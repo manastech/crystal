@@ -1,0 +1,16 @@
+machine:
+  timezone:
+    America/New_York
+  environment:
+    TRAVIS_BRANCH: $CIRCLE_BRANCH
+    TRAVIS_OS_NAME: $CIRCLE_BUILD_IMAGE
+    TRAVIS_PULL_REQUEST: $CI_PULL_REQUEST || "false"
+dependencies:
+  override:
+    - bin/ci prepare_system
+compile:
+  override:
+    - bin/ci prepare_build
+test:
+  override:
+    - bin/ci build
