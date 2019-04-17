@@ -12,7 +12,7 @@ abstract class OpenSSL::SSL::Socket < IO
           hostname.to_unsafe.as(Pointer(Void))
         )
 
-        {% if compare_versions(LibSSL::OPENSSL_VERSION, "1.0.2") >= 0 %}
+        {% if LibSSL::OPENSSL_VERSION_NUMBER >= 0x1_00_02_00_0 %}
           param = LibSSL.ssl_get0_param(@ssl)
 
           if ::Socket.ip?(hostname)
@@ -129,7 +129,7 @@ abstract class OpenSSL::SSL::Socket < IO
     @bio.io.flush
   end
 
-  {% if compare_versions(LibSSL::OPENSSL_VERSION, "1.0.2") >= 0 %}
+  {% if LibSSL::OPENSSL_VERSION_NUMBER >= 0x1_00_02_00_0 || LibSSL::LIBRESSL_VERSION_NUMBER >= 0x2_05_00_00_0 %}
   # Returns the negotiated ALPN protocol (eg: `"h2"`) of `nil` if no protocol was
   # negotiated.
   def alpn_protocol

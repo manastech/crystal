@@ -2,22 +2,15 @@ require "./lib_crypto"
 
 {% begin %}
   lib LibSSL
-    {% from_libressl = (`hash pkg-config 2> /dev/null || printf %s false` != "false") &&
-                       (`test -f $(pkg-config --silence-errors --variable=includedir libssl)/openssl/opensslv.h || printf %s false` != "false") &&
-                       (`printf "#include <openssl/opensslv.h>\nLIBRESSL_VERSION_NUMBER" | ${CC:-cc} $(pkg-config --cflags --silence-errors libssl || true) -E -`.chomp.split('\n').last != "LIBRESSL_VERSION_NUMBER") %}
-    {% ssl_version = `hash pkg-config 2> /dev/null && pkg-config --silence-errors --modversion libssl || printf %s 0.0.0`.split.last.gsub(/[^0-9.]/, "") %}
-
-    {% if from_libressl %}
-      LIBRESSL_VERSION = {{ ssl_version }}
-      OPENSSL_VERSION = "0.0.0"
-    {% else %}
-      LIBRESSL_VERSION = "0.0.0"
-      OPENSSL_VERSION = {{ ssl_version }}
-    {% end %}
+    {{ `#{__DIR__}/version.sh libssl` }}
   end
 {% end %}
 
-@[Link(ldflags: "`command -v pkg-config > /dev/null && pkg-config --libs --silence-errors libssl || printf %s '-lssl -lcrypto'`")]
+{% if LibSSL::LDFLAGS %}
+  @[Link(ldflags: "{{LibSSL::LDFLAGS.id}} -lssl -lcrypto")]
+{% else %}
+  @[Link(ldflags: "`command -v pkg-config > /dev/null && pkg-config --libs --silence-errors libssl || printf %s '-lssl -lcrypto'`")]
+{% end %}
 lib LibSSL
   alias Int = LibC::Int
   alias Char = LibC::Char
@@ -102,7 +95,7 @@ lib LibSSL
     NETSCAPE_DEMO_CIPHER_CHANGE_BUG = 0x40000000
     CRYPTOPRO_TLSEXT_BUG            = 0x80000000
 
-    {% if compare_versions(OPENSSL_VERSION, "1.1.0") >= 0 %}
+    {% if OPENSSL_VERSION_NUMBER >= 0x1_01_00_00_0 %}
       MICROSOFT_SESS_ID_BUG            = 0x00000000
       NETSCAPE_CHALLENGE_BUG           = 0x00000000
       NETSCAPE_REUSE_CIPHER_CHANGE_BUG = 0x00000000
@@ -189,7 +182,7 @@ lib LibSSL
   fun ssl_ctx_set_default_verify_paths = SSL_CTX_set_default_verify_paths(ctx : SSLContext) : Int
   fun ssl_ctx_ctrl = SSL_CTX_ctrl(ctx : SSLContext, cmd : Int, larg : ULong, parg : Void*) : ULong
 
-  {% if compare_versions(OPENSSL_VERSION, "1.1.0") >= 0 %}
+  {% if OPENSSL_VERSION_NUMBER >= 0x1_01_00_00_0 %}
     fun ssl_ctx_get_options = SSL_CTX_get_options(ctx : SSLContext) : ULong
     fun ssl_ctx_set_options = SSL_CTX_set_options(ctx : SSLContext, larg : ULong) : ULong
     fun ssl_ctx_clear_options = SSL_CTX_clear_options(ctx : SSLContext, larg : ULong) : ULong
@@ -198,10 +191,11 @@ lib LibSSL
   @[Raises]
   fun ssl_ctx_load_verify_locations = SSL_CTX_load_verify_locations(ctx : SSLContext, ca_file : UInt8*, ca_path : UInt8*) : Int
 
-  # Hostname validation for OpenSSL <= 1.0.1
-  fun ssl_ctx_set_cert_verify_callback = SSL_CTX_set_cert_verify_callback(ctx : SSLContext, callback : CertVerifyCallback, arg : Void*)
+  {% if OPENSSL_VERSION_NUMBER <= 0x1_00_01_00_0 %}
+    fun ssl_ctx_set_cert_verify_callback = SSL_CTX_set_cert_verify_callback(ctx : SSLContext, callback : CertVerifyCallback, arg : Void*)
+  {% end %}
 
-  {% if compare_versions(OPENSSL_VERSION, "1.1.0") >= 0 %}
+  {% if OPENSSL_VERSION_NUMBER >= 0x1_01_00_00_0 %}
     fun tls_method = TLS_method : SSLMethod
   {% else %}
     fun ssl_library_init = SSL_library_init
@@ -209,14 +203,14 @@ lib LibSSL
     fun sslv23_method = SSLv23_method : SSLMethod
   {% end %}
 
-  {% if compare_versions(OPENSSL_VERSION, "1.0.2") >= 0 || compare_versions(LIBRESSL_VERSION, "2.5.0") >= 0 %}
+  {% if OPENSSL_VERSION_NUMBER >= 0x1_00_02_00_0 || LIBRESSL_VERSION_NUMBER >= 0x2_05_00_00_0 %}
     alias ALPNCallback = (SSL, Char**, Char*, Char*, Int, Void*) -> Int
 
     fun ssl_get0_alpn_selected = SSL_get0_alpn_selected(handle : SSL, data : Char**, len : LibC::UInt*) : Void
     fun ssl_ctx_set_alpn_select_cb = SSL_CTX_set_alpn_select_cb(ctx : SSLContext, cb : ALPNCallback, arg : Void*) : Void
   {% end %}
 
-  {% if compare_versions(OPENSSL_VERSION, "1.0.2") >= 0 %}
+  {% if OPENSSL_VERSION_NUMBER >= 0x1_00_02_00_0 %}
     alias X509VerifyParam = LibCrypto::X509VerifyParam
 
     fun dtls_method = DTLS_method : SSLMethod
@@ -227,7 +221,7 @@ lib LibSSL
   {% end %}
 end
 
-{% unless compare_versions(LibSSL::OPENSSL_VERSION, "1.1.0") >= 0 %}
+{% if LibSSL::OPENSSL_VERSION_NUMBER < 0x1_01_00_00_0 %}
   LibSSL.ssl_library_init
   LibSSL.ssl_load_error_strings
   LibCrypto.openssl_add_all_algorithms

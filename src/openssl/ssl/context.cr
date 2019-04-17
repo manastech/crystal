@@ -3,7 +3,7 @@ require "uri/punycode"
 abstract class OpenSSL::SSL::Context
   # :nodoc:
   def self.default_method
-    {% if compare_versions(LibSSL::OPENSSL_VERSION, "1.1.0") >= 0 %}
+    {% if LibSSL::OPENSSL_VERSION_NUMBER >= 0x1_01_00_00_0 %}
       LibSSL.tls_method
     {% else %}
       LibSSL.sslv23_method
@@ -81,7 +81,7 @@ abstract class OpenSSL::SSL::Context
       super(method)
 
       self.verify_mode = OpenSSL::SSL::VerifyMode::PEER
-      {% if compare_versions(LibSSL::OPENSSL_VERSION, "1.0.2") >= 0 %}
+      {% if LibSSL::OPENSSL_VERSION_NUMBER >= 0x1_00_02_00_0 %}
       self.default_verify_param = "ssl_server"
       {% end %}
     end
@@ -114,26 +114,26 @@ abstract class OpenSSL::SSL::Context
       super(params)
     end
 
-    # Wraps the original certificate verification to also validate the
-    # hostname against the certificate configured Subject Alternate
-    # Names or Common Name.
-    #
-    # Required for OpenSSL <= 1.0.1 only.
-    protected def set_cert_verify_callback(hostname : String)
-      # Sanitize the hostname with PunyCode
-      hostname = URI::Punycode.to_ascii hostname
+    {% if LibSSL::OPENSSL_VERSION_NUMBER <= 0x1_00_01_00_0 %}
+      # Wraps the original certificate verification to also validate the
+      # hostname against the certificate configured Subject Alternate
+      # Names or Common Name.
+      protected def set_cert_verify_callback(hostname : String)
+        # Sanitize the hostname with PunyCode
+        hostname = URI::Punycode.to_ascii hostname
 
-      # Keep a reference so the GC doesn't collect it after sending it to C land
-      @hostname = hostname
-      LibSSL.ssl_ctx_set_cert_verify_callback(@handle, ->(x509_ctx, arg) {
-        if LibCrypto.x509_verify_cert(x509_ctx) != 0
-          cert = LibCrypto.x509_store_ctx_get_current_cert(x509_ctx)
-          HostnameValidation.validate_hostname(arg.as(String), cert) == HostnameValidation::Result::MatchFound ? 1 : 0
-        else
-          0
-        end
-      }, hostname.as(Void*))
-    end
+        # Keep a reference so the GC doesn't collect it after sending it to C land
+        @hostname = hostname
+        LibSSL.ssl_ctx_set_cert_verify_callback(@handle, ->(x509_ctx, arg) {
+          if LibCrypto.x509_verify_cert(x509_ctx) != 0
+            cert = LibCrypto.x509_store_ctx_get_current_cert(x509_ctx)
+            HostnameValidation.validate_hostname(arg.as(String), cert) == HostnameValidation::Result::MatchFound ? 1 : 0
+          else
+            0
+          end
+        }, hostname.as(Void*))
+      end
+    {% end %}
   end
 
   class Server < Context
@@ -157,7 +157,7 @@ abstract class OpenSSL::SSL::Context
       super(method)
 
       add_options(OpenSSL::SSL::Options::CIPHER_SERVER_PREFERENCE)
-      {% if compare_versions(LibSSL::OPENSSL_VERSION, "1.0.2") >= 0 %}
+      {% if LibSSL::OPENSSL_VERSION_NUMBER >= 0x1_00_02_00_0 %}
       self.default_verify_param = "ssl_client"
       {% end %}
 
@@ -301,7 +301,7 @@ abstract class OpenSSL::SSL::Context
 
   # Returns the current options set on the TLS context.
   def options
-    opts = {% if compare_versions(LibSSL::OPENSSL_VERSION, "1.1.0") >= 0 %}
+    opts = {% if LibSSL::OPENSSL_VERSION_NUMBER >= 0x1_01_00_00_0 %}
       LibSSL.ssl_ctx_get_options(@handle)
     {% else %}
       LibSSL.ssl_ctx_ctrl(@handle, LibSSL::SSL_CTRL_OPTIONS, 0, nil)
@@ -320,7 +320,7 @@ abstract class OpenSSL::SSL::Context
   # )
   # ```
   def add_options(options : OpenSSL::SSL::Options)
-    opts = {% if compare_versions(LibSSL::OPENSSL_VERSION, "1.1.0") >= 0 %}
+    opts = {% if LibSSL::OPENSSL_VERSION_NUMBER >= 0x1_01_00_00_0 %}
       LibSSL.ssl_ctx_set_options(@handle, options)
     {% else %}
       LibSSL.ssl_ctx_ctrl(@handle, LibSSL::SSL_CTRL_OPTIONS, options, nil)
@@ -335,7 +335,7 @@ abstract class OpenSSL::SSL::Context
   # context.remove_options(OpenSSL::SSL::Options::NO_SSL_V3)
   # ```
   def remove_options(options : OpenSSL::SSL::Options)
-    opts = {% if compare_versions(LibSSL::OPENSSL_VERSION, "1.1.0") >= 0 %}
+    opts = {% if LibSSL::OPENSSL_VERSION_NUMBER >= 0x1_01_00_00_0 %}
       LibSSL.ssl_ctx_clear_options(@handle, options)
     {% else %}
       LibSSL.ssl_ctx_ctrl(@handle, LibSSL::SSL_CTRL_CLEAR_OPTIONS, options, nil)
@@ -353,7 +353,7 @@ abstract class OpenSSL::SSL::Context
     LibSSL.ssl_ctx_set_verify(@handle, mode, nil)
   end
 
-  {% if compare_versions(LibSSL::OPENSSL_VERSION, "1.0.2") >= 0 %}
+  {% if LibSSL::OPENSSL_VERSION_NUMBER >= 0x1_00_02_00_0 || LibSSL::LIBRESSL_VERSION_NUMBER >= 0x2_05_00_00_0 %}
 
   @alpn_protocol : Pointer(Void)?
 
@@ -385,6 +385,10 @@ abstract class OpenSSL::SSL::Context
     @alpn_protocol = alpn_protocol = Box.box(protocol)
     LibSSL.ssl_ctx_set_alpn_select_cb(@handle, alpn_cb, alpn_protocol)
   end
+
+  {% end %}
+
+  {% if LibSSL::OPENSSL_VERSION_NUMBER >= 0x1_00_02_00_0 %}
 
   # Sets this context verify param to the default one of the given name.
   #

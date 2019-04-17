@@ -3,7 +3,7 @@ require "./lib_crypto"
 # :nodoc:
 struct OpenSSL::BIO
   def self.get_data(bio) : Void*
-    {% if compare_versions(LibCrypto::OPENSSL_VERSION, "1.1.0") >= 0 %}
+    {% if LibCrypto::OPENSSL_VERSION_NUMBER >= 0x1_01_00_00_0 %}
       LibCrypto.BIO_get_data(bio)
     {% else %}
       bio.value.ptr
@@ -11,7 +11,7 @@ struct OpenSSL::BIO
   end
 
   def self.set_data(bio, data : Void*)
-    {% if compare_versions(LibCrypto::OPENSSL_VERSION, "1.1.0") >= 0 %}
+    {% if LibCrypto::OPENSSL_VERSION_NUMBER >= 0x1_01_00_00_0 %}
       LibCrypto.BIO_set_data(bio, data)
     {% else %}
       bio.value.ptr = data
@@ -65,7 +65,7 @@ struct OpenSSL::BIO
     end
 
     create = LibCrypto::BioMethodCreate.new do |bio|
-      {% if compare_versions(LibCrypto::OPENSSL_VERSION, "1.1.0") >= 0 %}
+      {% if LibCrypto::OPENSSL_VERSION_NUMBER >= 0x1_01_00_00_0 %}
         LibCrypto.BIO_set_shutdown(bio, 1)
         LibCrypto.BIO_set_init(bio, 1)
         # bio.value.num = -1
@@ -82,10 +82,10 @@ struct OpenSSL::BIO
       1
     end
 
-    {% if compare_versions(LibCrypto::OPENSSL_VERSION, "1.1.0") >= 0 %}
+    {% if LibCrypto::OPENSSL_VERSION_NUMBER >= 0x1_01_00_00_0 %}
       biom = LibCrypto.BIO_meth_new(Int32::MAX, "Crystal BIO")
 
-      {% if compare_versions(LibCrypto::OPENSSL_VERSION, "1.1.1") >= 0 %}
+      {% if LibCrypto::OPENSSL_VERSION_NUMBER >= 0x1_01_01_00_0 %}
         LibCrypto.BIO_meth_set_write_ex(biom, bwrite_ex)
         LibCrypto.BIO_meth_set_read_ex(biom, bread_ex)
       {% else %}

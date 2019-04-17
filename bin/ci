@@ -86,7 +86,7 @@ format() {
 prepare_build() {
   on_linux verify_linux_environment
 
-  on_osx brew install crystal
+  on_osx brew install crystal openssl
 
   # Make sure binaries from llvm are available in PATH
   on_osx brew install jq
