@@ -73,41 +73,23 @@ describe BigDecimal do
       .should eq(BigDecimal.new(BigInt.new(5), 1))
   end
 
-  it "raises InvalidBigDecimalException when initializing from invalid input" do
-    expect_raises(InvalidBigDecimalException) do
-      BigDecimal.new("derp")
+  it "raises when initializing from invalid input" do
+    [
+      "derp", "1.2.3", "..2", "1..2",
+      "a1.2", "1a.2", "1.a2", "1.2a",
+      "1ee1", "e+e1",
+      "1 e1", "1e 1",
+      "..e1", "-..e1",
+      "e1", "e+5", ".e1", ".e+1", "-.e1",
+      "1e.", "1e0.1",
+    ].each do |s|
+      expect_raises(ArgumentError, /^Unexpected '/) { BigDecimal.new(s) }
     end
 
-    expect_raises(InvalidBigDecimalException) do
-      BigDecimal.new("")
-    end
-
-    expect_raises(InvalidBigDecimalException) do
-      BigDecimal.new("1.2.3")
-    end
-
-    expect_raises(InvalidBigDecimalException) do
-      BigDecimal.new("..2")
-    end
-
-    expect_raises(InvalidBigDecimalException) do
-      BigDecimal.new("1..2")
-    end
-
-    expect_raises(InvalidBigDecimalException) do
-      BigDecimal.new("a1.2")
-    end
-
-    expect_raises(InvalidBigDecimalException) do
-      BigDecimal.new("1a.2")
-    end
-
-    expect_raises(InvalidBigDecimalException) do
-      BigDecimal.new("1.a2")
-    end
-
-    expect_raises(InvalidBigDecimalException) do
-      BigDecimal.new("1.2a")
+    [
+      "", ".", "1e+", "1.1e-", "1.0e",
+    ].each do |s|
+      expect_raises(ArgumentError, "Unexpected end of number string") { BigDecimal.new(s) }
     end
   end
 

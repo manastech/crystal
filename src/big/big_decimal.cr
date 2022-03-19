@@ -69,68 +69,18 @@ struct BigDecimal < Number
     # Strip '_' to make it compatible with int literals like "1_000_000"
     str = str.delete('_')
 
-    raise InvalidBigDecimalException.new(str, "Zero size") if str.bytesize == 0
+    value_str, value_negative, fraction_str, exponent_str, exponent_negative = parse_e_notation(str.each_char.with_index)
 
-    # Check str's validity and find index of '.'
-    decimal_index = nil
-    # Check str's validity and find index of 'e'
-    exponent_index = nil
+    decimal_count = fraction_str ? fraction_str.size.to_u64 : 0_u64
+    unscaled_string = fraction_str ? value_str + fraction_str : value_str
+    @value = (value_negative ? "-" + unscaled_string : unscaled_string).to_big_i
 
-    str.each_char_with_index do |char, index|
-      case char
-      when '-'
-        unless index == 0 || exponent_index == index - 1
-          raise InvalidBigDecimalException.new(str, "Unexpected '-' character")
-        end
-      when '+'
-        unless exponent_index == index - 1
-          raise InvalidBigDecimalException.new(str, "Unexpected '+' character")
-        end
-      when '.'
-        if decimal_index
-          raise InvalidBigDecimalException.new(str, "Unexpected '.' character")
-        end
-        decimal_index = index
-      when 'e', 'E'
-        if exponent_index
-          raise InvalidBigDecimalException.new(str, "Unexpected #{char.inspect} character")
-        end
-        exponent_index = index
-      when '0'..'9'
-        # Pass
+    if exponent_str
+      # TODO wrap error
+      @scale = exponent_str.to_u64
+      if exponent_negative
+        @scale += decimal_count
       else
-        raise InvalidBigDecimalException.new(str, "Unexpected #{char.inspect} character")
-      end
-    end
-
-    decimal_end_index = (exponent_index || str.bytesize) - 1
-    if decimal_index
-      decimal_count = (decimal_end_index - decimal_index).to_u64
-
-      value_str = String.build do |builder|
-        # We know this is ASCII, so we can slice by index
-        builder.write(str.to_slice[0, decimal_index])
-        builder.write(str.to_slice[decimal_index + 1, decimal_count])
-      end
-      @value = value_str.to_big_i
-    else
-      decimal_count = 0_u64
-      @value = str[0..decimal_end_index].to_big_i
-    end
-
-    if exponent_index
-      exponent_postfix = str[exponent_index + 1]
-      case exponent_postfix
-      when '+', '-'
-        exponent_positive = exponent_postfix == '+'
-        exponent = str[(exponent_index + 2)..-1].to_u64
-      else
-        exponent_positive = true
-        exponent = str[(exponent_index + 1)..-1].to_u64
-      end
-
-      @scale = exponent
-      if exponent_positive
         if @scale < decimal_count
           @scale = decimal_count - @scale
         else
@@ -138,12 +88,119 @@ struct BigDecimal < Number
           @value *= 10.to_big_i ** @scale
           @scale = 0_u64
         end
-      else
-        @scale += decimal_count
       end
     else
       @scale = decimal_count
     end
+  end
+
+  private def parse_e_notation(iterator)
+    token = take_next_character(iterator)
+    value_negative = false
+    if token_sign?(token)
+      token, value_negative = parse_sign_symbol(token, iterator)
+    elsif !(token_digit?(token) || token_decimal?(token))
+      raise_parse_error(token)
+    end
+    next_token, value_str, fraction_str, exponent_str, exponent_negative = parse_numerical_part(token, iterator)
+    parse_end(next_token)
+    {value_str, value_negative, fraction_str, exponent_str, exponent_negative}
+  end
+
+  private def parse_sign_symbol(token, iterator)
+    {take_next_character(iterator), token[0] == '-'}
+  end
+
+  private def parse_numerical_part(token, iterator)
+    value_str = ""
+    fraction_str = nil
+    if token_digit?(token)
+      token, value_str = parse_digits(token, iterator)
+      token, fraction_str = parse_fractional_part(token, iterator) if token_decimal?(token)
+    elsif token_decimal?(token)
+      token, fraction_str = parse_fractional_part(token, iterator)
+      raise_parse_error(token) if fraction_str.empty?
+    else
+      raise_parse_error(token)
+    end
+    next_token, exponent_str, exponent_negative = token_e?(token) ? parse_exponent_part(token, iterator) : {token, nil, false}
+    {next_token, value_str, fraction_str, exponent_str, exponent_negative}
+  end
+
+  private def parse_digits(token, iterator)
+    val = String.build do |io|
+      while token_digit?(token)
+        io << token[0]
+        token = take_next_character(iterator, true)
+      end
+    end
+    {token, val}
+  end
+
+  private def parse_fractional_part(token, iterator)
+    token = take_next_character(iterator, true) # consume '.'
+    parse_digits(token, iterator)
+  end
+
+  private def parse_exponent_part(token, iterator)
+    token = take_next_character(iterator) # consume 'e'
+    if token_sign?(token)
+      next_token, exponent_negative = parse_sign_symbol(token, iterator)
+      token, val = parse_digits(next_token, iterator)
+      {token, val, exponent_negative}
+    elsif token_digit?(token)
+      token, val = parse_digits(token, iterator)
+      {token, val, false}
+    else
+      raise_parse_error(token)
+    end
+  end
+
+  private def parse_end(token)
+    raise_parse_error(token) unless token_end?(token)
+  end
+
+  private def take_next_character(iterator, allow_end = false) : Tuple(Char | Nil, Int32)
+    next_c = iterator.next
+    if next_c == Iterator::Stop::INSTANCE
+      raise_parse_eos_error unless allow_end
+      {nil, -1}
+    else
+      next_c.as(Tuple(Char, Int32))
+    end
+  end
+
+  private def token_digit?(token)
+    c = token[0]
+    c && c >= '0' && c <= '9'
+  end
+
+  private def token_sign?(token)
+    c = token[0]
+    c && (c == '-' || c == '+')
+  end
+
+  private def token_decimal?(token)
+    c = token[0]
+    c && c == '.'
+  end
+
+  private def token_e?(token)
+    c = token[0]
+    c && (c == 'e' || c == 'E')
+  end
+
+  private def token_end?(token)
+    token[0] == nil && token[1] == -1
+  end
+
+  private def raise_parse_error(token)
+    raise_parse_eos_error if token_end?(token)
+    raise ArgumentError.new("Unexpected '#{token[0]}' at character #{token[1]}")
+  end
+
+  private def raise_parse_eos_error
+    raise ArgumentError.new("Unexpected end of number string")
   end
 
   def - : BigDecimal
