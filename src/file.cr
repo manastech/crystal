@@ -360,7 +360,11 @@ class File < IO::FileDescriptor
   # File.delete("./bar") # raises File::NotFoundError (No such file or directory)
   # ```
   def self.delete(path : Path | String) : Nil
-    Crystal::System::File.delete(path.to_s, raise_on_missing: true)
+    Crystal::System::File.delete(
+      path.to_s,
+      raise_on_missing: true,
+      raise_on_directory: true
+    )
   end
 
   # Deletes the file at *path*.
@@ -372,7 +376,11 @@ class File < IO::FileDescriptor
   # File.delete?("./bar") # => false
   # ```
   def self.delete?(path : Path | String) : Bool
-    Crystal::System::File.delete(path.to_s, raise_on_missing: false)
+    Crystal::System::File.delete(
+      path.to_s,
+      raise_on_missing: false,
+      raise_on_directory: false
+    )
   end
 
   # Returns *filename*'s extension, or an empty string if it has no extension.
