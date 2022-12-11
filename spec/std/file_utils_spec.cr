@@ -675,7 +675,7 @@ describe "FileUtils" do
           File.symlink?(path2).should be_true
 
           expect_raises(File::NotFoundError, "Error resolving real path: '#{path2.inspect_unquoted}'") do
-            File.real_path(path2)
+            File.realpath(path2)
           end
           FileUtils.rm_rf(path2)
         end
