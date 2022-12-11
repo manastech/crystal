@@ -455,7 +455,7 @@ module FileUtils
   # FileUtils.rmdir("baz")
   # ```
   #
-  # NOTE: Alias of `Dir.rmdir`
+  # NOTE: Alias of `Dir.delete`
   def rmdir(path : Path | String) : Nil
     Dir.delete(path)
   end
