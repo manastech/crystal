@@ -379,7 +379,7 @@ class File < IO::FileDescriptor
     Crystal::System::File.delete(
       path.to_s,
       raise_on_missing: false,
-      raise_on_directory: false
+      raise_on_directory: true
     )
   end
 

@@ -386,9 +386,12 @@ module FileUtils
   # FileUtils.rm_f("afile.cr")
   # ```
   #
-  # NOTE: Alias of `File.delete?`
   def rm_f(path : Path | String) : Nil
-    File.delete?(path)
+    Crystal::System::File.delete(
+      path.to_s,
+      raise_on_missing: false,
+      raise_on_directory: false
+    )
   end
 
   # Deletes all *paths* file given, ignored if one path is a directory or not exists.
