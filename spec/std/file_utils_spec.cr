@@ -324,7 +324,9 @@ describe "FileUtils" do
       with_tempfile("rm_f-directory") do |path|
         test_with_string_and_path(path) do |arg|
           Dir.mkdir_p(path)
-          FileUtils.rm_f(arg)
+          expect_raises(File::Error, "Error deleting file: '#{path.inspect_unquoted}': Is a directory") do
+            FileUtils.rm_f(arg)
+          end
           Dir.exists?(path).should be_true
         end
       end
@@ -337,7 +339,9 @@ describe "FileUtils" do
           File.write(path2, "")
           Dir.mkdir_p(path3)
 
-          FileUtils.rm_f(args.to_a)
+          expect_raises(File::Error, "Error deleting file: '#{path3.inspect_unquoted}': Is a directory") do
+            FileUtils.rm_f(args.to_a)
+          end
 
           File.exists?(path1).should be_false
           File.exists?(path2).should be_false
