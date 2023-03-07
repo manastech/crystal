@@ -155,7 +155,7 @@ struct Crystal::System::Process
   end
 
   def self.spawn(command_args, env, clear_env, input, output, error, chdir)
-    reader_pipe, writer_pipe = IO.pipe
+    reader_pipe, writer_pipe = IO::FileDescriptor.pipe
 
     pid = self.fork(will_exec: true)
     if !pid

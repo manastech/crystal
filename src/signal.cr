@@ -193,7 +193,7 @@ module Crystal::Signal
 
   alias Handler = ::Signal ->
 
-  @@pipe = IO.pipe(read_blocking: false, write_blocking: true)
+  @@pipe : {IO::FileDescriptor, IO::FileDescriptor} = IO::FileDescriptor.pipe(read_blocking: false, write_blocking: true)
   @@handlers = {} of ::Signal => Handler
   @@child_handler : Handler?
   @@mutex = Mutex.new(:unchecked)
@@ -271,7 +271,7 @@ module Crystal::Signal
   def self.after_fork
     @@pipe.each(&.file_descriptor_close)
   ensure
-    @@pipe = IO.pipe(read_blocking: false, write_blocking: true)
+    @@pipe = IO::FileDescriptor.pipe(read_blocking: false, write_blocking: true)
   end
 
   # Resets signal handlers to `SIG_DFL`. This avoids the child to receive

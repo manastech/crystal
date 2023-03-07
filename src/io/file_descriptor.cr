@@ -37,6 +37,21 @@ class IO::FileDescriptor < IO
     end
   end
 
+  def self.pipe(read_blocking = false, write_blocking = false) : {IO::FileDescriptor, IO::FileDescriptor}
+    Crystal::System::FileDescriptor.pipe(read_blocking, write_blocking)
+  end
+
+  def self.pipe(read_blocking = false, write_blocking = false)
+    read, write = pipe(read_blocking, write_blocking)
+    begin
+      yield read, write
+    ensure
+      write.flush
+      read.close
+      write.close
+    end
+  end
+
   # :nodoc:
   def self.from_stdio(fd) : self
     Crystal::System::FileDescriptor.from_stdio(fd)

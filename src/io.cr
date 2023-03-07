@@ -137,8 +137,9 @@ abstract class IO
   # reader.gets # => "hello"
   # reader.gets # => "world"
   # ```
-  def self.pipe(read_blocking = false, write_blocking = false) : {IO::FileDescriptor, IO::FileDescriptor}
-    Crystal::System::FileDescriptor.pipe(read_blocking, write_blocking)
+  def self.pipe(read_blocking = false, write_blocking = false) : {IO, IO}
+    pipe = Pipe.new(read_blocking: read_blocking, write_blocking: write_blocking)
+    {pipe.reader, pipe.writer}
   end
 
   # Creates a pair of pipe endpoints (connected to each other) and passes them

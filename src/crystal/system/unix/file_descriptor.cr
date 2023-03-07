@@ -145,7 +145,7 @@ module Crystal::System::FileDescriptor
     end
   end
 
-  def self.pipe(read_blocking, write_blocking)
+  def self.pipe(read_blocking, write_blocking) : {IO::FileDescriptor, IO::FileDescriptor}
     pipe_fds = uninitialized StaticArray(LibC::Int, 2)
     if LibC.pipe(pipe_fds) != 0
       raise IO::Error.from_errno("Could not create pipe")

@@ -259,13 +259,13 @@ class Process
       stdio
     when IO
       if dst_io == STDIN
-        fork_io, process_io = IO.pipe(read_blocking: true)
+        fork_io, process_io = IO::FileDescriptor.pipe(read_blocking: true)
 
         @wait_count += 1
         ensure_channel
         spawn { copy_io(stdio, process_io, channel, close_dst: true) }
       else
-        process_io, fork_io = IO.pipe(write_blocking: true)
+        process_io, fork_io = IO::FileDescriptor.pipe(write_blocking: true)
 
         @wait_count += 1
         ensure_channel
@@ -276,11 +276,11 @@ class Process
     when Redirect::Pipe
       case dst_io
       when STDIN
-        fork_io, @input = IO.pipe(read_blocking: true)
+        fork_io, @input = IO::FileDescriptor.pipe(read_blocking: true)
       when STDOUT
-        @output, fork_io = IO.pipe(write_blocking: true)
+        @output, fork_io = IO::FileDescriptor.pipe(write_blocking: true)
       when STDERR
-        @error, fork_io = IO.pipe(write_blocking: true)
+        @error, fork_io = IO::FileDescriptor.pipe(write_blocking: true)
       else
         raise "BUG: unknown destination io #{dst_io}"
       end
