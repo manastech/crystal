@@ -1,49 +1,23 @@
 module Crystal::System::FileInfo
   protected getter file_attributes
 
-  def initialize(@file_attributes : LibC::BY_HANDLE_FILE_INFORMATION, @file_type : LibC::DWORD)
-    @reparse_tag = LibC::DWORD.new(0)
-  end
-
-  def initialize(file_attributes : LibC::WIN32_FIND_DATAW)
-    @file_attributes = LibC::BY_HANDLE_FILE_INFORMATION.new(
-      dwFileAttributes: file_attributes.dwFileAttributes,
-      ftCreationTime: file_attributes.ftCreationTime,
-      ftLastAccessTime: file_attributes.ftLastAccessTime,
-      ftLastWriteTime: file_attributes.ftLastWriteTime,
-      dwVolumeSerialNumber: 0,
-      nFileSizeHigh: file_attributes.nFileSizeHigh,
-      nFileSizeLow: file_attributes.nFileSizeLow,
-      nNumberOfLinks: 1,
-      nFileIndexHigh: 0,
-      nFileIndexLow: 0
-    )
-    @file_type = LibC::FILE_TYPE_DISK
-    @reparse_tag = file_attributes.dwReserved0
+  def initialize(@file_attributes : LibC::BY_HANDLE_FILE_INFORMATION, @file_type : LibC::DWORD, @reparse_tag : LibC::DWORD, @system_permissions : ::File::Permissions)
+    if @file_attributes.dwFileAttributes.bits_set? LibC::FILE_ATTRIBUTE_READONLY
+      @system_permissions &= ::File::Permissions.new(0o333)
+    end
   end
 
   def initialize(@file_type : LibC::DWORD)
     @file_attributes = LibC::BY_HANDLE_FILE_INFORMATION.new
     @reparse_tag = LibC::DWORD.new(0)
+    @system_permissions = ::File::Permissions.new(0o666)
   end
 
   def system_size : Int64
     ((@file_attributes.nFileSizeHigh.to_u64 << 32) | @file_attributes.nFileSizeLow.to_u64).to_i64
   end
 
-  def system_permissions : ::File::Permissions
-    if @file_attributes.dwFileAttributes.bits_set? LibC::FILE_ATTRIBUTE_READONLY
-      permissions = ::File::Permissions.new(0o444)
-    else
-      permissions = ::File::Permissions.new(0o666)
-    end
-
-    if @file_attributes.dwFileAttributes.bits_set? LibC::FILE_ATTRIBUTE_DIRECTORY
-      permissions | ::File::Permissions.new(0o111)
-    else
-      permissions
-    end
-  end
+  getter system_permissions : ::File::Permissions
 
   def system_type : ::File::Type
     case @file_type

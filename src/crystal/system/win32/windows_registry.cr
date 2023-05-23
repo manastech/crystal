@@ -7,7 +7,7 @@ module Crystal::System::WindowsRegistry
   #
   # Users need to ensure the opened key will be closed after usage (see `#close`).
   # *sam* specifies desired access rights to the key to be opened.
-  def self.open?(handle : LibC::HKEY, name : Slice(UInt16), sam = LibC::REGSAM::READ)
+  def self.open?(handle : LibC::HKEY, name : Slice(UInt16), sam = LibC::REGSAM::KEY_READ)
     status = LibC.RegOpenKeyExW(handle, name, 0, sam, out sub_handle)
     status = WinError.new(status)
 
@@ -22,7 +22,7 @@ module Crystal::System::WindowsRegistry
     end
   end
 
-  def self.open?(handle : LibC::HKEY, name : Slice(UInt16), sam = LibC::REGSAM::READ, &)
+  def self.open?(handle : LibC::HKEY, name : Slice(UInt16), sam = LibC::REGSAM::KEY_READ, &)
     key_handle = open?(handle, name, sam)
 
     return unless key_handle

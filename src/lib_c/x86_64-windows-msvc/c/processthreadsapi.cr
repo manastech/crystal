@@ -55,5 +55,7 @@ lib LibC
                       lpKernelTime : FILETIME*, lpUserTime : FILETIME*) : BOOL
   fun SwitchToThread : BOOL
 
+  GetCurrentProcessToken = HANDLE.new(-4) # C static inline function
+
   PROCESS_QUERY_INFORMATION = 0x0400
 end

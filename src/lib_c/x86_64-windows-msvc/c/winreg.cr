@@ -1,5 +1,6 @@
 lib LibC
   alias LSTATUS = DWORD
+  alias REGSAM = ACCESS_MASK
 
   enum RegistryRoutineFlags
     NONE                       = 0

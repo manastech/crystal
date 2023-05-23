@@ -58,15 +58,15 @@ module Crystal::System::File
 
   private def self.posix_to_open_opts(flags : Int32, perm : ::File::Permissions)
     access = if flags.bits_set? LibC::O_WRONLY
-               LibC::GENERIC_WRITE
+               LibC::ACCESS_MASK::GENERIC_WRITE
              elsif flags.bits_set? LibC::O_RDWR
-               LibC::GENERIC_READ | LibC::GENERIC_WRITE
+               LibC::ACCESS_MASK::GENERIC_READ | LibC::ACCESS_MASK::GENERIC_WRITE
              else
-               LibC::GENERIC_READ
+               LibC::ACCESS_MASK::GENERIC_READ
              end
 
     if flags.bits_set? LibC::O_APPEND
-      access |= LibC::FILE_APPEND_DATA
+      access |= LibC::ACCESS_MASK::FILE_APPEND_DATA
     end
 
     if flags.bits_set? LibC::O_TRUNC
@@ -92,7 +92,7 @@ module Crystal::System::File
 
     if flags.bits_set? LibC::O_TEMPORARY
       attributes |= LibC::FILE_FLAG_DELETE_ON_CLOSE | LibC::FILE_ATTRIBUTE_TEMPORARY
-      access |= LibC::DELETE
+      access |= LibC::ACCESS_MASK::DELETE
     end
 
     if flags.bits_set? LibC::O_SHORT_LIVED
@@ -137,24 +137,38 @@ module Crystal::System::File
       return check_not_found_error("Unable to get file info", path) if ret == 0
 
       if file_attributes.dwFileAttributes.bits_set? LibC::FILE_ATTRIBUTE_REPARSE_POINT
-        # Could be a symlink, retrieve its reparse tag with FindFirstFile
-        handle = LibC.FindFirstFileW(winpath, out find_data)
+        # Could be a symlink, retrieve its reparse tag
+        handle = LibC.CreateFileW(
+          winpath,
+          LibC::ACCESS_MASK::FILE_READ_ATTRIBUTES | LibC::ACCESS_MASK::READ_CONTROL,
+          LibC::DEFAULT_SHARE_MODE,
+          nil,
+          LibC::OPEN_EXISTING,
+          LibC::FILE_FLAG_BACKUP_SEMANTICS | LibC::FILE_FLAG_OPEN_REPARSE_POINT,
+          LibC::HANDLE.null
+        )
         return check_not_found_error("Unable to get file info", path) if handle == LibC::INVALID_HANDLE_VALUE
 
-        if LibC.FindClose(handle) == 0
-          raise RuntimeError.from_winerror("FindClose")
-        end
-
-        if find_data.dwReserved0 == LibC::IO_REPARSE_TAG_SYMLINK
-          return ::File::Info.new(find_data)
+        begin
+          with_reparse_data_buffer do |buf, size|
+            if LibC.DeviceIoControl(handle, LibC::FSCTL_GET_REPARSE_POINT, nil, 0, buf, size, out _, nil) != 0
+              reparse_data = buf.as(LibC::REPARSE_DATA_BUFFER*)
+              reparse_tag = reparse_data.value.reparseTag
+              if reparse_tag == LibC::IO_REPARSE_TAG_SYMLINK
+                return FileDescriptor.system_info(handle, LibC::FILE_TYPE_DISK, reparse_tag)
+              end
+            end
+          end
+        ensure
+          LibC.CloseHandle(handle)
         end
       end
     end
 
     handle = LibC.CreateFileW(
-      System.to_wstr(path),
-      LibC::FILE_READ_ATTRIBUTES,
-      LibC::FILE_SHARE_READ | LibC::FILE_SHARE_WRITE | LibC::FILE_SHARE_DELETE,
+      winpath,
+      LibC::ACCESS_MASK::FILE_READ_ATTRIBUTES | LibC::ACCESS_MASK::READ_CONTROL,
+      LibC::DEFAULT_SHARE_MODE,
       nil,
       LibC::OPEN_EXISTING,
       LibC::FILE_FLAG_BACKUP_SEMANTICS,
@@ -182,15 +196,60 @@ module Crystal::System::File
   end
 
   def self.readable?(path) : Bool
-    accessible?(path, 4)
+    check_rw_access(path, false)
   end
 
   def self.writable?(path) : Bool
-    accessible?(path, 2)
+    check_rw_access(path, true)
   end
 
   def self.executable?(path) : Bool
     LibC.GetBinaryTypeW(System.to_wstr(path), out result) != 0
+  end
+
+  private def self.check_rw_access(path, write = false)
+    winpath = System.to_wstr(path)
+
+    handle = LibC.CreateFileW(
+      winpath,
+      LibC::ACCESS_MASK::FILE_READ_ATTRIBUTES | LibC::ACCESS_MASK::READ_CONTROL,
+      LibC::DEFAULT_SHARE_MODE,
+      nil,
+      LibC::OPEN_EXISTING,
+      LibC::FILE_FLAG_BACKUP_SEMANTICS,
+      LibC::HANDLE.null
+    )
+    return false if handle == LibC::INVALID_HANDLE_VALUE
+
+    begin
+      if write
+        attributes = LibC.GetFileAttributesW(winpath)
+        return false if attributes == LibC::INVALID_FILE_ATTRIBUTES
+        return false if attributes.bits_set?(LibC::FILE_ATTRIBUTE_READONLY)
+      end
+
+      status = LibC.GetSecurityInfo(handle, LibC::SE_OBJECT_TYPE::FILE_OBJECT, LibC::DACL_SECURITY_INFORMATION, nil, nil, out dacl, nil, out security_descriptor)
+      raise IO::Error.from_os_error("GetSecurityInfo", WinError.new(status)) unless status == 0
+
+      begin
+        LibC.BuildTrusteeWithSidW(out trustee, process_sid)
+        if LibC.GetEffectiveRightsFromAclW(dacl, pointerof(trustee), out access_rights) != 0
+          raise RuntimeError.from_winerror("GetEffectiveRightsFromAclW")
+        end
+        access_rights.includes?(write ? LibC::ACCESS_MASK::FILE_GENERIC_WRITE : LibC::ACCESS_MASK::FILE_GENERIC_READ)
+      ensure
+        LibC.LocalFree(security_descriptor)
+      end
+    ensure
+      LibC.CloseHandle(handle)
+    end
+  end
+
+  private class_getter process_sid : LibC::SID* do
+    LibC.GetTokenInformation(LibC::GetCurrentProcessToken, LibC::TOKEN_INFORMATION_CLASS::TokenOwner, nil, 0, out byte_size)
+    buf = Pointer(UInt8).malloc(byte_size).as(LibC::TOKEN_OWNER*)
+    LibC.GetTokenInformation(LibC::GetCurrentProcessToken, LibC::TOKEN_INFORMATION_CLASS::TokenOwner, buf, byte_size, out _)
+    buf.value.owner
   end
 
   private def self.accessible?(path, mode)
@@ -331,7 +390,7 @@ module Crystal::System::File
   private def self.symlink_info?(path)
     handle = LibC.CreateFileW(
       System.to_wstr(path),
-      LibC::FILE_READ_ATTRIBUTES,
+      LibC::ACCESS_MASK::FILE_READ_ATTRIBUTES,
       LibC::DEFAULT_SHARE_MODE,
       nil,
       LibC::OPEN_EXISTING,
@@ -342,10 +401,7 @@ module Crystal::System::File
     return nil if handle == LibC::INVALID_HANDLE_VALUE
 
     begin
-      size = 0x40
-      buf = Pointer(UInt8).malloc(size)
-
-      while true
+      with_reparse_data_buffer do |buf, size|
         if LibC.DeviceIoControl(handle, LibC::FSCTL_GET_REPARSE_POINT, nil, 0, buf, size, out _, nil) != 0
           reparse_data = buf.as(LibC::REPARSE_DATA_BUFFER*)
           if reparse_data.value.reparseTag == LibC::IO_REPARSE_TAG_SYMLINK
@@ -376,13 +432,21 @@ module Crystal::System::File
             raise ::File::Error.new("Not a symlink", file: path)
           end
         end
-
-        return nil if WinError.value != WinError::ERROR_MORE_DATA || size == LibC::MAXIMUM_REPARSE_DATA_BUFFER_SIZE
-        size *= 2
-        buf = buf.realloc(size)
       end
     ensure
       LibC.CloseHandle(handle)
+    end
+  end
+
+  private def self.with_reparse_data_buffer(&)
+    size = 0x40
+    buf = Pointer(UInt8).malloc(size)
+
+    while true
+      yield buf, size
+      return nil if WinError.value != WinError::ERROR_MORE_DATA || size == LibC::MAXIMUM_REPARSE_DATA_BUFFER_SIZE
+      size *= 2
+      buf = buf.realloc(size)
     end
   end
 
@@ -403,7 +467,7 @@ module Crystal::System::File
     mtime = Crystal::System::Time.to_filetime(modification_time)
     handle = LibC.CreateFileW(
       System.to_wstr(path),
-      LibC::FILE_WRITE_ATTRIBUTES,
+      LibC::ACCESS_MASK::FILE_WRITE_ATTRIBUTES,
       LibC::FILE_SHARE_READ | LibC::FILE_SHARE_WRITE | LibC::FILE_SHARE_DELETE,
       nil,
       LibC::OPEN_EXISTING,

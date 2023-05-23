@@ -68,7 +68,7 @@ module Crystal::System::Dir
     if dir.file_handle == LibC::INVALID_HANDLE_VALUE
       handle = LibC.CreateFileW(
         System.to_wstr(path),
-        LibC::FILE_READ_ATTRIBUTES,
+        LibC::ACCESS_MASK::FILE_READ_ATTRIBUTES | LibC::ACCESS_MASK::READ_CONTROL,
         LibC::FILE_SHARE_READ | LibC::FILE_SHARE_WRITE | LibC::FILE_SHARE_DELETE,
         nil,
         LibC::OPEN_EXISTING,

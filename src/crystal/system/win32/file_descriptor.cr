@@ -1,6 +1,9 @@
 require "c/io"
+require "c/accctrl"
+require "c/aclapi"
 require "c/consoleapi"
 require "c/consoleapi2"
+require "c/securitybaseapi"
 require "c/winnls"
 require "io/overlapped"
 
@@ -96,7 +99,7 @@ module Crystal::System::FileDescriptor
     LibC::HANDLE.new(ret)
   end
 
-  def self.system_info(handle, file_type = nil)
+  def self.system_info(handle, file_type = nil, reparse_tag = LibC::DWORD.zero)
     unless file_type
       file_type = LibC.GetFileType(handle)
 
@@ -111,10 +114,57 @@ module Crystal::System::FileDescriptor
         raise IO::Error.from_winerror("Unable to get info")
       end
 
-      ::File::Info.new(file_info, file_type)
+      permissions = file_permissions(handle)
+      ::File::Info.new(file_info, file_type, reparse_tag, permissions)
     else
       ::File::Info.new(file_type)
     end
+  end
+
+  def self.file_permissions(handle)
+    status = LibC.GetSecurityInfo(
+      handle,
+      LibC::SE_OBJECT_TYPE::FILE_OBJECT,
+      LibC::OWNER_SECURITY_INFORMATION | LibC::GROUP_SECURITY_INFORMATION | LibC::DACL_SECURITY_INFORMATION,
+      out owner_sid,
+      out group_sid,
+      out dacl,
+      nil,
+      out security_descriptor,
+    )
+    raise IO::Error.from_os_error("GetSecurityInfo", WinError.new(status)) unless status == 0
+
+    begin
+      ::File::Permissions.new(
+        permissions_from_dacl(dacl, owner_sid) << 6 |
+        permissions_from_dacl(dacl, group_sid) << 3 |
+        permissions_from_dacl(dacl, world_sid)
+      )
+    ensure
+      LibC.LocalFree(security_descriptor)
+    end
+  end
+
+  private def self.permissions_from_dacl(dacl, sid)
+    LibC.BuildTrusteeWithSidW(out trustee, sid)
+    if LibC.GetEffectiveRightsFromAclW(dacl, pointerof(trustee), out access_rights) != 0
+      raise RuntimeError.from_winerror("GetEffectiveRightsFromAclW")
+    end
+
+    permissions = 0_i16
+    permissions |= 1 if access_rights.includes?(LibC::ACCESS_MASK::FILE_GENERIC_EXECUTE)
+    permissions |= 2 if access_rights.includes?(LibC::ACCESS_MASK::FILE_GENERIC_WRITE)
+    permissions |= 4 if access_rights.includes?(LibC::ACCESS_MASK::FILE_GENERIC_READ)
+    permissions
+  end
+
+  private class_getter world_sid : LibC::SID* do
+    sid = Pointer(UInt8).malloc(LibC::SECURITY_MAX_SID_SIZE).as(LibC::SID*)
+    size = LibC::DWORD.new!(LibC::SECURITY_MAX_SID_SIZE)
+    if LibC.CreateWellKnownSid(LibC::WELL_KNOWN_SID_TYPE::WinWorldSid, nil, sid, pointerof(size)) == 0
+      raise RuntimeError.from_winerror("CreateWellKnownSid")
+    end
+    sid
   end
 
   private def system_info
@@ -180,7 +230,7 @@ module Crystal::System::FileDescriptor
 
     r_pipe_flags = LibC::FILE_FLAG_NO_BUFFERING
     r_pipe_flags |= LibC::FILE_FLAG_OVERLAPPED unless read_blocking
-    r_pipe = LibC.CreateFileW(System.to_wstr(pipe_name), LibC::GENERIC_READ | LibC::FILE_WRITE_ATTRIBUTES, 0, nil, LibC::OPEN_EXISTING, r_pipe_flags, nil)
+    r_pipe = LibC.CreateFileW(System.to_wstr(pipe_name), LibC::ACCESS_MASK::GENERIC_READ | LibC::ACCESS_MASK::FILE_WRITE_ATTRIBUTES, 0, nil, LibC::OPEN_EXISTING, r_pipe_flags, nil)
     raise IO::Error.from_winerror("CreateFileW") if r_pipe == LibC::INVALID_HANDLE_VALUE
     Crystal::Scheduler.event_loop.create_completion_port(r_pipe) unless read_blocking
 

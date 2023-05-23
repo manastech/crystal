@@ -4,6 +4,8 @@ require "c/int_safe"
 require "c/minwinbase"
 
 lib LibC
+  fun LocalFree(hMem : Void*) : Void*
+
   FORMAT_MESSAGE_ALLOCATE_BUFFER = 0x00000100_u32
   FORMAT_MESSAGE_IGNORE_INSERTS  = 0x00000200_u32
   FORMAT_MESSAGE_FROM_STRING     = 0x00000400_u32
