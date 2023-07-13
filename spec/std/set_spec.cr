@@ -421,4 +421,97 @@ describe "Set" do
       set.clone.compare_by_identity?.should be_true
     end
   end
+
+  describe "keep_if" do
+    it "keeps only elements that evaluate to true" do
+      set = Set{1, 2, 3}
+      set.keep_if { |n| n < 2 }
+      set.should eq(Set{1})
+    end
+
+    it "returns self" do
+      set = Set{1, 2, 3}
+      set.keep_if { |n| n < 2 }.should be(set)
+    end
+  end
+
+  describe "select!" do
+    it "keeps only elements that evaluate to true" do
+      set = Set{1, 2, 3}
+      set.select! { |n| n < 2 }
+      set.should eq(Set{1})
+    end
+
+    it "returns self if changes were made" do
+      set = Set{1, 2, 3}
+      set.select! { |n| n < 2 }.should eq(set)
+    end
+
+    it "returns nil if no changes were made" do
+      set = Set{1, 2, 3}
+      set.select! { |n| n < 4 }.should be_nil
+    end
+  end
+
+  describe "filter!" do
+    it "keeps only elements that evaluate to true" do
+      set = Set{1, 2, 3}
+      set.filter! { |n| n < 2 }
+      set.should eq(Set{1})
+    end
+
+    it "returns self if changes were made" do
+      set = Set{1, 2, 3}
+      set.filter! { |n| n < 2 }.should eq(set)
+    end
+
+    it "returns nil if no changes were made" do
+      set = Set{1, 2, 3}
+      set.filter! { |n| n < 4 }.should be_nil
+    end
+  end
+
+  describe "delete_if" do
+    it "keeps only elements that evaluate to false" do
+      set = Set{1, 2, 3}
+      set.delete_if { |n| n < 2 }
+      set.should eq(Set{2, 3})
+    end
+
+    it "returns self" do
+      set = Set{1, 2, 3}
+      set.delete_if { |n| n < 2 }.should be(set)
+    end
+  end
+
+  describe "reject!" do
+    it "keeps only elements that evaluate to false" do
+      set = Set{1, 2, 3}
+      set.reject! { |n| n < 2 }
+      set.should eq(Set{2, 3})
+    end
+
+    it "returns self if changes were made" do
+      set = Set{1, 2, 3}
+      set.reject! { |n| n < 2 }.should eq(set)
+    end
+
+    it "returns nil if no changes were made" do
+      set = Set{1, 2, 3}
+      set.reject! { |n| n > 4 }.should be_nil
+    end
+  end
+
+  describe "map!" do
+    it "transforms elements" do
+      set = Set{1, 2, 3}
+      set.map! { |n| n + 1 }
+      set.should eq(Set{2, 3, 4})
+    end
+
+    it "returns nil" do
+      set = Set{1, 2, 3}
+      set.map! { |n| n + 1 }.should be_nil
+    end
+  end
 end

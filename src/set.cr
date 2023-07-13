@@ -479,6 +479,46 @@ struct Set(T)
   def same?(other : Set) : Bool
     @hash.same?(other.@hash)
   end
+
+  # Deletes every element of the set for which block evaluates to false, and
+  # returns `self`.
+  def keep_if(& : T ->) : self
+    @hash.select! { |k, v| yield(k) }
+    self
+  end
+
+  # Equivalent to `#keep_if`, but returns nil if no changes were made.
+  def select!(& : T ->) : self | Nil
+    n = size
+    keep_if { |elem| yield(elem) }
+    self if n != size
+  end
+
+  # Alias for `#select!`
+  def filter!(& : T ->) : self | Nil
+    select! { |elem| yield(elem) }
+  end
+
+  # Deletes every element of the set for which block evaluates to true, and
+  # returns `self`.
+  def delete_if(& : T ->) : self
+    @hash.reject! { |k, v| yield(k) }
+    self
+  end
+
+  # Equivalent to `#delete_if`, but returns nil if no changes were made.
+  def reject!(& : T ->) : self | Nil
+    n = size
+    delete_if { |elem| yield(elem) }
+    self if n != size
+  end
+
+  # Transforms each element in the set.
+  def map!(& : T -> T) : Nil
+    hash = Hash(T, Nil).new(initial_capacity: size)
+    each { |elem| hash[yield(elem)] = nil }
+    @hash = hash
+  end
 end
 
 module Enumerable
