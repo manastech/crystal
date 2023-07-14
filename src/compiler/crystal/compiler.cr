@@ -498,8 +498,15 @@ module Crystal
               pr, pw = IO.pipe
               spawn do
                 pr.each_line do |line|
-                  unit = JSON.parse(line)
-                  reused << unit["name"].as_s if unit["reused"].as_bool
+                  unit_info = JSON.parse(line)
+                  reused << unit_info["name"].as_s if unit_info["reused"].as_bool
+
+                  module_idx = unit_info["idx"].as_i
+                  slice.update(module_idx) do |unit|
+                    unit.compilation_time = unit_info["time"].as_f.seconds
+                    unit
+                  end
+
                   @progress_tracker.stage_progress += 1
                 end
               end
@@ -507,10 +514,15 @@ module Crystal
 
             codegen_process = Crystal::System::Process.fork do
               pipe_w = pw
-              slice.each do |unit|
+              slice.each_with_index do |unit, idx|
                 unit.compile
                 if pipe_w
-                  unit_json = {name: unit.name, reused: unit.reused_previous_compilation?}.to_json
+                  unit_json = {
+                    name:   unit.name,
+                    reused: unit.reused_previous_compilation?,
+                    idx:    idx,
+                    time:   unit.compilation_time.total_seconds,
+                  }.to_json
                   pipe_w.puts unit_json
                 end
               end
@@ -573,6 +585,15 @@ module Crystal
         puts "These modules were not reused:"
         not_reused.each do |unit|
           puts " - #{unit.original_name} (#{unit.name}.bc)"
+        end
+      end
+
+      if units.size != reused.size
+        puts
+        puts("Top 10 slowest modules:")
+        units.sort_by! { |u| u.compilation_time * -1 }
+        units.first(10).each do |unit|
+          puts " - #{unit.compilation_time} #{unit.original_name} (#{unit.name}.bc)"
         end
       end
     end
@@ -684,6 +705,7 @@ module Crystal
       getter original_name
       getter llvm_mod
       getter? reused_previous_compilation = false
+      property compilation_time : Time::Span = Time::Span::ZERO
       @object_extension : String
 
       def initialize(@compiler : Compiler, program : Program, @name : String,
@@ -714,7 +736,9 @@ module Crystal
       end
 
       def compile
-        compile_to_object
+        @compilation_time = Time.measure do
+          compile_to_object
+        end
       end
 
       private def compile_to_object
