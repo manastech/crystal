@@ -239,6 +239,13 @@ module Crystal::System::SignalChildHandler
 
   def self.wait(pid : LibC::PidT) : Channel(Int32)
     channel = Channel(Int32).new(1)
+    {% if flag?(:interpreted) %}
+      # Returns channel immediately when interpreted
+      # Waiting for child process in interpreted code
+      # does not rely on signal SIGCHLD and it's handled
+      # in ::Crystal::System::Process.wait
+      return channel
+    {% end %}
 
     @@mutex.lock
     if exit_code = @@pending.delete(pid)

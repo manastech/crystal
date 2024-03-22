@@ -42,6 +42,7 @@ jobs:
   test-interpreter-std_spec:
     needs: build-interpreter
     runs-on: ubuntu-22.04
+    timeout-minutes: 15
     container:
       image: crystallang/crystal:1.11.2-build
     strategy:

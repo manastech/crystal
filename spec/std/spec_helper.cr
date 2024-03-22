@@ -108,12 +108,17 @@ def compile_source(source, flags = %w(), file = __FILE__, &)
 end
 
 def compile_and_run_file(source_file, flags = %w(), runtime_args = %w(), file = __FILE__)
-  compile_file(source_file, flags: flags, file: file) do |executable_file|
-    output, error = IO::Memory.new, IO::Memory.new
-    status = Process.run executable_file, args: runtime_args, output: output, error: error
-
-    {status, output.to_s, error.to_s}
-  end
+  status, output, error = Process::Status.new(0), IO::Memory.new, IO::Memory.new
+  {% if flag?(:interpreted) %}
+    compiler = ENV["CRYSTAL_SPEC_COMPILER_BIN"]? || "bin/crystal"
+    args = ["i", source_file, "--", *runtime_args]
+    status = Process.run compiler, args: args, output: output, error: error
+  {% else %}
+    compile_file(source_file, flags: flags, file: file) do |executable_file|
+      status = Process.run executable_file, args: runtime_args, output: output, error: error
+    end
+  {% end %}
+  {status, output.to_s, error.to_s}
 end
 
 def compile_and_run_source(source, flags = %w(), runtime_args = %w(), file = __FILE__)

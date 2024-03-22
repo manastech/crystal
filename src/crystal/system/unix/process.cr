@@ -15,6 +15,24 @@ struct Crystal::System::Process
   end
 
   def wait
+    {% if flag?(:interpreted) %}
+      exit_code = uninitialized Int32
+      loop do
+        r_pid = LibC.waitpid(pid, pointerof(exit_code), LibC::WNOHANG)
+        case r_pid
+        when 0
+          sleep 1
+        when -1
+          raise RuntimeError.from_errno("waitpid") unless Errno.value == Errno::ECHILD
+          sleep 1
+        else
+          break
+        end
+      end
+
+      @channel.send(exit_code)
+      @channel.close
+    {% end %}
     @channel.receive
   end
 
