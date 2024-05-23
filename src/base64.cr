@@ -294,7 +294,7 @@ module Base64
       i = 8
       while i != 0
         value = 0_u32
-        Intrinsics.memmove(pointerof(value), input, 4, is_volatile: false)
+        Intrinsics.memcpy(pointerof(value), input, 4, is_volatile: false)
         input += 3
 
         value = value.byte_swap
@@ -311,7 +311,7 @@ module Base64
 
     while pairs > 0
       value = 0_u32
-      Intrinsics.memmove(pointerof(value), input, 3, is_volatile: false)
+      Intrinsics.memcpy(pointerof(value), input, 3, is_volatile: false)
       input += 3
 
       value = value.byte_swap
