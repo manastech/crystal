@@ -290,7 +290,7 @@ module Base64
   # *input* must have at least `pairs * 3` bytes available to process,
   # while *output* must have at least `pairs * 4` bytes of storage available.
   private def encode_base64_full_pairs_internal(input : UInt8*, output : UInt8*, pairs : Int32, chars : UInt8*) : Nil
-    while pairs >= 8
+    while pairs > 8
       i = 8
       while i != 0
         value = 0_u32
