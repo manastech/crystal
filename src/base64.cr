@@ -23,9 +23,15 @@ module Base64
   private CHARS_STD  = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/"
   private CHARS_SAFE = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789-_"
   private LINE_SIZE  = 60
+  private LINE_PAIRS = LINE_SIZE // 4
+  private LINE_BYTES = LINE_PAIRS * 3
   private PAD        = '='.ord.to_u8
   private NL         = '\n'.ord.to_u8
   private NR         = '\r'.ord.to_u8
+
+  {% begin %}
+    private STREAM_MAX_INPUT_BUFFER_SIZE = {{ IO::DEFAULT_BUFFER_SIZE // (LINE_SIZE + 1) * (LINE_SIZE // 4 * 3) }}
+  {% end %}
 
   # Returns the base64-encoded version of *data*.
   # This method complies with [RFC 2045](https://tools.ietf.org/html/rfc2045).
@@ -44,67 +50,8 @@ module Base64
   def encode(data) : String
     slice = data.to_slice
     String.new(encode_size(slice.size, new_lines: true)) do |buf|
-      appender = buf.appender
-      encode_with_new_lines(slice) { |byte| appender << byte }
-      size = appender.size
-      {size, size}
-    end
-  end
-
-  # Writes the base64-encoded version of *data* to *io*.
-  # This method complies with [RFC 2045](https://tools.ietf.org/html/rfc2045).
-  # Line feeds are added to every 60 encoded characters.
-  #
-  # ```
-  # Base64.encode("Now is the time for all good coders\nto learn Crystal", STDOUT)
-  # ```
-  def encode(data, io : IO)
-    count = 0
-    encode_with_new_lines(data) do |byte|
-      io << byte.unsafe_chr
-      count += 1
-    end
-    io.flush
-    count
-  end
-
-  private def encode_with_new_lines(data, &)
-    inc = 0
-    to_base64(data.to_slice, CHARS_STD, pad: true) do |byte|
-      yield byte
-      inc += 1
-      if inc >= LINE_SIZE
-        yield NL
-        inc = 0
-      end
-    end
-    if inc > 0
-      yield NL
-    end
-  end
-
-  private def encode_with_new_lines(io : IO, &)
-    inc = 0
-    # Base64 operates in 3-byte segments, so we use a buffer size that is a
-    # multiple of 3.
-    buffer = StaticArray(UInt8, 8193).new { 0u8 }
-    bytes = buffer.to_slice
-
-    loop do
-      bytes_read = io.read(bytes)
-      break if bytes_read == 0
-
-      to_base64(bytes[0, bytes_read], CHARS_STD, pad: bytes_read < bytes.bytesize) do |byte|
-        yield byte
-        inc += 1
-        if inc >= LINE_SIZE
-          yield NL
-          inc = 0
-        end
-      end
-    end
-    if inc > 0
-      yield NL
+      bytes_written = encode_base64_buffer_internal(slice.to_unsafe, slice.size, buf, CHARS_STD.to_unsafe, newlines: true, pad: true)
+      {bytes_written, bytes_written}
     end
   end
 
@@ -121,37 +68,11 @@ module Base64
   # Tm93IGlzIHRoZSB0aW1lIGZvciBhbGwgZ29vZCBjb2RlcnMKdG8gbGVhcm4gQ3J5c3RhbA==
   # ```
   def strict_encode(data) : String
-    strict_encode data, CHARS_STD, pad: true
-  end
-
-  private def strict_encode(data, alphabet, pad = false)
     slice = data.to_slice
     String.new(encode_size(slice.size)) do |buf|
-      appender = buf.appender
-      to_base64(slice, alphabet, pad: pad) { |byte| appender << byte }
-      size = appender.size
-      {size, size}
+      written_bytes = encode_base64_buffer_internal(slice.to_unsafe, slice.size, buf, CHARS_STD.to_unsafe, pad: true)
+      {written_bytes, written_bytes}
     end
-  end
-
-  # Writes the base64-encoded version of *data* with no newlines to *io*.
-  # This method complies with [RFC 4648](https://tools.ietf.org/html/rfc4648).
-  #
-  # ```
-  # Base64.strict_encode("Now is the time for all good coders\nto learn Crystal", STDOUT)
-  # ```
-  def strict_encode(data, io : IO)
-    strict_encode_to_io_internal(data, io, CHARS_STD, pad: true)
-  end
-
-  private def strict_encode_to_io_internal(data, io, alphabet, pad)
-    count = 0
-    to_base64(data.to_slice, alphabet, pad: pad) do |byte|
-      count += 1
-      io << byte.unsafe_chr
-    end
-    io.flush
-    count
   end
 
   # Returns the base64-encoded version of *data* using a urlsafe alphabet.
@@ -165,11 +86,36 @@ module Base64
   def urlsafe_encode(data, padding = true) : String
     slice = data.to_slice
     String.new(encode_size(slice.size)) do |buf|
-      appender = buf.appender
-      to_base64(slice, CHARS_SAFE, pad: padding) { |byte| appender << byte }
-      size = appender.size
-      {size, size}
+      bytes_written = encode_base64_buffer_internal(slice.to_unsafe, slice.size, buf, CHARS_SAFE.to_unsafe, pad: padding)
+      {bytes_written, bytes_written}
     end
+  end
+
+  # Writes the base64-encoded version of *data* to *io*.
+  # This method complies with [RFC 2045](https://tools.ietf.org/html/rfc2045).
+  # Line feeds are added to every 60 encoded characters.
+  #
+  # ```
+  # Base64.encode("Now is the time for all good coders\nto learn Crystal", STDOUT)
+  # ```
+  def encode(data, io : IO) : Int32
+    slice = data.to_slice
+    encode_base64_chunked_internal(slice.to_unsafe, slice.size, CHARS_STD.to_unsafe, newlines: true, pad: true) do |buf|
+      io.write_string(buf)
+    end.tap { io.flush }
+  end
+
+  # Writes the base64-encoded version of *data* with no newlines to *io*.
+  # This method complies with [RFC 4648](https://tools.ietf.org/html/rfc4648).
+  #
+  # ```
+  # Base64.strict_encode("Now is the time for all good coders\nto learn Crystal", STDOUT)
+  # ```
+  def strict_encode(data, io : IO) : Int32
+    slice = data.to_slice
+    encode_base64_chunked_internal(slice.to_unsafe, slice.size, CHARS_STD.to_unsafe, pad: true) do |buf|
+      io.write_string(buf)
+    end.tap { io.flush }
   end
 
   # Writes the base64-encoded version of *data* using a urlsafe alphabet to *io*.
@@ -177,8 +123,26 @@ module Base64
   # Alphabet" in [RFC 4648](https://tools.ietf.org/html/rfc4648).
   #
   # The alphabet uses `'-'` instead of `'+'` and `'_'` instead of `'/'`.
-  def urlsafe_encode(data, io : IO)
-    strict_encode_to_io_internal(data, io, CHARS_SAFE, pad: true)
+  def urlsafe_encode(data, io : IO, padding = true) : Int32
+    slice = data.to_slice
+    encode_base64_chunked_internal(slice.to_unsafe, slice.size, CHARS_SAFE.to_unsafe, pad: padding) do |buf|
+      io.write_string(buf)
+    end.tap { io.flush }
+  end
+
+  # :nodoc:
+  def encode(data : IO, io : IO) : Int64
+    encode_base64_stream_internal(data, io, CHARS_STD.to_unsafe, newlines: true, pad: true)
+  end
+
+  # :nodoc:
+  def strict_encode(data : IO, io : IO) : Int64
+    encode_base64_stream_internal(data, io, CHARS_STD.to_unsafe, pad: true)
+  end
+
+  # :nodoc:
+  def urlsafe_encode(data : IO, io : IO, padding = true) : Int64
+    encode_base64_stream_internal(data, io, CHARS_SAFE.to_unsafe, pad: padding)
   end
 
   # Returns the base64-decoded version of *data* as a `Bytes`.
@@ -224,50 +188,171 @@ module Base64
     (str_size * 3 / 4.0).to_i + 4
   end
 
-  private def to_base64(data, chars, pad = false, &)
-    bytes = chars.to_unsafe
-    size = data.size
-    cstr = data.to_unsafe
-    return if cstr.null? || size == 0
-    endcstr = cstr + size - size % 3 - 3
+  # Internal method for encoding bytes from one stream as base64 into another one.
+  # Returns the amount of bytes written into output.
+  private def encode_base64_stream_internal(input : IO, output : IO, chars : UInt8*, *, newlines : Bool = false, pad : Bool = false) : Int64
+    input_buffer = uninitialized UInt8[STREAM_MAX_INPUT_BUFFER_SIZE]
+    output_buffer = uninitialized UInt8[IO::DEFAULT_BUFFER_SIZE]
 
-    # process bunch of full triples
-    while cstr < endcstr
-      n = cstr.as(UInt32*).value.byte_swap
-      yield bytes[(n >> 26) & 63]
-      yield bytes[(n >> 20) & 63]
-      yield bytes[(n >> 14) & 63]
-      yield bytes[(n >> 8) & 63]
-      cstr += 3
-    end
+    input_slice = input_buffer.to_slice
 
-    # process last full triple manually, because reading UInt32 not correct for guarded memory
-    if size >= 3
-      n = (cstr.value.to_u32 << 16) | ((cstr + 1).value.to_u32 << 8) | (cstr + 2).value
-      yield bytes[(n >> 18) & 63]
-      yield bytes[(n >> 12) & 63]
-      yield bytes[(n >> 6) & 63]
-      yield bytes[(n) & 63]
-      cstr += 3
-    end
+    required_bytes = newlines ? LINE_BYTES : 3
+    total_written = 0_i64
 
-    # process last partial triple
-    pd = size % 3
-    if pd == 1
-      n = (cstr.value.to_u32 << 16)
-      yield bytes[(n >> 18) & 63]
-      yield bytes[(n >> 12) & 63]
-      if pad
-        yield PAD
-        yield PAD
+    while true
+      unprocessable_bytes = 0
+      read_bytes = input.read(input_slice)
+
+      input_slice += read_bytes
+      available_bytes = (input_buffer.size &- input_slice.size)
+
+      if read_bytes != 0
+        next if available_bytes < required_bytes
+        unprocessable_bytes = available_bytes % required_bytes
       end
-    elsif pd == 2
-      n = (cstr.value.to_u32 << 16) | ((cstr + 1).value.to_u32 << 8)
-      yield bytes[(n >> 18) & 63]
-      yield bytes[(n >> 12) & 63]
-      yield bytes[(n >> 6) & 63]
-      yield PAD if pad
+
+      written = encode_base64_buffer_internal(input_buffer.to_unsafe, available_bytes &- unprocessable_bytes, output_buffer.to_unsafe, chars, newlines: newlines, pad: pad)
+      total_written += written
+      output.write_string(output_buffer.to_slice[0, written])
+
+      break if read_bytes == 0
+
+      # Move unprocessed bytes to the beginning of input_buffer
+      Intrinsics.memmove(input_buffer.to_unsafe, input_buffer.to_unsafe + unprocessable_bytes, unprocessable_bytes, is_volatile: false) unless unprocessable_bytes == 0
+      input_slice = input_buffer.to_slice + unprocessable_bytes
     end
+
+    total_written
+  end
+
+  # Internal method for encoding bytes from one buffer as base64, using chunks allocated by this method.
+  # Returns the amount of bytes written into output.
+  private def encode_base64_chunked_internal(
+    input : UInt8*, input_size : Int32, chars : UInt8*, *, newlines : Bool = false, pad : Bool = false, & : Bytes -> Nil
+  ) : Int32
+    total_written_bytes = 0
+
+    # Make sure output's size is a multiple of (LINE_SIZE + 1) and 4,
+    # so we never cut-off pairs/lines in the middle of the output.
+    output = uninitialized UInt8[IO::DEFAULT_BUFFER_SIZE]
+
+    while input_size > 0
+      process_bytes = Math.min(STREAM_MAX_INPUT_BUFFER_SIZE, input_size)
+      written_bytes = encode_base64_buffer_internal(input, process_bytes, output.to_unsafe, chars, newlines: newlines, pad: pad)
+
+      input += process_bytes
+      input_size &-= process_bytes
+
+      yield output.to_slice[0, written_bytes]
+      total_written_bytes &+= written_bytes
+    end
+
+    total_written_bytes
+  end
+
+  # Internal method for encoding bytes from one buffer as base64 into another one (backend of *every* encoding method).
+  # Returns the amount of bytes written into output.
+  private def encode_base64_buffer_internal(input : UInt8*, input_size : Int32, output : UInt8*, chars : UInt8*, *, newlines : Bool = false, pad : Bool = false) : Int32
+    initial_output = output
+
+    if newlines
+      while input_size > LINE_BYTES
+        encode_base64_full_pairs_internal(input, output, LINE_PAIRS, chars)
+
+        input += LINE_BYTES
+        input_size &-= LINE_BYTES
+        output += LINE_SIZE
+        output.value = NL
+        output += 1
+      end
+    end
+
+    return (output.address &- initial_output.address).to_i32! if input_size <= 0
+    pairs, remaining_bytes = input_size.divmod(3)
+
+    encode_base64_full_pairs_internal(input, output, pairs, chars)
+    output += pairs &* 4
+
+    if remaining_bytes > 0
+      output += encode_base64_final_pair_internal(input + (pairs &* 3), remaining_bytes, output, chars, pad: pad)
+    end
+
+    if newlines
+      output.value = NL
+      output += 1
+    end
+
+    (output.address &- initial_output.address).to_i32!
+  end
+
+  # Internal method for encoding *pairs* times full 3-byte data pairs into 4-byte base64 pairs, without padding.
+  #
+  # *input* must have at least `pairs * 3` bytes available to process,
+  # while *output* must have at least `pairs * 4` bytes of storage available.
+  private def encode_base64_full_pairs_internal(input : UInt8*, output : UInt8*, pairs : Int32, chars : UInt8*) : Nil
+    while pairs >= 8
+      i = 8
+      while i != 0
+        value = 0_u32
+        Intrinsics.memmove(pointerof(value), input, 4, is_volatile: false)
+        input += 3
+
+        value = value.byte_swap
+
+        output[0] = chars[(value >> 26) & 63]
+        output[1] = chars[(value >> 20) & 63]
+        output[2] = chars[(value >> 14) & 63]
+        output[3] = chars[(value >> 8) & 63]
+        output += 4
+        i &-= 1
+      end
+      pairs &-= 8
+    end
+
+    while pairs > 0
+      value = 0_u32
+      Intrinsics.memmove(pointerof(value), input, 3, is_volatile: false)
+      input += 3
+
+      value = value.byte_swap
+
+      output[0] = chars[(value >> 26) & 63]
+      output[1] = chars[(value >> 20) & 63]
+      output[2] = chars[(value >> 14) & 63]
+      output[3] = chars[(value >> 8) & 63]
+      output += 4
+      pairs &-= 1
+    end
+  end
+
+  # Internal method for encoding the final 1-2 bytes of an input to base64 with or without padding.
+  # Returns the amount of bytes written into output.
+  #
+  # This method assumes that `1 <= input_size <= 2`.
+  # Otherwise, the method's behaviour is undefined.
+  #
+  # If `pad == `true`, exactly 4 bytes will be written to *output*.
+  # Otherwise, `(input_size + 1)` bytes will be written to *output*.
+  private def encode_base64_final_pair_internal(input : UInt8*, input_size : Int32, output : UInt8*, chars : UInt8*, *, pad : Bool = false) : Int32
+    in0 = input[0]
+    output[0] = chars[in0 >> 2]
+
+    if input_size == 1
+      output[1] = chars[in0 << 6 >> 2]
+      return 2 unless pad
+
+      output[2] = PAD
+      output[3] = PAD
+    else
+      in1 = input[1]
+      output[1] = chars[(in0 << 6 >> 2) | (in1 >> 4)]
+      output[2] = chars[(in1 << 4 >> 2)]
+      return 3 unless pad
+
+      output[3] = PAD
+    end
+
+    4
   end
 
   # Processes the given data and yields each byte.
