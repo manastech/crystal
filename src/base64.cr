@@ -70,8 +70,8 @@ module Base64
   def strict_encode(data) : String
     slice = data.to_slice
     String.new(encode_size(slice.size)) do |buf|
-      written_bytes = encode_base64_buffer_internal(slice.to_unsafe, slice.size, buf, CHARS_STD.to_unsafe, pad: true)
-      {written_bytes, written_bytes}
+      bytes_written = encode_base64_buffer_internal(slice.to_unsafe, slice.size, buf, CHARS_STD.to_unsafe, pad: true)
+      {bytes_written, bytes_written}
     end
   end
 
