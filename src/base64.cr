@@ -290,6 +290,14 @@ module Base64
   # *input* must have at least `pairs * 3` bytes available to process,
   # while *output* must have at least `pairs * 4` bytes of storage available.
   private def encode_base64_full_pairs_internal(input : UInt8*, output : UInt8*, pairs : Int32, chars : UInt8*) : Nil
+    # On most archivectures supported by crystal, unaligned memory access is very cheap.
+    # This section thus tries to improve performance by unrolling the loop and by replacing
+    # three aligned UInt8 accesses by one unaligned UInt32 access (discarding the last byte).
+    # The condition `pairs > 8` makes sure that there's at least one pair which is processed byte by byte,
+    # so we never accidentally read one byte further than we're allowed to (-> possible segfault).
+    #
+    # NOTE: On weak-memory architectures like risc-v, llvm must replace the
+    # unaligned UInt32 access by *four* aligned UInt8 accesses, degrading performance.
     while pairs > 8
       i = 8
       while i != 0
