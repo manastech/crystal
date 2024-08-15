@@ -176,6 +176,20 @@ class File < IO::FileDescriptor
     new(filename, fd, blocking: blocking, encoding: encoding, invalid: invalid).tap { |f| f.system_set_mode(mode) }
   end
 
+  # Creates a named pipe (also known as a fifo file) at specified *path*,
+  # raises an exception on error, returns nil on success.
+  #
+  # You can also set permissions via the second parameter 
+  #
+  #```
+  # File.mkfifo("foo")
+  # File.mkfifo("foo", 0o600)
+  #```
+  def self.mkfifo(path : Path | String, perm = DEFAULT_CREATE_PERMISSIONS) : Nil
+    path = path.to_s
+    Crystal::System::File.mkfifo(path, perm)
+  end
+
   getter path : String
 
   # Returns a `File::Info` object for the file given by *path* or returns `nil`
