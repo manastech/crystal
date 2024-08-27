@@ -119,6 +119,10 @@ class Crystal::Command
       STDERR.puts "Couldn't determine version from git or shard.yml, please provide --project-version option"
     end
 
+    if Crystal::Doc::MarkdDocRenderer::SANITIZER.nil?
+      STDERR.puts "Crystal built without LibXML2 support, documentation sanitization disabled"
+    end
+
     unless project_info.name? && project_info.version?
       abort
     end

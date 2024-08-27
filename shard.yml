@@ -2,7 +2,7 @@ name: crystal
 version: 1.14.0-dev
 
 authors:
-- Crystal Core Team <crystal@manas.tech>
+  - Crystal Core Team <crystal@manas.tech>
 
 description: |
   The Crystal standard library and compiler.
@@ -15,6 +15,9 @@ dependencies:
   reply:
     github: I3oris/reply
     commit: 90a7eb5a76048884d5d56bf6b9369f1e67fdbcd7
+  sanitize:
+    github: straight-shoota/sanitize
+    commit: 75c141b619c77956e88f557149566cd28876398b
 
 license: Apache-2.0
 

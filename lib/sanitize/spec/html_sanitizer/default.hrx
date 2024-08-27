@@ -1,0 +1,138 @@
+<===> invalid/fragment.html
+<invalid>foo<p>bar</p>bazz</invalid><div>quux</div>
+<===> invalid/stripped.html
+foo<p>bar</p>bazz<div>quux</div>
+<===> invalid/escaped.html
+&lt;invalid&gt;foo&lt;p&gt;bar&lt;/p&gt;bazz&lt;/invalid&gt;<div>quux</div>
+<===> invalid/pruned.html
+<div>quux</div>
+<===>
+
+
+<===> bad_argument/fragment.html
+<div invalid="bar">foo</div>
+<===> bad_argument/stripped.html
+<div>foo</div>
+<===>
+
+<==> whitewash/fragment.html
+<o:div>no</o:div><div id='no'>foo</div><invalid>bar</invalid><!--[if gts mso9]><div>microsofty stuff</div><![endif]-->
+<==> whitewash/pruned.html
+<div>foo</div>
+<==>
+
+
+<===> nofollow/fragment.html
+<a href="http://www.example.com/">Click here</a>
+<===> nofollow/stripped.html
+<a href="http://www.example.com/" rel="nofollow">Click here</a>
+<===>
+
+
+<===> nofollow-rel/fragment.html
+<a href="http://www.example.com/" rel="noopener">Click here</a>
+<===> nofollow-rel/stripped.html
+<a href="http://www.example.com/" rel="noopener nofollow">Click here</a>
+<===>
+
+
+<===> unprintable/fragment.html
+<b>Lo\u2029ofah ro\u2028cks!</b><script>x\u2028y</script>
+<===> unprintable/stripped.html
+<b>Loofah rocks!</b><script>xy</script>
+<===>
+
+
+<===> msword/fragment.html
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8"><meta name="ProgId" content="Word.Document"><meta name="Generator" content="Microsoft Word 11"><meta name="Originator" content="Microsoft Word 11"><link rel="File-List" href="file:///C:%5CDOCUME%7E1%5CNICOLE%7E1%5CLOCALS%7E1%5CTemp%5Cmsohtml1%5C01%5Cclip_filelist.xml"><!--[if gte mso 9]><xml>
+<w:WordDocument>
+  <w:View>Normal</w:View>
+  <w:Zoom>0</w:Zoom>
+  <w:PunctuationKerning/>
+  <w:ValidateAgainstSchemas/>
+  <w:SaveIfXMLInvalid>false</w:SaveIfXMLInvalid>
+  <w:IgnoreMixedContent>false</w:IgnoreMixedContent>
+  <w:AlwaysShowPlaceholderText>false</w:AlwaysShowPlaceholderText>
+  <w:Compatibility>
+  <w:BreakWrappedTables/>
+  <w:SnapToGridInCell/>
+  <w:WrapTextWithPunct/>
+  <w:UseAsianBreakRules/>
+  <w:DontGrowAutofit/>
+  </w:Compatibility>
+  <w:BrowserLevel>MicrosoftInternetExplorer4</w:BrowserLevel>
+</w:WordDocument>
+</xml><![endif]--><!--[if gte mso 9]><xml>
+<w:LatentStyles DefLockedState="false" LatentStyleCount="156">
+</w:LatentStyles>
+</xml><![endif]--><style>
+<!--
+/* Style Definitions */
+p.MsoNormal, li.MsoNormal, div.MsoNormal
+{mso-style-parent:"";
+margin:0in;
+margin-bottom:.0001pt;
+mso-pagination:widow-orphan;
+font-size:12.0pt;
+font-family:"Times New Roman";
+mso-fareast-font-family:"Times New Roman";}
+@page Section1
+{size:8.5in 11.0in;
+margin:1.0in 1.25in 1.0in 1.25in;
+mso-header-margin:.5in;
+mso-footer-margin:.5in;
+mso-paper-source:0;}
+div.Section1
+{page:Section1;}
+-->
+</style><!--[if gte mso 10]>
+<style>
+/* Style Definitions */
+table.MsoNormalTable
+{mso-style-name:"Table Normal";
+mso-tstyle-rowband-size:0;
+mso-tstyle-colband-size:0;
+mso-style-noshow:yes;
+mso-style-parent:"";
+mso-padding-alt:0in 5.4pt 0in 5.4pt;
+mso-para-margin:0in;
+mso-para-margin-bottom:.0001pt;
+mso-pagination:widow-orphan;
+font-size:10.0pt;
+font-family:"Times New Roman";
+mso-ansi-language:#0400;
+mso-fareast-language:#0400;
+mso-bidi-language:#0400;}
+</style>
+<![endif]-->
+
+<p class="MsoNormal">Foo <b style="">BOLD<o:p></o:p></b></p>
+<===> msword/stripped.html
+<html><head>
+
+</head><body><p>Foo <b>BOLD</b></p>
+<===>
+
+
+<===> entities/fragment.html
+<p>foo&nbsp;bar</p>
+<===>
+
+
+<===> align/fragment.html
+<p align="center">foo</p>
+<===>
+
+
+<===> align-empty/fragment.html
+<p align="">foo</p>
+<===> align-empty/common.html
+<p>foo</p>
+<===>
+
+
+<===> align-invalid/fragment.html
+<p align="middle">foo</p>
+<===> align-invalid/common.html
+<p>foo</p>
+<===>

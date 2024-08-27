@@ -1,0 +1,15 @@
+name: sanitize
+version: 0.1.0
+
+authors:
+  - Johannes Müller <straightshoota@gmail.com>
+
+crystal: 0.35.0
+
+license: Apache-2.0
+
+documentation: https://straight-shoota.github.io/sanitize/api/latest/
+
+development_dependencies:
+  hrx:
+    github: straight-shoota/hrx

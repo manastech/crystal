@@ -1,0 +1,67 @@
+<==> simple/fragment.html
+<p>foo</p>
+<==> simple/text.html
+foo
+<==>
+
+
+<==> whitespace between elements1/fragment.html
+foo<br/>bar
+<==> whitespace between elements1/text.html
+foo bar
+<==>
+
+
+<==> whitespace between elements2/fragment.html
+<p>foo</p><p>bar</p>
+<==> whitespace between elements2/text.html
+foo bar
+<==>
+
+
+<==> whitespace between elements3/fragment.html
+<p>foo</p><p> bar</p>
+<==> whitespace between elements3/text.html
+foo bar
+<==>
+
+
+<==> whitespace between elements4/fragment.html
+<b>foo</b><b>bar</b>
+<==> whitespace between elements4/text.html
+foobar
+<==>
+
+
+<==> whitespace between elements5/fragment.html
+<B>foo</B><P>bar</P>
+<==> whitespace between elements5/text.html
+foo bar
+<==>
+
+
+<==> complex/fragment.html
+<b>Lo<!-- comment -->rem</b> <a href="pants" title="foo" style="text-decoration: underline;">ipsum</a> <a href="http://foo.com/"><strong>dolor</strong></a> sit<br/>amet <style>.foo { color: #fff; }</style> <script>alert("hello world");</script>
+<==> complex/text.html
+Lorem ipsum dolor sit amet
+<==>
+
+
+# Pending because libxml2 behaviour changed in 2.9.13 (https://gitlab.gnome.org/GNOME/libxml2/-/issues/339)
+<==> pending:html-special-chars/fragment.html
+<<foo>script>
+<==> pending:html-special-chars/text.html
+&lt;script&gt;
+<==>
+
+
+<==> prune script/fragment.html
+<script>foo</script>
+<==> prune script/text.html
+<==>
+
+
+<==> prune style/fragment.html
+<style>foo</style>
+<==> prune script/text.html
+<==>

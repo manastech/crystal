@@ -8,3 +8,7 @@ shards:
     git: https://github.com/i3oris/reply.git
     version: 0.3.1+git.commit.90a7eb5a76048884d5d56bf6b9369f1e67fdbcd7
 
+  sanitize:
+    git: https://github.com/straight-shoota/sanitize.git
+    version: 0.1.0+git.commit.75c141b619c77956e88f557149566cd28876398b
+

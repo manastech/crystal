@@ -1,0 +1,160 @@
+
+<===> simple, no spaces/fragment.html
+<a href="javascript:alert(\'XSS\');">foo</a>
+<===> simple, no spaces/common.html
+foo
+<===> simple, no spaces/restricted.html
+foo
+<===> simple, no spaces/basic.html
+<a rel="nofollow">foo</a>
+<===> simple, no spaces/relaxed.html
+<a>foo</a>
+
+<===> simple, spaces before/fragment.html
+<a href="javascript    :alert(\'XSS\');">foo</a>
+<===> simple, spaces before/common.html
+foo
+<===> simple, spaces before/restricted.html
+foo
+<===> simple, spaces before/basic.html
+<a rel="nofollow">foo</a>
+<===> simple, spaces before/relaxed.html
+<a>foo</a>
+
+<===> simple, spaces after/fragment.html
+<a href="javascript:    alert(\'XSS\');">foo</a>
+<===> simple, spaces after/common.html
+foo
+<===> simple, spaces after/restricted.html
+foo
+<===> simple, spaces after/basic.html
+<a rel="nofollow">foo</a>
+<===> simple, spaces after/relaxed.html
+<a>foo</a>
+
+<===> simple, spaces before and after/fragment.html
+<a href="javascript    :   alert(\'XSS\');">foo</a>
+<===> simple, spaces before and after/common.html
+foo
+<===> simple, spaces before and after/restricted.html
+foo
+<===> simple, spaces before and after/basic.html
+<a rel="nofollow">foo</a>
+<===> simple, spaces before and after/relaxed.html
+<a>foo</a>
+
+<===> preceding colon/fragment.html
+<a href=":javascript:alert(\'XSS\');">foo</a>
+<===> preceding colon/common.html
+foo
+<===> preceding colon/restricted.html
+foo
+<===> preceding colon/basic.html
+<a rel="nofollow">foo</a>
+<===> preceding colon/relaxed.html
+<a>foo</a>
+
+<===> UTF-8 encoding/fragment.html
+<a href="javascript&#58;">foo</a>
+<===> UTF-8 encoding/common.html
+foo
+<===> UTF-8 encoding/restricted.html
+foo
+<===> UTF-8 encoding/basic.html
+<a rel="nofollow">foo</a>
+<===> UTF-8 encoding/relaxed.html
+<a>foo</a>
+
+<===> long UTF-8 encoding/fragment.html
+<a href="javascript&#0058;">foo</a>
+<===> long UTF-8 encoding/common.html
+foo
+<===> long UTF-8 encoding/restricted.html
+foo
+<===> long UTF-8 encoding/basic.html
+<a rel="nofollow">foo</a>
+<===> long UTF-8 encoding/relaxed.html
+<a>foo</a>
+
+<===> long UTF-8 encoding without semicolons/fragment.html
+<a href=&#0000106&#0000097&#0000118&#0000097&#0000115&#0000099&#0000114&#0000105&#0000112&#0000116&#0000058&#0000097&#0000108&#0000101&#0000114&#0000116&#0000040&#0000039&#0000088&#0000083&#0000083&#0000039&#0000041>foo</a>
+<===> long UTF-8 encoding without semicolons/common.html
+foo
+<===> long UTF-8 encoding without semicolons/restricted.html
+foo
+<===> long UTF-8 encoding without semicolons/basic.html
+<a rel="nofollow">foo</a>
+<===> long UTF-8 encoding without semicolons/relaxed.html
+<a>foo</a>
+
+<===> hex encoding/fragment.html
+<a href="javascript&#x3A;">foo</a>
+<===> hex encoding/common.html
+foo
+<===> hex encoding/restricted.html
+foo
+<===> hex encoding/basic.html
+<a rel="nofollow">foo</a>
+<===> hex encoding/relaxed.html
+<a>foo</a>
+
+<===> long hex encoding/fragment.html
+<a href="javascript&#x003A;">foo</a>
+<===> long hex encoding/common.html
+foo
+<===> long hex encoding/restricted.html
+foo
+<===> long hex encoding/basic.html
+<a rel="nofollow">foo</a>
+<===> long hex encoding/relaxed.html
+<a>foo</a>
+
+<===> hex encoding without semicolons/fragment.html
+<a href=&#x6A&#x61&#x76&#x61&#x73&#x63&#x72&#x69&#x70&#x74&#x3A&#x61&#x6C&#x65&#x72&#x74&#x28&#x27&#x58&#x53&#x53&#x27&#x29>foo</a>
+<===> hex encoding without semicolons/common.html
+foo
+<===> hex encoding without semicolons/restricted.html
+foo
+<===> hex encoding without semicolons/basic.html
+<a rel="nofollow">foo</a>
+<===> hex encoding without semicolons/relaxed.html
+<a>foo</a>
+
+<===> null char/fragment.html
+<img src=java\0script:alert(\"XSS\")>
+<===> null char/common.html
+<===> null char/restricted.html
+<===> null char/basic.html
+<===> null char/relaxed.html
+<===> invalid URL char/fragment.html
+<img src=java\script:alert("XSS")>
+<===> invalid URL char/common.html
+
+<===> invalid URL char/restricted.html
+
+<===> invalid URL char/basic.html
+
+<===> invalid URL char/relaxed.html
+<img>
+
+<===> spaces and entities/fragment.html
+<img src=" &#14;  javascript:alert(\'XSS\');">
+<===> spaces and entities/common.html
+
+<===> spaces and entities/restricted.html
+
+<===> spaces and entities/basic.html
+
+<===> spaces and entities/relaxed.html
+<img>
+
+<===> protocol whitespace/fragment.html
+<a href=" http://example.com/"></a>
+<===> protocol whitespace/common.html
+
+<===> protocol whitespace/restricted.html
+
+<===> protocol whitespace/basic.html
+<a href="http://example.com/" rel="nofollow"></a>
+<===> protocol whitespace/relaxed.html
+<a href="http://example.com/"></a>

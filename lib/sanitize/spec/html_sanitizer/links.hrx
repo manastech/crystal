@@ -1,0 +1,89 @@
+<===> links/1/fragment.html
+<a href="http://www.google.com"></a>
+<===> links/1/common.html
+<a href="http://www.google.com" rel="nofollow"/>
+<===>
+
+
+<===> links/2/fragment.html
+<a href="//www.google.com"></a>
+<===> links/2/common.html
+<a href="//www.google.com" rel="nofollow"/>
+<===>
+
+
+<===> links/3/fragment.html
+<a href="/www.google.com"></a>
+<===> links/3/common.html
+<a href="/www.google.com" rel="nofollow"/>
+<===>
+
+
+<===> links/4/fragment.html
+<a href="www.google.com"></a>
+<===> links/4/common.html
+<a href="www.google.com" rel="nofollow"/>
+<===>
+
+
+<===> links/5/fragment.html
+<a href="javascript:alert(1)"></a>
+<===> links/5/common.html
+
+<===>
+
+
+<===> links/6/fragment.html
+<a href="#"></a>
+<===> links/6/common.html
+
+<===>
+
+
+<===> links/7/fragment.html
+<a href="#top"></a>
+<===> links/7/common.html
+<a href="#top" rel="nofollow"/>
+<===>
+
+
+<===> links/8/fragment.html
+<a href="?q=1"></a>
+<===> links/8/common.html
+<a href="?q=1" rel="nofollow"/>
+<===>
+
+
+<===> links/9/fragment.html
+<a href="?q=1&r=2"></a>
+<===> links/9/common.html
+<a href="?q=1&amp;r=2" rel="nofollow"/>
+<===>
+
+
+<===> links/10/fragment.html
+<a href="?q=1&r=2&s=:foo@"></a>
+<===> links/10/common.html
+<a href="?q=1&amp;r=2&amp;s=:foo@" rel="nofollow"/>
+<===>
+
+
+<===> links/11/fragment.html
+<img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAUAAAAFCAYAAACNbyblAAAAHElEQVQI12P4//8/w38GIAXDIBKE0DHxgljNBAAO9TXL0Y4OHwAAAABJRU5ErkJggg==" alt="Red dot" />
+<===> links/11/common.html
+<img src="" alt="Red dot"/>
+<===>
+
+
+<===> links/12/fragment.html
+<img src="giraffe.gif" />
+<===> links/12/common.html
+<img src="giraffe.gif"/>
+<===>
+
+
+<===> links/13/fragment.html
+<img src="giraffe.gif?height=500&width=500" />
+<===> links/13/common.html
+<img src="giraffe.gif?height=500&amp;width=500"/>
+<===>

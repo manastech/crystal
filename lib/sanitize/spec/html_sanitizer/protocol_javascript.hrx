@@ -1,0 +1,67 @@
+<===>  simple, no spaces/fragment.html
+<a href="javascript:alert(\'XSS\');">foo</a>
+<===>  simple, no spaces/common.html
+foo
+<===>  simple, spaces before/fragment.html
+<a href="javascript    :alert(\'XSS\');">foo</a>
+<===>
+# TODO: Maybe this should strip the a tag
+<===>  simple, spaces before/common.html
+<a href="javascript%20%20%20%20:alert(%5C'XSS%5C');" rel="nofollow">foo</a>
+<===>  simple, spaces after/fragment.html
+<a href="javascript:    alert(\'XSS\');">foo</a>
+<===>  simple, spaces after/common.html
+foo
+<===>  simple, spaces before and after/fragment.html
+<a href="javascript    :   alert(\'XSS\');">foo</a>
+<===>
+# TODO: Maybe this should strip the a tag
+<===>  simple, spaces before and after/common.html
+<a href="javascript%20%20%20%20:%20%20%20alert(%5C'XSS%5C');" rel="nofollow">foo</a>
+<===>  preceding colon/fragment.html
+<a href=":javascript:alert(\'XSS\');">foo</a>
+<===>
+# TODO: Maybe this should strip the a tag
+<===>  preceding colon/common.html
+<a href=":javascript:alert(%5C'XSS%5C');" rel="nofollow">foo</a>
+<===>  UTF-8 encoding/fragment.html
+<a href="javascript&#58;">foo</a>
+<===>  UTF-8 encoding/common.html
+foo
+<===>  long UTF-8 encoding/fragment.html
+<a href="javascript&#0058;">foo</a>
+<===>  long UTF-8 encoding/common.html
+foo
+<===>  long UTF-8 encoding without semicolons/fragment.html
+<a href=&#0000106&#0000097&#0000118&#0000097&#0000115&#0000099&#0000114&#0000105&#0000112&#0000116&#0000058&#0000097&#0000108&#0000101&#0000114&#0000116&#0000040&#0000039&#0000088&#0000083&#0000083&#0000039&#0000041>foo</a>
+<===>  long UTF-8 encoding without semicolons/common.html
+foo
+<===>  hex encoding/fragment.html
+<a href="javascript&#x3A;">foo</a>
+<===>  hex encoding/common.html
+foo
+<===>  long hex encoding/fragment.html
+<a href="javascript&#x003A;">foo</a>
+<===>  long hex encoding/common.html
+foo
+<===>  hex encoding without semicolons/fragment.html
+<a href=&#x6A&#x61&#x76&#x61&#x73&#x63&#x72&#x69&#x70&#x74&#x3A&#x61&#x6C&#x65&#x72&#x74&#x28&#x27&#x58&#x53&#x53&#x27&#x29>foo</a>
+<===>  hex encoding without semicolons/common.html
+foo
+<===> null char/fragment.html
+<img src=java\0script:alert(\"XSS\")>
+<===>
+# TODO: Maybe this should strip the a tag
+<===> null char/common.html
+<img src="java%5C0script:alert(%5C%22XSS%5C%22)"/>
+<===>  invalid URL char/fragment.html
+<img src=java\script:alert("XSS")>
+<===>
+# TODO: Maybe this should strip the a tag
+<===>  invalid URL char/common.html
+<img src="java%5Cscript:alert(%22XSS%22)"/>
+<===>  spaces and entities/fragment.html
+<img src=" &#14;  javascript:alert(\'XSS\');">
+<===>  spaces and entities/common.html
+<img src=""/>
+<===>

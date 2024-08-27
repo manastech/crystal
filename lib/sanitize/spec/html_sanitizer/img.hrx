@@ -1,0 +1,46 @@
+<===> img/fragment.html
+<img src=""/>
+<===>
+
+
+<===> img with width/fragment.html
+<img src="" width="100"/>
+<===>
+
+
+<===> img with height/fragment.html
+<img src="" height="100"/>
+<===>
+
+
+<===> img with width and height/fragment.html
+<img src="" width="100" height="100"/>
+<===>
+
+
+<===> img invalid height/fragment.html
+<img src="" height="full"/>
+<===> img invalid height/common.html
+<img src=""/>
+<===>
+
+
+<===> img invalid width/fragment.html
+<img src="" width="full"/>
+<===> img invalid width/common.html
+<img src=""/>
+<===>
+
+
+
+<===> img invalid width and height/fragment.html
+<img src="" width="full" height="full"/>
+<===> img invalid width and height/common.html
+<img src=""/>
+<===>
+
+
+
+<===> img percent width and height/fragment.html
+<img src="" width="100%" height="100%"/>
+<===>

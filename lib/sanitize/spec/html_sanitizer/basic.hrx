@@ -1,0 +1,70 @@
+<===> empty/document.html
+<===>
+
+
+<===> pending:skeleton/document.html
+<html>
+  <body>
+  </body>
+</html>
+
+<===>
+
+
+<===> invalid/fragment.html
+<invalid>foo<p>bar</p>bazz</invalid><blockquote>quux</blockquote>
+<===> invalid/common.html
+foo<p>bar</p>bazz<blockquote>quux</blockquote>
+<===>
+
+
+
+<===> invalid-div/fragment.html
+<invalid>foo<p>bar</p>bazz</invalid><article>quux</article>
+<===> invalid-div/common.html
+foo<p>bar</p>bazz quux
+<===>
+
+
+<===> basic/fragment.html
+<b>Lo<!-- comment -->rem</b> <a href="pants" title="foo" style="text-decoration: underline;">ipsum</a> <a href="http://foo.com/"><strong>dolor</strong></a> sit<br/>amet <style>.foo { color: #fff; }</style> <script>alert("hello world");</script>
+<===> basic/common.html
+<b>Lorem</b> <a href="pants" title="foo" rel="nofollow">ipsum</a> <a href="http://foo.com/" rel="nofollow"><strong>dolor</strong></a> sit<br/>amet
+<===>
+
+
+<===> malformed/fragment.html
+Lo<!-- comment -->rem</b> <a href=pants title="foo>ipsum <a href="http://foo.com/"><strong>dolor</a></strong> sit<br/>amet <script>alert("hello world");
+<===> malformed/common.html
+Lorem <a href="pants" title="foo&gt;ipsum &lt;a href=" rel="nofollow"><strong>dolor</strong></a> sit<br/>amet
+<===>
+
+
+
+<===> unclosed/fragment.html
+<p>a</p><blockquote>b
+<===> unclosed/common.html
+<p>a</p><blockquote>b</blockquote>
+<===>
+
+
+
+<===> malicious/fragment.html
+<b>Lo<!-- comment -->rem</b> <a href="javascript:pants" title="foo">ipsum</a> <a href="http://foo.com/"><strong>dolor</strong></a> sit<br/>amet &lt;script>alert("hello world");</script>
+<===> malicious/common.html
+<b>Lorem</b> ipsum <a href="http://foo.com/" rel="nofollow"><strong>dolor</strong></a> sit<br/>amet &lt;script&gt;alert(&quot;hello world&quot;);
+<===>
+
+
+<===> target="_blank"/fragment.html
+<a href="foo" target="_blank">foo</a>
+<===> target="_blank"/common.html
+<a href="foo" rel="nofollow">foo</a>
+<===>
+
+
+<===> percent encoded URL/fragment.html
+<img src="https://github.com/RomainFranceschini/quartz/workflows/Quartz%20CI/badge.svg?branch=master" alt="CI Status"/>
+<===> percent encoded URL/common.html
+<img src="https://github.com/RomainFranceschini/quartz/workflows/Quartz%20CI/badge.svg?branch=master" alt="CI Status"/>
+<===>

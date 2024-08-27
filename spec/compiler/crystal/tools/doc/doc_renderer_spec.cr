@@ -374,7 +374,35 @@ describe Doc::MarkdDocRenderer do
     HTML
   end
 
-  describe "renders html" do
-    it_renders nil, %(<h1 align="center">Foo</h1>), %(<h1 align="center">Foo</h1>)
-  end
+  {% if !flag?(:without_libxml2) %}
+    describe "renders html with sanitization" do
+      it_renders nil, %(<h1 align="center">Foo</h1>), %(<h1>Foo</h1>)
+      it_renders nil, %(<script>alert("hello world")</script>), %()
+      it_renders nil, %(<p style="font-size: 100px">example text</p></div>), %(<p>example text</p>)
+
+      it_renders nil, %(```crystal\n# <script>alert("hello world")</script>\n```),
+        %(<pre><code class="language-crystal"><span class="c"># &lt;script&gt;alert(&quot;hello world&quot;)&lt;/script&gt;</span></code></pre>)
+    end
+
+    describe "still renders tables despite sanitization" do
+      table_mkdn = <<-HTML
+        <table>
+          <tr>
+            <th>column 1</th>
+            <th>column 2</th>
+          </tr>
+          <tr>
+            <td>data 1</td>
+            <td>data 2</td>
+          </tr>
+          <tr>
+            <td>data 3</td>
+            <td>data 4</td>
+          </tr>
+        </table>
+      HTML
+
+      it_renders nil, table_mkdn, table_mkdn
+    end
+  {% end %}
 end

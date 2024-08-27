@@ -1,0 +1,34 @@
+<===> reject/fragment.html
+<div class="foo"/>
+<===> reject/common.html
+<div/>
+<===> reject/allow-prefix.html
+<div/>
+<===>
+
+
+<===> allow-with-prefix/fragment.html
+<div class="allowed-foo"/>
+<===> allow-with-prefix/common.html
+<div/>
+<===> allow-with-prefix/allow-prefix.html
+<div class="allowed-foo"/>
+<===>
+
+
+<===> reject-non-prefix/fragment.html
+<div class="x-allowed-foo"/>
+<===> reject-non-prefix/common.html
+<div/>
+<===> reject-non-prefix/allow-prefix.html
+<div/>
+<===>
+
+
+<===> allow-explicit/fragment.html
+<div class="explicitly-allowed"/>
+<===> allow-explicit/common.html
+<div/>
+<===> allow-explicit/allow-prefix.html
+<div class="explicitly-allowed"/>
+<===>
