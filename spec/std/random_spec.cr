@@ -131,14 +131,24 @@ describe "Random" do
 
   it "does with inclusive range of floats" do
     rand(1.0..1.0).should eq(1.0)
+
     x = rand(1.8..3.2)
     x.should be >= 1.8
     x.should be <= 3.2
 
+    x = rand(Float64::MIN..Float64::MAX)
+    x.should be >= Float64::MIN
+    x.should be <= Float64::MAX
+
     rand(1.0_f32..1.0_f32).should eq(1.0_f32)
+
     x = rand(1.8_f32..3.2_f32)
     x.should be >= 1.8_f32
     x.should be <= 3.2_f32
+
+    x = rand(Float32::MIN..Float32::MAX)
+    x.should be >= Float32::MIN
+    x.should be <= Float32::MAX
   end
 
   it "does with exclusive range of floats" do
@@ -146,9 +156,17 @@ describe "Random" do
     x.should be >= 1.8
     x.should be < 3.3
 
+    x = rand(Float64::MIN...Float64::MAX)
+    x.should be >= Float64::MIN
+    x.should be < Float64::MAX
+
     x = rand(1.8_f32...3.3_f32)
     x.should be >= 1.8_f32
     x.should be < 3.3_f32
+
+    x = rand(Float32::MIN...Float32::MAX)
+    x.should be >= Float32::MIN
+    x.should be < Float32::MAX
   end
 
   describe "raises on invalid range" do
@@ -176,6 +194,30 @@ describe "Random" do
       end
       expect_raises ArgumentError, "Invalid range for rand: 1.0..0.0" do
         rand(1.0..0.0)
+      end
+    end
+
+    it "infinite range" do
+      expect_raises ArgumentError, "Invalid range for rand: 0.0..Infinity" do
+        rand(0.0..Float64::INFINITY)
+      end
+      expect_raises ArgumentError, "Invalid range for rand: -Infinity..0.0" do
+        rand(-Float64::INFINITY..0.0)
+      end
+      expect_raises ArgumentError, "Invalid range for rand: -Infinity..Infinity" do
+        rand(-Float64::INFINITY..Float64::INFINITY)
+      end
+    end
+
+    it "nan range" do
+      expect_raises ArgumentError, "Invalid range for rand: 0.0..NaN" do
+        rand(0.0..Float64::NAN)
+      end
+      expect_raises ArgumentError, "Invalid range for rand: NaN..0.0" do
+        rand(Float64::NAN..0.0)
+      end
+      expect_raises ArgumentError, "Invalid range for rand: NaN..NaN" do
+        rand(Float64::NAN..Float64::NAN)
       end
     end
   end

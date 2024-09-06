@@ -244,6 +244,25 @@ module Random
     {% end %}
   {% end %}
 
+  {% for size in [32, 64] %}
+    {% type = "Float#{size}".id %}
+    private def rand_range(range : Range({{type}}, {{type}})) : {{type}}
+      half_begin = range.begin / 2
+      half_end = range.end / 2
+      half_span = half_end - half_begin
+
+      if half_span.finite?
+        middle = half_begin + half_end
+        if range.exclusive?
+          return middle + half_span*(2*rand(1.0) - 1) if half_span > 0
+        else
+          return middle + half_span*(2*rand - 1) if half_span >= 0
+        end
+      end
+      raise ArgumentError.new "Invalid range for rand: #{range}"
+    end
+  {% end %}
+
   # Returns a random `Float` which is greater than or equal to `0`
   # and less than *max*.
   #
@@ -286,18 +305,7 @@ module Random
   # Random.new.rand(6.2..21.768) # => 15.2989
   # ```
   def rand(range : Range(Float, Float)) : Float
-    span = range.end - range.begin
-    if range.excludes_end?
-      unless range.begin < range.end
-        raise ArgumentError.new "Invalid range for rand: #{range}"
-      end
-      range.begin + rand(span)
-    else
-      unless range.begin <= range.end
-        raise ArgumentError.new "Invalid range for rand: #{range}"
-      end
-      range.begin + rand * span
-    end
+    rand_range(range)
   end
 
   {% for type, values in {
