@@ -16,6 +16,11 @@ dependencies:
     github: I3oris/reply
     commit: db423dae3dd34c6ba5e36174653a0c109117a167
 
+development_dependencies:
+  ameba:
+    github: crystal-ameba/ameba
+    commit: 6d03cef6dfd0f52faf19bbcd47d14831db4d7834
+
 license: Apache-2.0
 
 repository: https://github.com/crystal-lang/crystal

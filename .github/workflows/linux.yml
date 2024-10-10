@@ -107,6 +107,23 @@ jobs:
       - name: Check Format
         run: bin/ci format
 
+  run_ameba:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Install latest Crystal version
+        uses: crystal-lang/install-crystal@v1
+        with:
+          crystal: latest
+
+      - name: Download Crystal source
+        uses: actions/checkout@v4
+
+      - name: Install dependencies
+        run: shards install
+
+      - name: Run Ameba linter
+        run: bin/ameba
+
   deploy_api_docs:
     if: github.repository_owner == 'crystal-lang' && github.event_name == 'push' && github.ref == 'refs/heads/master'
     env:

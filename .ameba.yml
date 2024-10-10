@@ -1,0 +1,130 @@
+# Global
+
+Excluded:
+  - src/unicode/data.cr
+  - src/openssl/lib_crypto.cr
+
+# Metrics
+
+Metrics/CyclomaticComplexity:
+  Enabled: false
+
+# Documentation
+
+Documentation/DocumentationAdmonition:
+  Enabled: false
+
+# Naming
+
+Naming/BlockParameterName:
+  Enabled: false
+
+Naming/BinaryOperatorParameterName:
+  Enabled: false
+
+Naming/ConstantNames:
+  Excluded:
+    - src/lib_c/x86_64-windows-msvc/**/*
+    - src/lib_c/aarch64-android/**/*
+
+Naming/TypeNames:
+  Excluded:
+    - src/lib_c/**/*
+    - src/llvm/abi/**/*
+    - src/float/printer/**/*
+    - src/time/format/custom/**/*
+
+Naming/MethodNames:
+  Excluded:
+    - samples/spectral-norm.cr
+    - src/crystal/system/win32/time.cr
+
+Naming/VariableNames:
+  Excluded:
+    - samples/spectral-norm.cr
+    - src/lib_c/**/*
+    - src/float/printer/**/*
+    - src/crystal/system/win32/time.cr
+    - src/crystal/system/win32/delay_load.cr
+    - src/xml/libxml2.cr
+
+# Lint
+
+Lint/Typos:
+  Enabled: false
+
+Lint/ShadowingOuterLocalVar:
+  Enabled: false
+
+Lint/NotNil:
+  Enabled: false
+
+Lint/UnusedArgument:
+  Enabled: false
+
+Lint/DebuggerStatement:
+  Excluded:
+    - spec/debug/**/*
+
+Lint/DebugCalls:
+  Excluded:
+    - scripts/generate_windows_zone_names.cr
+    - samples/**/*
+    - spec/std/pp_spec.cr
+    - src/kernel.cr
+
+Lint/UselessAssign:
+  Excluded:
+    - scripts/generate_grapheme_properties.cr
+    - scripts/generate_unicode_data.cr
+    - samples/mt_gc_test.cr
+    - spec/debug/**/*
+    - spec/std/concurrent/select_spec.cr
+    - spec/std/weak_ref_spec.cr
+    - src/crystal/system/unix/syscall.cr
+
+Lint/LiteralInInterpolation:
+  Excluded:
+    - spec/compiler/formatter/formatter_spec.cr
+    - spec/std/string_spec.cr
+    - spec/std/random_spec.cr
+
+Lint/LiteralInCondition:
+  Excluded:
+    - spec/std/range_spec.cr
+
+Lint/LiteralsComparison:
+  Excluded:
+    - spec/std/int_spec.cr
+    - spec/std/tuple_spec.cr
+    - spec/std/char_spec.cr
+    - spec/std/regex_spec.cr
+
+Lint/RandZero:
+  Excluded:
+    - spec/std/random_spec.cr
+
+Lint/SpecFocus:
+  Excluded:
+    - spec/compiler/parser/parser_spec.cr
+
+Lint/SpecFilename:
+  Excluded:
+    - spec/llvm-ir/**/*
+    - spec/compiler/crystal_path/**/*
+
+# Style
+
+Style/WhileTrue:
+  Enabled: false
+
+Style/NegatedConditionsInUnless:
+  Enabled: false
+
+Style/VerboseBlock:
+  ExcludeOperators: true
+  ExcludeSetters: true
+
+Style/RedundantNext:
+  Excluded:
+    - src/crystal/system/win32/**/*
