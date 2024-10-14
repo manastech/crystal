@@ -126,6 +126,63 @@ describe Socket::IPAddress do
     Socket::IPAddress.new("::ffff:0:0", 443).address.should eq "::ffff:0.0.0.0"
   end
 
+  describe "#scope_id" do
+    it "parses link-local IPv6 with interface scope" do
+      address = Socket::IPAddress.new("fe80::3333:4444%3", 8081)
+      address.address.should eq "fe80::3333:4444"
+      address.scope_id.should eq 3
+    end
+
+    it "ignores link-local scope identifier on non-LL addrs" do
+      address = Socket::IPAddress.new("fd00::abcd%5", 443)
+      address.address.should eq "fd00::abcd"
+      address.scope_id.should eq 0
+    end
+
+    it "looks up loopback interface index by name" do
+      # loopback interface "lo" is supposed to *always* be the first interface and
+      # enumerated with index 1
+      loopback_iface = {% if flag?(:windows) %}
+                         "loopback_0"
+                       {% elsif flag?(:darwin) || flag?(:bsd) || flag?(:solaris) %}
+                         "lo0"
+                       {% else %}
+                         "lo"
+                       {% end %}
+      address = Socket::IPAddress.new("fe80::1111%#{loopback_iface}", 0)
+      address.address.should eq "fe80::1111"
+      address.scope_id.should eq 1
+    end
+
+    it "looks up loopback interface name by index" do
+      # loopback interface "lo" is supposed to *always* be the first interface and
+      # enumerated with index 1
+      buf = uninitialized StaticArray(UInt8, LibC::IF_NAMESIZE)
+      LibC.if_indextoname(1, buf)
+      ifname = String.new(buf.to_unsafe)
+      {% if flag?(:windows) %}
+        ifname.should eq "loopback_0"
+      {% elsif flag?(:darwin) || flag?(:bsd) || flag?(:solaris) %}
+        ifname.should eq "lo0"
+      {% else %}
+        ifname.should eq "lo"
+      {% end %}
+    end
+
+    it "fails on invalid link-local scope identifier" do
+      expect_raises(ArgumentError, "Invalid IPv6 link-local scope index '0' in address 'fe80::c0ff:ee%0'") do
+        Socket::IPAddress.new("fe80::c0ff:ee%0", port: 0)
+      end
+    end
+
+    it "fails on non-existent link-local scope interface" do
+      # looking up an interface index obviously requires for said interface device to exist
+      expect_raises(ArgumentError, "IPv6 link-local scope interface 'zzzzzzzzzzzzzzz' not found (in address 'fe80::0f0f:abcd%zzzzzzzzzzzzzzz'") do
+        Socket::IPAddress.new("fe80::0f0f:abcd%zzzzzzzzzzzzzzz", port: 0)
+      end
+    end
+  end
+
   describe ".parse" do
     it "parses IPv4" do
       address = Socket::IPAddress.parse "ip://192.168.0.1:8081"
@@ -263,6 +320,7 @@ describe Socket::IPAddress do
       Socket::IPAddress.v6(0xfe80, 0, 0, 0, 0x4860, 0x4860, 0x4860, 0x1234, port: 55001).should eq Socket::IPAddress.new("fe80::4860:4860:4860:1234", 55001)
       Socket::IPAddress.v6(0xffff, 0xffff, 0xffff, 0xffff, 0xffff, 0xffff, 0xffff, 0xfffe, port: 65535).should eq Socket::IPAddress.new("ffff:ffff:ffff:ffff:ffff:ffff:ffff:fffe", 65535)
       Socket::IPAddress.v6(0, 0, 0, 0, 0, 0xffff, 0xc0a8, 0x0001, port: 0).should eq Socket::IPAddress.new("::ffff:192.168.0.1", 0)
+      Socket::IPAddress.v6(0xfe80, 0, 0, 0, 0x5971, 0x5971, 0x5971, 0xabcd, port: 44444, scope_id: 3).should eq Socket::IPAddress.new("fe80::5971:5971:5971:abcd%3", 44444)
     end
 
     it "raises on out of bound field" do
