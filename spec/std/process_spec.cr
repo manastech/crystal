@@ -101,6 +101,11 @@ describe Process do
         end
       end
     end
+
+    it "doesn't break if process is collected before completion" do
+      200.times { Process.new(*exit_code_command(0)) }
+      10.times { GC.collect }
+    end
   end
 
   describe "#wait" do
