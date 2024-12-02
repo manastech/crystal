@@ -51,7 +51,7 @@
 # client.get "/some_path"
 # ```
 class OAuth::Consumer
-  @tls : Bool
+  @tls : Bool | OpenSSL::SSL::Context::Client
 
   # Creates an OAuth consumer.
   #
@@ -64,8 +64,9 @@ class OAuth::Consumer
                  @scheme : String = "https",
                  @request_token_uri : String = "/oauth/request_token",
                  @authorize_uri : String = "/oauth/authorize",
-                 @access_token_uri : String = "/oauth/access_token")
-    @tls = @scheme == "https"
+                 @access_token_uri : String = "/oauth/access_token",
+                 tls : Nil | Bool | OpenSSL::SSL::Context::Client = nil)
+    @tls = tls.nil? ? @scheme == "https" : tls
   end
 
   # Obtains a request token, also known as "temporary credentials", as specified by
