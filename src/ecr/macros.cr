@@ -1,3 +1,5 @@
+require "./processor"
+
 module ECR
   # Defines a `to_s(io)` method whose body is the ECR contained
   # in *filename*, translated to Crystal code.
@@ -67,7 +69,7 @@ module ECR
   # io << '!'
   # ```
   macro embed(filename, io_name)
-    \{{ run("ecr/process", {{filename}}, {{io_name.id.stringify}}) }}
+    ::ECR.process_string({{ read_file(filename) }}, {{ filename }}, {{ io_name.id.stringify }}, false)
   end
 
   # Embeds an ECR file *filename* into the program and renders it to a string.

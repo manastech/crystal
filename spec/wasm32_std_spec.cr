@@ -66,8 +66,7 @@ require "./std/deque_spec.cr"
 # require "./std/digest/sha512_spec.cr" (failed linking)
 # require "./std/dir_spec.cr" (failed to run)
 require "./std/double_spec.cr"
-require "./std/ecr/ecr_lexer_spec.cr"
-# require "./std/ecr/ecr_spec.cr" (failed linking)
+require "./std/ecr/ecr_spec.cr"
 require "./std/enum_spec.cr"
 require "./std/enumerable_spec.cr"
 # require "./std/env_spec.cr" (failed to run)
