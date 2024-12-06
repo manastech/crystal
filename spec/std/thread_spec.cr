@@ -44,9 +44,13 @@ pending_interpreted describe: Thread do
   end
 
   it "names the thread" do
-    Thread.current.name.should be_nil
-    name = nil
+    {% if flag?(:execution_context) %}
+      Thread.current.name.should eq("DEFAULT")
+    {% else %}
+      Thread.current.name.should be_nil
+    {% end %}
 
+    name = nil
     thread = Thread.new(name: "some-name") do
       name = Thread.current.name
     end
