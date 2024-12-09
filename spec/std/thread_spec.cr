@@ -45,7 +45,11 @@ pending_interpreted describe: Thread do
 
   it "names the thread" do
     {% if flag?(:execution_context) %}
-      Thread.current.name.should eq("DEFAULT")
+      {% if flag?(:mt) %}
+        Thread.current.name.should match(/^DEFAULT-\d+$/)
+      {% else %}
+        Thread.current.name.should eq("DEFAULT")
+      {% end %}
     {% else %}
       Thread.current.name.should be_nil
     {% end %}
