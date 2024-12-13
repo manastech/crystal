@@ -1,4 +1,5 @@
 require "./spec_helper"
+require "../../../support/thread"
 
 describe Fiber::ExecutionContext::Runnables do
   it "#initialize" do
@@ -190,14 +191,14 @@ describe Fiber::ExecutionContext::Runnables do
 
       global_queue = Fiber::ExecutionContext::GlobalQueue.new(Thread::Mutex.new)
       ready = Thread::WaitGroup.new(n)
-      shutdown = Thread::WaitGroup.new(n)
+      threads = Array(Thread).new(n)
 
       all_runnables = Array(Fiber::ExecutionContext::Runnables(16)).new(n) do
         Fiber::ExecutionContext::Runnables(16).new(global_queue)
       end
 
       n.times do |i|
-        Thread.new("RUN-#{i}") do |thread|
+        threads << new_thread("RUN-#{i}") do
           runnables = all_runnables[i]
           slept = 0
 
@@ -239,10 +240,6 @@ describe Fiber::ExecutionContext::Runnables do
             slept += 1
             Thread.sleep(1.nanosecond) # don't burn CPU
           end
-        rescue exception
-          Crystal::System.print_error "\nthread #{thread.name} raised: #{exception}"
-        ensure
-          shutdown.done
         end
       end
       ready.wait
@@ -255,7 +252,7 @@ describe Fiber::ExecutionContext::Runnables do
         Thread.sleep(10.nanoseconds) if i % 2 == 1
       end
 
-      shutdown.wait
+      threads.map(&.join)
 
       # must have dequeued each fiber exactly X times (no less, no more)
       fibers.each { |fc| fc.counter.should eq(increments) }

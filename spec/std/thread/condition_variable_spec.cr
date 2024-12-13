@@ -1,4 +1,5 @@
 require "../spec_helper"
+require "../../support/thread"
 
 # interpreter doesn't support threads yet (#14287)
 pending_interpreted describe: Thread::ConditionVariable do
@@ -7,7 +8,7 @@ pending_interpreted describe: Thread::ConditionVariable do
     cond = Thread::ConditionVariable.new
 
     mutex.synchronize do
-      Thread.new do
+      new_thread do
         mutex.synchronize { cond.signal }
       end
 
@@ -22,7 +23,7 @@ pending_interpreted describe: Thread::ConditionVariable do
     waiting = 0
 
     5.times do
-      Thread.new do
+      new_thread do
         mutex.synchronize do
           waiting += 1
           cv1.wait(mutex)
@@ -78,7 +79,7 @@ pending_interpreted describe: Thread::ConditionVariable do
     cond = Thread::ConditionVariable.new
 
     mutex.synchronize do
-      Thread.new do
+      new_thread do
         mutex.synchronize { cond.signal }
       end
 
