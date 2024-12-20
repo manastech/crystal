@@ -25,6 +25,7 @@ module Fiber::ExecutionContext
     {% else %}
       @@default = SingleThreaded.default
     {% end %}
+    @@monitor = Monitor.new
   end
 
   # Returns the default number of workers to start in the execution context.
