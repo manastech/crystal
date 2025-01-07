@@ -349,6 +349,8 @@ class OptionParser
     old_missing_option = @missing_option
     old_invalid_option = @invalid_option
     old_before_each = @before_each
+    old_summary_width = @summary_width
+    old_summary_indent = @summary_indent
 
     begin
       yield
@@ -361,6 +363,8 @@ class OptionParser
       @missing_option = old_missing_option
       @invalid_option = old_invalid_option
       @before_each = old_before_each
+      @summary_width = old_summary_width
+      @summary_indent = old_summary_indent
     end
   end
 
