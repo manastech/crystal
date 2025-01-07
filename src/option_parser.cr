@@ -316,13 +316,20 @@ class OptionParser
     @flags.join io, '\n'
   end
 
+  # Width for option list portion of summary.
+  property summary_width : Int32 = 32
+
+  # Indentation for summary.
+  property summary_indent : String = "    "
+
   private def append_flag(flag, description)
-    indent = " " * 37
-    description = description.gsub("\n", "\n#{indent}")
-    if flag.size >= 33
-      @flags << "    #{flag}\n#{indent}#{description}"
+    description_indent = "#{summary_indent}#{" " * summary_width} " # Adjust the indent based on summary_width
+    description = description.gsub("\n", "\n#{description_indent}")
+
+    if flag.size >= summary_width
+      @flags << "#{summary_indent}#{flag}\n#{description_indent}#{description}"
     else
-      @flags << "    #{flag}#{" " * (33 - flag.size)}#{description}"
+      @flags << "#{summary_indent}#{flag}#{" " * (summary_width - flag.size)} #{description}"
     end
   end
 
