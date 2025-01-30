@@ -25,8 +25,8 @@ class Crystal::CodeGenVisitor
     initialized_flag_name = class_var_global_initialized_name(class_var)
     initialized_flag = @main_mod.globals[initialized_flag_name]?
     unless initialized_flag
-      initialized_flag = @main_mod.globals.add(@main_llvm_context.int8, initialized_flag_name)
-      initialized_flag.initializer = @main_llvm_context.int8.const_int(0)
+      initialized_flag = @main_mod.globals.add(@main_llvm_context.int1, initialized_flag_name)
+      initialized_flag.initializer = @main_llvm_context.int1.const_int(0)
       initialized_flag.linkage = LLVM::Linkage::Internal if @single_module
       initialized_flag.thread_local = true if class_var.thread_local?
     end
@@ -61,7 +61,7 @@ class Crystal::CodeGenVisitor
       initialized_flag_name = class_var_global_initialized_name(class_var)
       initialized_flag = @llvm_mod.globals[initialized_flag_name]?
       unless initialized_flag
-        initialized_flag = @llvm_mod.globals.add(llvm_context.int8, initialized_flag_name)
+        initialized_flag = @llvm_mod.globals.add(llvm_context.int1, initialized_flag_name)
         initialized_flag.thread_local = true if class_var.thread_local?
       end
     end
