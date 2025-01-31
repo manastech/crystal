@@ -207,7 +207,10 @@ module Regex::PCRE2
   private def match_impl(str, byte_index, options)
     match_data = match_data(str, byte_index, options) || return
 
-    ovector_count = LibPCRE2.get_ovector_count(match_data)
+    # we reuse the same matchdata allocation, so we must "reimplement" the
+    # behavior of pcre2_match_data_create_from_pattern (get_ovector_count always
+    # returns 65535, aka the maximum):
+    ovector_count = capture_count_impl &+ 1
     ovector = Slice.new(LibPCRE2.get_ovector_pointer(match_data), ovector_count &* 2)
 
     # We need to dup the ovector because `match_data` is re-used for subsequent
