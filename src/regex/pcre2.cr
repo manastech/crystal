@@ -232,17 +232,17 @@ module Regex::PCRE2
     LibPCRE2.jit_stack_free(jit_stack)
   end
 
-  @@match_datas = Crystal::System::ThreadLocal(LibPCRE2::MatchData*).new do |match_data|
+  @@match_data = Crystal::System::ThreadLocal(LibPCRE2::MatchData*).new do |match_data|
     LibPCRE2.match_data_free(match_data)
   end
 
   class_getter match_context : LibPCRE2::MatchContext* do
     match_context = LibPCRE2.match_context_create(nil)
-    LibPCRE2.jit_stack_assign(match_context, ->(_data) {
-      @@jit_stack.get do
-        LibPCRE2.jit_stack_create(32_768, 1_048_576, nil) || raise "Error allocating JIT stack"
-      end
-    }, nil)
+    LibPCRE2.jit_stack_assign(match_context, ->(data) {
+      # we must pass @@jit_stack through the data argument to avoid a segfault
+      jit_stack = data.as(Crystal::System::ThreadLocal(LibPCRE2::JITStack*)*)
+      jit_stack.value.get { LibPCRE2.jit_stack_create(32_768, 1_048_576, nil) || raise "Error allocating JIT stack" }
+    }, pointerof(@@jit_stack))
     match_context
   end
 
@@ -251,7 +251,7 @@ module Regex::PCRE2
   end
 
   private def match_data(str, byte_index, options)
-    match_data = @@match_datas.get { LibPCRE2.match_data_create(65_535, nil) }
+    match_data = @@match_data.get { LibPCRE2.match_data_create(65_535, nil) }
     match_count = LibPCRE2.match(@re, str, str.bytesize, byte_index, pcre2_match_options(options), match_data, PCRE2.match_context)
 
     if match_count < 0
