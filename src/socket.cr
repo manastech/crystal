@@ -467,6 +467,20 @@ class Socket < IO
   private def unbuffered_flush : Nil
     # Nothing
   end
+
+  # Blocks the current fiber until the socket is ready for read. Raises
+  # `TimeoutError` when the configured `#read_timeout` has elapsed, otherwise
+  # returns normally.
+  def wait_readable : Nil
+    system_wait_readable
+  end
+
+  # Blocks the current fiber until the socket is ready for write. Raises
+  # `TimeoutError` when the configured `#write_timeout` has elapsed, otherwise
+  # returns normally.
+  def wait_writable : Nil
+    system_wait_writable
+  end
 end
 
 require "./socket/*"

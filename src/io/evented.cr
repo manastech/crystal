@@ -34,12 +34,7 @@ module IO::Evented
   end
 
   # :nodoc:
-  def wait_readable(timeout = @read_timeout) : Nil
-    wait_readable(timeout: timeout) { raise TimeoutError.new("Read timed out") }
-  end
-
-  # :nodoc:
-  def wait_readable(timeout = @read_timeout, *, raise_if_closed = true, &) : Nil
+  def evented_wait_readable(timeout = @read_timeout, *, raise_if_closed = true, &) : Nil
     readers = @readers.get { Deque(Fiber).new }
     readers << Fiber.current
     add_read_event(timeout)
@@ -59,12 +54,7 @@ module IO::Evented
   end
 
   # :nodoc:
-  def wait_writable(timeout = @write_timeout) : Nil
-    wait_writable(timeout: timeout) { raise TimeoutError.new("Write timed out") }
-  end
-
-  # :nodoc:
-  def wait_writable(timeout = @write_timeout, &) : Nil
+  def evented_wait_writable(timeout = @write_timeout, &) : Nil
     writers = @writers.get { Deque(Fiber).new }
     writers << Fiber.current
     add_write_event(timeout)

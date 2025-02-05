@@ -39,6 +39,14 @@ module Crystal::System::FileDescriptor
     event_loop.write(self, slice)
   end
 
+  private def system_wait_readable : Nil
+    event_loop.wait_readable(self)
+  end
+
+  private def system_wait_writable : Nil
+    event_loop.wait_writable(self)
+  end
+
   private def event_loop? : Crystal::EventLoop::FileDescriptor?
     Crystal::EventLoop.current?
   end

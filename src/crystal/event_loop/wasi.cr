@@ -39,6 +39,12 @@ class Crystal::EventLoop::Wasi < Crystal::EventLoop
     end
   end
 
+  def wait_readable(file_descriptor : Crystal::System::FileDescriptor) : Nil
+    file_descriptor.evented_wait_readable(raise_if_closed: false) do
+      raise IO::TimeoutError.new("Read timed out")
+    end
+  end
+
   def write(file_descriptor : Crystal::System::FileDescriptor, slice : Bytes) : Int32
     evented_write(file_descriptor, "Error writing file_descriptor") do
       LibC.write(file_descriptor.fd, slice, slice.size).tap do |return_code|
@@ -46,6 +52,12 @@ class Crystal::EventLoop::Wasi < Crystal::EventLoop
           raise IO::Error.new "File not open for writing", target: file_descriptor
         end
       end
+    end
+  end
+
+  def wait_writable(file_descriptor : Crystal::System::FileDescriptor) : Nil
+    file_descriptor.evented_wait_writable(raise_if_closed: false) do
+      raise IO::TimeoutError.new("Write timed out")
     end
   end
 
@@ -59,9 +71,21 @@ class Crystal::EventLoop::Wasi < Crystal::EventLoop
     end
   end
 
+  def wait_readable(socket : ::Socket) : Nil
+    socket.evented_wait_readable do
+      raise IO::TimeoutError.new("Read timed out")
+    end
+  end
+
   def write(socket : ::Socket, slice : Bytes) : Int32
     evented_write(socket, "Error writing to socket") do
       LibC.send(socket.fd, slice, slice.size, 0)
+    end
+  end
+
+  def wait_writable(socket : ::Socket) : Nil
+    socket.evented_wait_writable do
+      raise IO::TimeoutError.new("Write timed out")
     end
   end
 

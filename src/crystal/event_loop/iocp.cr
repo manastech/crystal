@@ -190,11 +190,19 @@ class Crystal::EventLoop::IOCP < Crystal::EventLoop
     end.to_i32
   end
 
+  def wait_readable(file_descriptor : Crystal::System::FileDescriptor) : Nil
+    raise NotImplementedError.new("Crystal::System::IOCP#wait_readable(FileDescriptor)")
+  end
+
   def write(file_descriptor : Crystal::System::FileDescriptor, slice : Bytes) : Int32
     System::IOCP.overlapped_operation(file_descriptor, "WriteFile", file_descriptor.write_timeout, writing: true) do |overlapped|
       ret = LibC.WriteFile(file_descriptor.windows_handle, slice, slice.size, out byte_count, overlapped)
       {ret, byte_count}
     end.to_i32
+  end
+
+  def wait_writable(file_descriptor : Crystal::System::FileDescriptor) : Nil
+    raise NotImplementedError.new("Crystal::System::IOCP#wait_writable(FileDescriptor)")
   end
 
   def close(file_descriptor : Crystal::System::FileDescriptor) : Nil
@@ -220,6 +228,13 @@ class Crystal::EventLoop::IOCP < Crystal::EventLoop
     bytes_read.to_i32
   end
 
+  def wait_readable(socket : ::Socket) : Nil
+    # NOTE: Windows 10+ has `ProcessSocketNotifications` to associate sockets to
+    # a completion port and be notified of socket readiness. See
+    # <https://learn.microsoft.com/en-us/windows/win32/winsock/winsock-socket-state-notifications>
+    raise NotImplementedError.new("Crystal::System::IOCP#wait_readable(Socket)")
+  end
+
   def write(socket : ::Socket, slice : Bytes) : Int32
     wsabuf = wsa_buffer(slice)
 
@@ -229,6 +244,13 @@ class Crystal::EventLoop::IOCP < Crystal::EventLoop
     end
 
     bytes.to_i32
+  end
+
+  def wait_writable(socket : ::Socket) : Nil
+    # NOTE: Windows 10+ has `ProcessSocketNotifications` to associate sockets to
+    # a completion port and be notified of socket readiness. See
+    # <https://learn.microsoft.com/en-us/windows/win32/winsock/winsock-socket-state-notifications>
+    raise NotImplementedError.new("Crystal::System::IOCP#wait_writable(Socket)")
   end
 
   def send_to(socket : ::Socket, slice : Bytes, address : ::Socket::Address) : Int32

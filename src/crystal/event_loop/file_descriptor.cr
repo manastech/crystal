@@ -9,6 +9,9 @@ abstract class Crystal::EventLoop
     # Returns 0 when EOF is reached.
     abstract def read(file_descriptor : Crystal::System::FileDescriptor, slice : Bytes) : Int32
 
+    # Blocks the current fiber until the file descriptor is ready for read.
+    abstract def wait_readable(file_descriptor : Crystal::System::FileDescriptor) : Nil
+
     # Writes at least one byte from *slice* to the file descriptor.
     #
     # Blocks the current fiber if the file descriptor isn't ready for writing,
@@ -16,6 +19,9 @@ abstract class Crystal::EventLoop
     #
     # Returns the number of bytes written (up to `slice.size`).
     abstract def write(file_descriptor : Crystal::System::FileDescriptor, slice : Bytes) : Int32
+
+    # Blocks the current fiber until the file descriptor is ready for write.
+    abstract def wait_writable(file_descriptor : Crystal::System::FileDescriptor) : Nil
 
     # Closes the file descriptor resource.
     abstract def close(file_descriptor : Crystal::System::FileDescriptor) : Nil

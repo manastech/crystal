@@ -146,6 +146,12 @@ abstract class Crystal::EventLoop::Polling < Crystal::EventLoop
     end
   end
 
+  def wait_readable(file_descriptor : System::FileDescriptor) : Nil
+    wait_readable(file_descriptor, file_descriptor.@read_timeout) do
+      raise IO::TimeoutError.new
+    end
+  end
+
   def write(file_descriptor : System::FileDescriptor, slice : Bytes) : Int32
     size = evented_write(file_descriptor, slice, file_descriptor.@write_timeout)
 
@@ -157,6 +163,12 @@ abstract class Crystal::EventLoop::Polling < Crystal::EventLoop
       end
     else
       size.to_i32
+    end
+  end
+
+  def wait_writable(file_descriptor : System::FileDescriptor) : Nil
+    wait_writable(file_descriptor, file_descriptor.@write_timeout) do
+      raise IO::TimeoutError.new
     end
   end
 
@@ -176,10 +188,22 @@ abstract class Crystal::EventLoop::Polling < Crystal::EventLoop
     size
   end
 
+  def wait_readable(socket : ::Socket) : Nil
+    wait_readable(socket, socket.@read_timeout) do
+      raise IO::TimeoutError.new
+    end
+  end
+
   def write(socket : ::Socket, slice : Bytes) : Int32
     size = evented_write(socket, slice, socket.@write_timeout)
     raise IO::Error.from_errno("write", target: socket) if size == -1
     size
+  end
+
+  def wait_writable(socket : ::Socket) : Nil
+    wait_writable(socket, socket.@write_timeout) do
+      raise IO::TimeoutError.new
+    end
   end
 
   def accept(socket : ::Socket) : ::Socket::Handle?
