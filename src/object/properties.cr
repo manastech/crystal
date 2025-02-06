@@ -2,119 +2,9 @@
 # WARNING: DO NOT EDIT MANUALLY!
 
 class Object
-  # Defines getter methods for each of the given arguments.
+  # Defines getter method(s) to access instance variable(s).
   #
-  # Writing:
-  #
-  # ```
-  # class Person
-  #   getter name
-  # end
-  # ```
-  #
-  # Is the same as writing:
-  #
-  # ```
-  # class Person
-  #   def name
-  #     @name
-  #   end
-  # end
-  # ```
-  #
-  # The arguments can be string literals, symbol literals or plain names:
-  #
-  # ```
-  # class Person
-  #   getter :name, "age"
-  # end
-  # ```
-  #
-  # If a type declaration is given, a variable with that name
-  # is declared with that type.
-  #
-  # ```
-  # class Person
-  #   getter name : String
-  # end
-  # ```
-  #
-  # Is the same as writing:
-  #
-  # ```
-  # class Person
-  #   @name : String
-  #
-  #   def name : String
-  #     @name
-  #   end
-  # end
-  # ```
-  #
-  # The type declaration can also include an initial value:
-  #
-  # ```
-  # class Person
-  #   getter name : String = "John Doe"
-  # end
-  # ```
-  #
-  # Is the same as writing:
-  #
-  # ```
-  # class Person
-  #   @name : String = "John Doe"
-  #
-  #   def name : String
-  #     @name
-  #   end
-  # end
-  # ```
-  #
-  # An assignment can be passed too, but in this case the type of the
-  # variable must be easily inferable from the initial value:
-  #
-  # ```
-  # class Person
-  #   getter name = "John Doe"
-  # end
-  # ```
-  #
-  # Is the same as writing:
-  #
-  # ```
-  # class Person
-  #   @name = "John Doe"
-  #
-  #   def name : String
-  #     @name
-  #   end
-  # end
-  # ```
-  #
-  # If a block is given to the macro, a getter is generated
-  # with a variable that is lazily initialized with
-  # the block's contents:
-  #
-  # ```
-  # class Person
-  #   getter(birth_date) { Time.local }
-  # end
-  # ```
-  #
-  # Is the same as writing:
-  #
-  # ```
-  # class Person
-  #   def birth_date
-  #     if (value = @birth_date).nil?
-  #       @birth_date = Time.local
-  #     else
-  #       value
-  #     end
-  #   end
-  # end
-  # ```
+  # Refer to [Getters](#getters) for details.
   macro getter(*names, &block)
     {% for name in names %}
       {% if name.is_a?(TypeDeclaration) %}
@@ -149,99 +39,27 @@ class Object
     {% end %}
   end
 
-  # Defines query getter methods for each of the given arguments.
+  # Identical to `getter` but defines query methods.
   #
-  # Writing:
+  # For example writing:
   #
   # ```
-  # class Person
-  #   getter? happy
+  # class Robot
+  #   getter? working
   # end
   # ```
   #
-  # Is the same as writing:
+  # Is equivalent to writing:
   #
   # ```
-  # class Person
-  #   def happy?
-  #     @happy
+  # class Robot
+  #   def working?
+  #     @working
   #   end
   # end
   # ```
   #
-  # The arguments can be string literals, symbol literals or plain names:
-  #
-  # ```
-  # class Person
-  #   getter? :happy, "famous"
-  # end
-  # ```
-  #
-  # If a type declaration is given, a variable with that name
-  # is declared with that type.
-  #
-  # ```
-  # class Person
-  #   getter? happy : Bool
-  # end
-  # ```
-  #
-  # is the same as writing:
-  #
-  # ```
-  # class Person
-  #   @happy : Bool
-  #
-  #   def happy? : Bool
-  #     @happy
-  #   end
-  # end
-  # ```
-  #
-  # The type declaration can also include an initial value:
-  #
-  # ```
-  # class Person
-  #   getter? happy : Bool = true
-  # end
-  # ```
-  #
-  # Is the same as writing:
-  #
-  # ```
-  # class Person
-  #   @happy : Bool = true
-  #
-  #   def happy? : Bool
-  #     @happy
-  #   end
-  # end
-  # ```
-  #
-  # An assignment can be passed too, but in this case the type of the
-  # variable must be easily inferable from the initial value:
-  #
-  # ```
-  # class Person
-  #   getter? happy = true
-  # end
-  # ```
-  #
-  # Is the same as writing:
-  #
-  # ```
-  # class Person
-  #   @happy = true
-  #
-  #   def happy?
-  #     @happy
-  #   end
-  # end
-  # ```
-  #
-  # If a block is given to the macro, a getter is generated with a variable
-  # that is lazily initialized with the block's contents, for examples see
-  # `#getter`.
+  # Refer to [Getters](#getters) for general details.
   macro getter?(*names, &block)
     {% for name in names %}
       {% if name.is_a?(TypeDeclaration) %}
@@ -276,62 +94,38 @@ class Object
     {% end %}
   end
 
-  # Defines raise-on-nil and nilable getter methods for each of the given arguments.
+  # Similar to `getter` but defines both raise-on-nil methods as well as query
+  # methods that return a nilable value.
   #
-  # Writing:
+  # If a type is specified, then it will become a nilable type (union of the
+  # type and `Nil`). Unlike the other `getter` methods the value is always
+  # initialized to `nil`. There are no initial value or lazy initialization.
   #
-  # ```
-  # class Person
-  #   getter! name
-  # end
-  # ```
-  #
-  # Is the same as writing:
+  # For example writing:
   #
   # ```
-  # class Person
-  #   def name?
-  #     @name
-  #   end
-  #
-  #   def name
-  #     @name.not_nil!
-  #   end
-  # end
-  # ```
-  #
-  # The arguments can be string literals, symbol literals or plain names:
-  #
-  # ```
-  # class Person
-  #   getter! :name, "age"
-  # end
-  # ```
-  #
-  # If a type declaration is given, a variable with that name
-  # is declared with that type, as nilable.
-  #
-  # ```
-  # class Person
+  # class Robot
   #   getter! name : String
   # end
   # ```
   #
-  # is the same as writing:
+  # Is equivalent to writing:
   #
   # ```
-  # class Person
+  # class Robot
   #   @name : String?
   #
-  #   def name?
+  #   def name? : String?
   #     @name
   #   end
   #
-  #   def name
-  #     @name.not_nil!
+  #   def name : String
+  #     @name.not_nil!("Robot#name cannot be nil")
   #   end
   # end
   # ```
+  #
+  # Refer to [Getters](#getters) for general details.
   macro getter!(*names)
     {% for name in names %}
       {% if name.is_a?(TypeDeclaration) %}
@@ -358,91 +152,9 @@ class Object
     {% end %}
   end
 
-  # Defines setter methods for each of the given arguments.
+  # Generates setter methods to set instance variables.
   #
-  # Writing:
-  #
-  # ```
-  # class Person
-  #   setter name
-  # end
-  # ```
-  #
-  # Is the same as writing:
-  #
-  # ```
-  # class Person
-  #   def name=(@name)
-  #   end
-  # end
-  # ```
-  #
-  # The arguments can be string literals, symbol literals or plain names:
-  #
-  # ```
-  # class Person
-  #   setter :name, "age"
-  # end
-  # ```
-  #
-  # If a type declaration is given, a variable with that name
-  # is declared with that type.
-  #
-  # ```
-  # class Person
-  #   setter name : String
-  # end
-  # ```
-  #
-  # is the same as writing:
-  #
-  # ```
-  # class Person
-  #   @name : String
-  #
-  #   def name=(@name : String)
-  #   end
-  # end
-  # ```
-  #
-  # The type declaration can also include an initial value:
-  #
-  # ```
-  # class Person
-  #   setter name : String = "John Doe"
-  # end
-  # ```
-  #
-  # Is the same as writing:
-  #
-  # ```
-  # class Person
-  #   @name : String = "John Doe"
-  #
-  #   def name=(@name : String)
-  #   end
-  # end
-  # ```
-  #
-  # An assignment can be passed too, but in this case the type of the
-  # variable must be easily inferable from the initial value:
-  #
-  # ```
-  # class Person
-  #   setter name = "John Doe"
-  # end
-  # ```
-  #
-  # Is the same as writing:
-  #
-  # ```
-  # class Person
-  #   @name = "John Doe"
-  #
-  #   def name=(@name)
-  #   end
-  # end
-  # ```
+  # Refer to [Setters](#setters) for general details.
   macro setter(*names)
     {% for name in names %}
       {% if name.is_a?(TypeDeclaration) %}
@@ -464,134 +176,10 @@ class Object
     {% end %}
   end
 
-  # Defines property methods for each of the given arguments.
+  # Generates both `getter` and `setter`
+  # methods to access instance variables.
   #
-  # Writing:
-  #
-  # ```
-  # class Person
-  #   property name
-  # end
-  # ```
-  #
-  # Is the same as writing:
-  #
-  # ```
-  # class Person
-  #   def name=(@name)
-  #   end
-  #
-  #   def name
-  #     @name
-  #   end
-  # end
-  # ```
-  #
-  # The arguments can be string literals, symbol literals or plain names:
-  #
-  # ```
-  # class Person
-  #   property :name, "age"
-  # end
-  # ```
-  #
-  # If a type declaration is given, a variable with that name
-  # is declared with that type.
-  #
-  # ```
-  # class Person
-  #   property name : String
-  # end
-  # ```
-  #
-  # Is the same as writing:
-  #
-  # ```
-  # class Person
-  #   @name : String
-  #
-  #   def name=(@name)
-  #   end
-  #
-  #   def name
-  #     @name
-  #   end
-  # end
-  # ```
-  #
-  # The type declaration can also include an initial value:
-  #
-  # ```
-  # class Person
-  #   property name : String = "John Doe"
-  # end
-  # ```
-  #
-  # Is the same as writing:
-  #
-  # ```
-  # class Person
-  #   @name : String = "John Doe"
-  #
-  #   def name=(@name : String)
-  #   end
-  #
-  #   def name
-  #     @name
-  #   end
-  # end
-  # ```
-  #
-  # An assignment can be passed too, but in this case the type of the
-  # variable must be easily inferable from the initial value:
-  #
-  # ```
-  # class Person
-  #   property name = "John Doe"
-  # end
-  # ```
-  #
-  # Is the same as writing:
-  #
-  # ```
-  # class Person
-  #   @name = "John Doe"
-  #
-  #   def name=(@name : String)
-  #   end
-  #
-  #   def name
-  #     @name
-  #   end
-  # end
-  # ```
-  #
-  # If a block is given to the macro, a property is generated
-  # with a variable that is lazily initialized with
-  # the block's contents:
-  #
-  # ```
-  # class Person
-  #   property(birth_date) { Time.local }
-  # end
-  # ```
-  #
-  # Is the same as writing:
-  #
-  # ```
-  # class Person
-  #   def birth_date
-  #     if (value = @birth_date).nil?
-  #       @birth_date = Time.local
-  #     else
-  #       value
-  #     end
-  #   end
-  #
-  #   def birth_date=(@birth_date)
-  #   end
-  # end
-  # ```
+  # Refer to the aforementioned macros for details.
   macro property(*names, &block)
     {% for name in names %}
       {% if name.is_a?(TypeDeclaration) %}
@@ -629,111 +217,10 @@ class Object
     {% end %}
   end
 
-  # Defines query property methods for each of the given arguments.
+  # Generates both `getter?` and `setter`
+  # methods to access instance variables.
   #
-  # Writing:
-  #
-  # ```
-  # class Person
-  #   property? happy
-  # end
-  # ```
-  #
-  # Is the same as writing:
-  #
-  # ```
-  # class Person
-  #   def happy=(@happy)
-  #   end
-  #
-  #   def happy?
-  #     @happy
-  #   end
-  # end
-  # ```
-  #
-  # The arguments can be string literals, symbol literals or plain names:
-  #
-  # ```
-  # class Person
-  #   property? :happy, "famous"
-  # end
-  # ```
-  #
-  # If a type declaration is given, a variable with that name
-  # is declared with that type.
-  #
-  # ```
-  # class Person
-  #   property? happy : Bool
-  # end
-  # ```
-  #
-  # Is the same as writing:
-  #
-  # ```
-  # class Person
-  #   @happy : Bool
-  #
-  #   def happy=(@happy : Bool)
-  #   end
-  #
-  #   def happy? : Bool
-  #     @happy
-  #   end
-  # end
-  # ```
-  #
-  # The type declaration can also include an initial value:
-  #
-  # ```
-  # class Person
-  #   property? happy : Bool = true
-  # end
-  # ```
-  #
-  # Is the same as writing:
-  #
-  # ```
-  # class Person
-  #   @happy : Bool = true
-  #
-  #   def happy=(@happy : Bool)
-  #   end
-  #
-  #   def happy? : Bool
-  #     @happy
-  #   end
-  # end
-  # ```
-  #
-  # An assignment can be passed too, but in this case the type of the
-  # variable must be easily inferable from the initial value:
-  #
-  # ```
-  # class Person
-  #   property? happy = true
-  # end
-  # ```
-  #
-  # Is the same as writing:
-  #
-  # ```
-  # class Person
-  #   @happy = true
-  #
-  #   def happy=(@happy)
-  #   end
-  #
-  #   def happy?
-  #     @happy
-  #   end
-  # end
-  # ```
-  #
-  # If a block is given to the macro, a property is generated
-  # with a variable that is lazily initialized with
-  # the block's contents, for examples see `#property`.
+  # Refer to the aforementioned macros for details.
   macro property?(*names, &block)
     {% for name in names %}
       {% if name.is_a?(TypeDeclaration) %}
@@ -771,68 +258,10 @@ class Object
     {% end %}
   end
 
-  # Defines raise-on-nil property methods for each of the given arguments.
+  # Generates both `getter!` and `setter`
+  # methods to access instance variables.
   #
-  # Writing:
-  #
-  # ```
-  # class Person
-  #   property! name
-  # end
-  # ```
-  #
-  # Is the same as writing:
-  #
-  # ```
-  # class Person
-  #   def name=(@name)
-  #   end
-  #
-  #   def name?
-  #     @name
-  #   end
-  #
-  #   def name
-  #     @name.not_nil!
-  #   end
-  # end
-  # ```
-  #
-  # The arguments can be string literals, symbol literals or plain names:
-  #
-  # ```
-  # class Person
-  #   property! :name, "age"
-  # end
-  # ```
-  #
-  # If a type declaration is given, a variable with that name
-  # is declared with that type, as nilable.
-  #
-  # ```
-  # class Person
-  #   property! name : String
-  # end
-  # ```
-  #
-  # Is the same as writing:
-  #
-  # ```
-  # class Person
-  #   @name : String?
-  #
-  #   def name=(@name)
-  #   end
-  #
-  #   def name?
-  #     @name
-  #   end
-  #
-  #   def name
-  #     @name.not_nil!
-  #   end
-  # end
-  # ```
+  # Refer to the aforementioned macros for details.
   macro property!(*names)
     {% for name in names %}
       {% if name.is_a?(TypeDeclaration) %}
@@ -862,119 +291,29 @@ class Object
     {% end %}
   end
 
-  # Defines getter methods for each of the given arguments.
+  # Defines getter method(s) to access class variable(s).
   #
-  # Writing:
+  # For example writing:
   #
   # ```
-  # class Person
-  #   class_getter name
+  # class Robot
+  #   class_getter backend
   # end
   # ```
   #
-  # Is the same as writing:
+  # Is equivalent to writing:
   #
   # ```
-  # class Person
-  #   def self.name
-  #     @@name
+  # class Robot
+  #   @@backend : String
+  #
+  #   def self.backend
+  #     @@backend
   #   end
   # end
   # ```
   #
-  # The arguments can be string literals, symbol literals or plain names:
-  #
-  # ```
-  # class Person
-  #   class_getter :name, "age"
-  # end
-  # ```
-  #
-  # If a type declaration is given, a variable with that name
-  # is declared with that type.
-  #
-  # ```
-  # class Person
-  #   class_getter name : String
-  # end
-  # ```
-  #
-  # Is the same as writing:
-  #
-  # ```
-  # class Person
-  #   @@name : String
-  #
-  #   def self.name : String
-  #     @@name
-  #   end
-  # end
-  # ```
-  #
-  # The type declaration can also include an initial value:
-  #
-  # ```
-  # class Person
-  #   class_getter name : String = "John Doe"
-  # end
-  # ```
-  #
-  # Is the same as writing:
-  #
-  # ```
-  # class Person
-  #   @@name : String = "John Doe"
-  #
-  #   def self.name : String
-  #     @@name
-  #   end
-  # end
-  # ```
-  #
-  # An assignment can be passed too, but in this case the type of the
-  # variable must be easily inferable from the initial value:
-  #
-  # ```
-  # class Person
-  #   class_getter name = "John Doe"
-  # end
-  # ```
-  #
-  # Is the same as writing:
-  #
-  # ```
-  # class Person
-  #   @@name = "John Doe"
-  #
-  #   def self.name : String
-  #     @@name
-  #   end
-  # end
-  # ```
-  #
-  # If a block is given to the macro, a getter is generated
-  # with a variable that is lazily initialized with
-  # the block's contents:
-  #
-  # ```
-  # class Person
-  #   class_getter(birth_date) { Time.local }
-  # end
-  # ```
-  #
-  # Is the same as writing:
-  #
-  # ```
-  # class Person
-  #   def self.birth_date
-  #     if (value = @@birth_date).nil?
-  #       @@birth_date = Time.local
-  #     else
-  #       value
-  #     end
-  #   end
-  # end
-  # ```
+  # Refer to [Getters](#getters) for details.
   macro class_getter(*names, &block)
     {% for name in names %}
       {% if name.is_a?(TypeDeclaration) %}
@@ -1009,99 +348,27 @@ class Object
     {% end %}
   end
 
-  # Defines query getter methods for each of the given arguments.
+  # Identical to `class_getter` but defines query methods.
   #
-  # Writing:
+  # For example writing:
   #
   # ```
-  # class Person
-  #   class_getter? happy
+  # class Robot
+  #   class_getter? backend
   # end
   # ```
   #
-  # Is the same as writing:
+  # Is equivalent to writing:
   #
   # ```
-  # class Person
-  #   def self.happy?
-  #     @@happy
+  # class Robot
+  #   def self.backend?
+  #     @@backend
   #   end
   # end
   # ```
   #
-  # The arguments can be string literals, symbol literals or plain names:
-  #
-  # ```
-  # class Person
-  #   class_getter? :happy, "famous"
-  # end
-  # ```
-  #
-  # If a type declaration is given, a variable with that name
-  # is declared with that type.
-  #
-  # ```
-  # class Person
-  #   class_getter? happy : Bool
-  # end
-  # ```
-  #
-  # is the same as writing:
-  #
-  # ```
-  # class Person
-  #   @@happy : Bool
-  #
-  #   def self.happy? : Bool
-  #     @@happy
-  #   end
-  # end
-  # ```
-  #
-  # The type declaration can also include an initial value:
-  #
-  # ```
-  # class Person
-  #   class_getter? happy : Bool = true
-  # end
-  # ```
-  #
-  # Is the same as writing:
-  #
-  # ```
-  # class Person
-  #   @@happy : Bool = true
-  #
-  #   def self.happy? : Bool
-  #     @@happy
-  #   end
-  # end
-  # ```
-  #
-  # An assignment can be passed too, but in this case the type of the
-  # variable must be easily inferable from the initial value:
-  #
-  # ```
-  # class Person
-  #   class_getter? happy = true
-  # end
-  # ```
-  #
-  # Is the same as writing:
-  #
-  # ```
-  # class Person
-  #   @@happy = true
-  #
-  #   def self.happy?
-  #     @@happy
-  #   end
-  # end
-  # ```
-  #
-  # If a block is given to the macro, a getter is generated with a variable
-  # that is lazily initialized with the block's contents, for examples see
-  # `#class_getter`.
+  # Refer to [Getters](#getters) for general details.
   macro class_getter?(*names, &block)
     {% for name in names %}
       {% if name.is_a?(TypeDeclaration) %}
@@ -1136,62 +403,38 @@ class Object
     {% end %}
   end
 
-  # Defines raise-on-nil and nilable getter methods for each of the given arguments.
+  # Similar to `class_getter` but defines both raise-on-nil methods as well as
+  # query methods that return a nilable value.
   #
-  # Writing:
+  # If a type is specified, then it will become a nilable type (union of the
+  # type and `Nil`). Unlike with `class_getter` the value is always initialized
+  # to `nil`. There are no initial value or lazy initialization.
+  #
+  # For example writing:
   #
   # ```
-  # class Person
-  #   class_getter! name
+  # class Robot
+  #   class_getter! backend : String
   # end
   # ```
   #
-  # Is the same as writing:
+  # Is equivalent to writing:
   #
   # ```
-  # class Person
-  #   def self.name?
-  #     @@name
+  # class Robot
+  #   @@backend : String?
+  #
+  #   def self.backend? : String?
+  #     @@backend
   #   end
   #
-  #   def self.name
-  #     @@name.not_nil!
-  #   end
-  # end
-  # ```
-  #
-  # The arguments can be string literals, symbol literals or plain names:
-  #
-  # ```
-  # class Person
-  #   class_getter! :name, "age"
-  # end
-  # ```
-  #
-  # If a type declaration is given, a variable with that name
-  # is declared with that type, as nilable.
-  #
-  # ```
-  # class Person
-  #   class_getter! name : String
-  # end
-  # ```
-  #
-  # is the same as writing:
-  #
-  # ```
-  # class Person
-  #   @@name : String?
-  #
-  #   def self.name?
-  #     @@name
-  #   end
-  #
-  #   def self.name
-  #     @@name.not_nil!
+  #   def backend : String
+  #     @@backend.not_nil!("Robot.backend cannot be nil")
   #   end
   # end
   # ```
+  #
+  # Refer to [Getters](#getters) for general details.
   macro class_getter!(*names)
     {% for name in names %}
       {% if name.is_a?(TypeDeclaration) %}
@@ -1218,91 +461,28 @@ class Object
     {% end %}
   end
 
-  # Defines setter methods for each of the given arguments.
+  # Generates setter method(s) to set class variable(s).
   #
-  # Writing:
+  # For example writing:
   #
   # ```
-  # class Person
-  #   class_setter name
+  # class Robot
+  #   class_setter factories
   # end
   # ```
   #
-  # Is the same as writing:
+  # Is equivalent to writing:
   #
   # ```
-  # class Person
-  #   def self.name=(@@name)
+  # class Robot
+  #   @@factories
+  #
+  #   def self.factories=(@@factories)
   #   end
   # end
   # ```
   #
-  # The arguments can be string literals, symbol literals or plain names:
-  #
-  # ```
-  # class Person
-  #   class_setter :name, "age"
-  # end
-  # ```
-  #
-  # If a type declaration is given, a variable with that name
-  # is declared with that type.
-  #
-  # ```
-  # class Person
-  #   class_setter name : String
-  # end
-  # ```
-  #
-  # is the same as writing:
-  #
-  # ```
-  # class Person
-  #   @@name : String
-  #
-  #   def self.name=(@@name : String)
-  #   end
-  # end
-  # ```
-  #
-  # The type declaration can also include an initial value:
-  #
-  # ```
-  # class Person
-  #   class_setter name : String = "John Doe"
-  # end
-  # ```
-  #
-  # Is the same as writing:
-  #
-  # ```
-  # class Person
-  #   @@name : String = "John Doe"
-  #
-  #   def self.name=(@@name : String)
-  #   end
-  # end
-  # ```
-  #
-  # An assignment can be passed too, but in this case the type of the
-  # variable must be easily inferable from the initial value:
-  #
-  # ```
-  # class Person
-  #   class_setter name = "John Doe"
-  # end
-  # ```
-  #
-  # Is the same as writing:
-  #
-  # ```
-  # class Person
-  #   @@name = "John Doe"
-  #
-  #   def self.name=(@@name)
-  #   end
-  # end
-  # ```
+  # Refer to [Setters](#setters) for general details.
   macro class_setter(*names)
     {% for name in names %}
       {% if name.is_a?(TypeDeclaration) %}
@@ -1324,134 +504,10 @@ class Object
     {% end %}
   end
 
-  # Defines property methods for each of the given arguments.
+  # Generates both `class_getter` and `class_setter`
+  # methods to access instance variables.
   #
-  # Writing:
-  #
-  # ```
-  # class Person
-  #   class_property name
-  # end
-  # ```
-  #
-  # Is the same as writing:
-  #
-  # ```
-  # class Person
-  #   def self.name=(@@name)
-  #   end
-  #
-  #   def self.name
-  #     @@name
-  #   end
-  # end
-  # ```
-  #
-  # The arguments can be string literals, symbol literals or plain names:
-  #
-  # ```
-  # class Person
-  #   class_property :name, "age"
-  # end
-  # ```
-  #
-  # If a type declaration is given, a variable with that name
-  # is declared with that type.
-  #
-  # ```
-  # class Person
-  #   class_property name : String
-  # end
-  # ```
-  #
-  # Is the same as writing:
-  #
-  # ```
-  # class Person
-  #   @@name : String
-  #
-  #   def self.name=(@@name)
-  #   end
-  #
-  #   def self.name
-  #     @@name
-  #   end
-  # end
-  # ```
-  #
-  # The type declaration can also include an initial value:
-  #
-  # ```
-  # class Person
-  #   class_property name : String = "John Doe"
-  # end
-  # ```
-  #
-  # Is the same as writing:
-  #
-  # ```
-  # class Person
-  #   @@name : String = "John Doe"
-  #
-  #   def self.name=(@@name : String)
-  #   end
-  #
-  #   def self.name
-  #     @@name
-  #   end
-  # end
-  # ```
-  #
-  # An assignment can be passed too, but in this case the type of the
-  # variable must be easily inferable from the initial value:
-  #
-  # ```
-  # class Person
-  #   class_property name = "John Doe"
-  # end
-  # ```
-  #
-  # Is the same as writing:
-  #
-  # ```
-  # class Person
-  #   @@name = "John Doe"
-  #
-  #   def self.name=(@@name : String)
-  #   end
-  #
-  #   def self.name
-  #     @@name
-  #   end
-  # end
-  # ```
-  #
-  # If a block is given to the macro, a property is generated
-  # with a variable that is lazily initialized with
-  # the block's contents:
-  #
-  # ```
-  # class Person
-  #   class_property(birth_date) { Time.local }
-  # end
-  # ```
-  #
-  # Is the same as writing:
-  #
-  # ```
-  # class Person
-  #   def self.birth_date
-  #     if (value = @@birth_date).nil?
-  #       @@birth_date = Time.local
-  #     else
-  #       value
-  #     end
-  #   end
-  #
-  #   def self.birth_date=(@@birth_date)
-  #   end
-  # end
-  # ```
+  # Refer to the aforementioned macros for details.
   macro class_property(*names, &block)
     {% for name in names %}
       {% if name.is_a?(TypeDeclaration) %}
@@ -1489,111 +545,10 @@ class Object
     {% end %}
   end
 
-  # Defines query property methods for each of the given arguments.
+  # Generates both `class_getter?` and `class_setter`
+  # methods to access instance variables.
   #
-  # Writing:
-  #
-  # ```
-  # class Person
-  #   class_property? happy
-  # end
-  # ```
-  #
-  # Is the same as writing:
-  #
-  # ```
-  # class Person
-  #   def self.happy=(@@happy)
-  #   end
-  #
-  #   def self.happy?
-  #     @@happy
-  #   end
-  # end
-  # ```
-  #
-  # The arguments can be string literals, symbol literals or plain names:
-  #
-  # ```
-  # class Person
-  #   class_property? :happy, "famous"
-  # end
-  # ```
-  #
-  # If a type declaration is given, a variable with that name
-  # is declared with that type.
-  #
-  # ```
-  # class Person
-  #   class_property? happy : Bool
-  # end
-  # ```
-  #
-  # Is the same as writing:
-  #
-  # ```
-  # class Person
-  #   @@happy : Bool
-  #
-  #   def self.happy=(@@happy : Bool)
-  #   end
-  #
-  #   def self.happy? : Bool
-  #     @@happy
-  #   end
-  # end
-  # ```
-  #
-  # The type declaration can also include an initial value:
-  #
-  # ```
-  # class Person
-  #   class_property? happy : Bool = true
-  # end
-  # ```
-  #
-  # Is the same as writing:
-  #
-  # ```
-  # class Person
-  #   @@happy : Bool = true
-  #
-  #   def self.happy=(@@happy : Bool)
-  #   end
-  #
-  #   def self.happy? : Bool
-  #     @@happy
-  #   end
-  # end
-  # ```
-  #
-  # An assignment can be passed too, but in this case the type of the
-  # variable must be easily inferable from the initial value:
-  #
-  # ```
-  # class Person
-  #   class_property? happy = true
-  # end
-  # ```
-  #
-  # Is the same as writing:
-  #
-  # ```
-  # class Person
-  #   @@happy = true
-  #
-  #   def self.happy=(@@happy)
-  #   end
-  #
-  #   def self.happy?
-  #     @@happy
-  #   end
-  # end
-  # ```
-  #
-  # If a block is given to the macro, a property is generated
-  # with a variable that is lazily initialized with
-  # the block's contents, for examples see `#class_property`.
+  # Refer to the aforementioned macros for details.
   macro class_property?(*names, &block)
     {% for name in names %}
       {% if name.is_a?(TypeDeclaration) %}
@@ -1631,68 +586,10 @@ class Object
     {% end %}
   end
 
-  # Defines raise-on-nil property methods for each of the given arguments.
+  # Generates both `class_getter!` and `class_setter`
+  # methods to access instance variables.
   #
-  # Writing:
-  #
-  # ```
-  # class Person
-  #   class_property! name
-  # end
-  # ```
-  #
-  # Is the same as writing:
-  #
-  # ```
-  # class Person
-  #   def self.name=(@@name)
-  #   end
-  #
-  #   def self.name?
-  #     @@name
-  #   end
-  #
-  #   def self.name
-  #     @@name.not_nil!
-  #   end
-  # end
-  # ```
-  #
-  # The arguments can be string literals, symbol literals or plain names:
-  #
-  # ```
-  # class Person
-  #   class_property! :name, "age"
-  # end
-  # ```
-  #
-  # If a type declaration is given, a variable with that name
-  # is declared with that type, as nilable.
-  #
-  # ```
-  # class Person
-  #   class_property! name : String
-  # end
-  # ```
-  #
-  # Is the same as writing:
-  #
-  # ```
-  # class Person
-  #   @@name : String?
-  #
-  #   def self.name=(@@name)
-  #   end
-  #
-  #   def self.name?
-  #     @@name
-  #   end
-  #
-  #   def self.name
-  #     @@name.not_nil!
-  #   end
-  # end
-  # ```
+  # Refer to the aforementioned macros for details.
   macro class_property!(*names)
     {% for name in names %}
       {% if name.is_a?(TypeDeclaration) %}

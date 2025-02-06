@@ -104,119 +104,6 @@ struct Generator
 
   def gen_getter
     puts <<-TEXT
-      # Defines getter methods for each of the given arguments.
-      #
-      # Writing:
-      #
-      # ```
-      # class Person
-      #   #{@macro_prefix}getter name
-      # end
-      # ```
-      #
-      # Is the same as writing:
-      #
-      # ```
-      # class Person
-      #   def #{@method_prefix}name
-      #     #{@var_prefix}name
-      #   end
-      # end
-      # ```
-      #
-      # The arguments can be string literals, symbol literals or plain names:
-      #
-      # ```
-      # class Person
-      #   #{@macro_prefix}getter :name, "age"
-      # end
-      # ```
-      #
-      # If a type declaration is given, a variable with that name
-      # is declared with that type.
-      #
-      # ```
-      # class Person
-      #   #{@macro_prefix}getter name : String
-      # end
-      # ```
-      #
-      # Is the same as writing:
-      #
-      # ```
-      # class Person
-      #   #{@var_prefix}name : String
-      #
-      #   def #{@method_prefix}name : String
-      #     #{@var_prefix}name
-      #   end
-      # end
-      # ```
-      #
-      # The type declaration can also include an initial value:
-      #
-      # ```
-      # class Person
-      #   #{@macro_prefix}getter name : String = "John Doe"
-      # end
-      # ```
-      #
-      # Is the same as writing:
-      #
-      # ```
-      # class Person
-      #   #{@var_prefix}name : String = "John Doe"
-      #
-      #   def #{@method_prefix}name : String
-      #     #{@var_prefix}name
-      #   end
-      # end
-      # ```
-      #
-      # An assignment can be passed too, but in this case the type of the
-      # variable must be easily inferable from the initial value:
-      #
-      # ```
-      # class Person
-      #   #{@macro_prefix}getter name = "John Doe"
-      # end
-      # ```
-      #
-      # Is the same as writing:
-      #
-      # ```
-      # class Person
-      #   #{@var_prefix}name = "John Doe"
-      #
-      #   def #{@method_prefix}name : String
-      #     #{@var_prefix}name
-      #   end
-      # end
-      # ```
-      #
-      # If a block is given to the macro, a getter is generated
-      # with a variable that is lazily initialized with
-      # the block's contents:
-      #
-      # ```
-      # class Person
-      #   #{@macro_prefix}getter(birth_date) { Time.local }
-      # end
-      # ```
-      #
-      # Is the same as writing:
-      #
-      # ```
-      # class Person
-      #   def #{@method_prefix}birth_date
-      #     if (value = #{@var_prefix}birth_date).nil?
-      #       #{@var_prefix}birth_date = Time.local
-      #     else
-      #       value
-      #     end
-      #   end
-      # end
-      # ```
       macro #{@macro_prefix}getter(*names, &block)
         {% for name in names %}
     #{def_vars}
@@ -228,99 +115,6 @@ struct Generator
 
   def gen_getter?
     puts <<-TEXT
-      # Defines query getter methods for each of the given arguments.
-      #
-      # Writing:
-      #
-      # ```
-      # class Person
-      #   #{@macro_prefix}getter? happy
-      # end
-      # ```
-      #
-      # Is the same as writing:
-      #
-      # ```
-      # class Person
-      #   def #{@method_prefix}happy?
-      #     #{@var_prefix}happy
-      #   end
-      # end
-      # ```
-      #
-      # The arguments can be string literals, symbol literals or plain names:
-      #
-      # ```
-      # class Person
-      #   #{@macro_prefix}getter? :happy, "famous"
-      # end
-      # ```
-      #
-      # If a type declaration is given, a variable with that name
-      # is declared with that type.
-      #
-      # ```
-      # class Person
-      #   #{@macro_prefix}getter? happy : Bool
-      # end
-      # ```
-      #
-      # is the same as writing:
-      #
-      # ```
-      # class Person
-      #   #{@var_prefix}happy : Bool
-      #
-      #   def #{@method_prefix}happy? : Bool
-      #     #{@var_prefix}happy
-      #   end
-      # end
-      # ```
-      #
-      # The type declaration can also include an initial value:
-      #
-      # ```
-      # class Person
-      #   #{@macro_prefix}getter? happy : Bool = true
-      # end
-      # ```
-      #
-      # Is the same as writing:
-      #
-      # ```
-      # class Person
-      #   #{@var_prefix}happy : Bool = true
-      #
-      #   def #{@method_prefix}happy? : Bool
-      #     #{@var_prefix}happy
-      #   end
-      # end
-      # ```
-      #
-      # An assignment can be passed too, but in this case the type of the
-      # variable must be easily inferable from the initial value:
-      #
-      # ```
-      # class Person
-      #   #{@macro_prefix}getter? happy = true
-      # end
-      # ```
-      #
-      # Is the same as writing:
-      #
-      # ```
-      # class Person
-      #   #{@var_prefix}happy = true
-      #
-      #   def #{@method_prefix}happy?
-      #     #{@var_prefix}happy
-      #   end
-      # end
-      # ```
-      #
-      # If a block is given to the macro, a getter is generated with a variable
-      # that is lazily initialized with the block's contents, for examples see
-      # `##{@macro_prefix}getter`.
       macro #{@macro_prefix}getter?(*names, &block)
         {% for name in names %}
     #{def_vars}
@@ -332,134 +126,10 @@ struct Generator
 
   def gen_property
     puts <<-TEXT
-      # Defines property methods for each of the given arguments.
+      # Generates both `#{@macro_prefix}getter` and `#{@macro_prefix}setter`
+      # methods to access instance variables.
       #
-      # Writing:
-      #
-      # ```
-      # class Person
-      #   #{@macro_prefix}property name
-      # end
-      # ```
-      #
-      # Is the same as writing:
-      #
-      # ```
-      # class Person
-      #   def #{@method_prefix}name=(#{@var_prefix}name)
-      #   end
-      #
-      #   def #{@method_prefix}name
-      #     #{@var_prefix}name
-      #   end
-      # end
-      # ```
-      #
-      # The arguments can be string literals, symbol literals or plain names:
-      #
-      # ```
-      # class Person
-      #   #{@macro_prefix}property :name, "age"
-      # end
-      # ```
-      #
-      # If a type declaration is given, a variable with that name
-      # is declared with that type.
-      #
-      # ```
-      # class Person
-      #   #{@macro_prefix}property name : String
-      # end
-      # ```
-      #
-      # Is the same as writing:
-      #
-      # ```
-      # class Person
-      #   #{@var_prefix}name : String
-      #
-      #   def #{@method_prefix}name=(#{@var_prefix}name)
-      #   end
-      #
-      #   def #{@method_prefix}name
-      #     #{@var_prefix}name
-      #   end
-      # end
-      # ```
-      #
-      # The type declaration can also include an initial value:
-      #
-      # ```
-      # class Person
-      #   #{@macro_prefix}property name : String = "John Doe"
-      # end
-      # ```
-      #
-      # Is the same as writing:
-      #
-      # ```
-      # class Person
-      #   #{@var_prefix}name : String = "John Doe"
-      #
-      #   def #{@method_prefix}name=(#{@var_prefix}name : String)
-      #   end
-      #
-      #   def #{@method_prefix}name
-      #     #{@var_prefix}name
-      #   end
-      # end
-      # ```
-      #
-      # An assignment can be passed too, but in this case the type of the
-      # variable must be easily inferable from the initial value:
-      #
-      # ```
-      # class Person
-      #   #{@macro_prefix}property name = "John Doe"
-      # end
-      # ```
-      #
-      # Is the same as writing:
-      #
-      # ```
-      # class Person
-      #   #{@var_prefix}name = "John Doe"
-      #
-      #   def #{@method_prefix}name=(#{@var_prefix}name : String)
-      #   end
-      #
-      #   def #{@method_prefix}name
-      #     #{@var_prefix}name
-      #   end
-      # end
-      # ```
-      #
-      # If a block is given to the macro, a property is generated
-      # with a variable that is lazily initialized with
-      # the block's contents:
-      #
-      # ```
-      # class Person
-      #   #{@macro_prefix}property(birth_date) { Time.local }
-      # end
-      # ```
-      #
-      # Is the same as writing:
-      #
-      # ```
-      # class Person
-      #   def #{@method_prefix}birth_date
-      #     if (value = #{@var_prefix}birth_date).nil?
-      #       #{@var_prefix}birth_date = Time.local
-      #     else
-      #       value
-      #     end
-      #   end
-      #
-      #   def #{@method_prefix}birth_date=(#{@var_prefix}birth_date)
-      #   end
-      # end
-      # ```
+      # Refer to the aforementioned macros for details.
       macro #{@macro_prefix}property(*names, &block)
         {% for name in names %}
     #{def_vars}
@@ -472,111 +142,10 @@ struct Generator
 
   def gen_property?
     puts <<-TEXT
-      # Defines query property methods for each of the given arguments.
+      # Generates both `#{@macro_prefix}getter?` and `#{@macro_prefix}setter`
+      # methods to access instance variables.
       #
-      # Writing:
-      #
-      # ```
-      # class Person
-      #   #{@macro_prefix}property? happy
-      # end
-      # ```
-      #
-      # Is the same as writing:
-      #
-      # ```
-      # class Person
-      #   def #{@method_prefix}happy=(#{@var_prefix}happy)
-      #   end
-      #
-      #   def #{@method_prefix}happy?
-      #     #{@var_prefix}happy
-      #   end
-      # end
-      # ```
-      #
-      # The arguments can be string literals, symbol literals or plain names:
-      #
-      # ```
-      # class Person
-      #   #{@macro_prefix}property? :happy, "famous"
-      # end
-      # ```
-      #
-      # If a type declaration is given, a variable with that name
-      # is declared with that type.
-      #
-      # ```
-      # class Person
-      #   #{@macro_prefix}property? happy : Bool
-      # end
-      # ```
-      #
-      # Is the same as writing:
-      #
-      # ```
-      # class Person
-      #   #{@var_prefix}happy : Bool
-      #
-      #   def #{@method_prefix}happy=(#{@var_prefix}happy : Bool)
-      #   end
-      #
-      #   def #{@method_prefix}happy? : Bool
-      #     #{@var_prefix}happy
-      #   end
-      # end
-      # ```
-      #
-      # The type declaration can also include an initial value:
-      #
-      # ```
-      # class Person
-      #   #{@macro_prefix}property? happy : Bool = true
-      # end
-      # ```
-      #
-      # Is the same as writing:
-      #
-      # ```
-      # class Person
-      #   #{@var_prefix}happy : Bool = true
-      #
-      #   def #{@method_prefix}happy=(#{@var_prefix}happy : Bool)
-      #   end
-      #
-      #   def #{@method_prefix}happy? : Bool
-      #     #{@var_prefix}happy
-      #   end
-      # end
-      # ```
-      #
-      # An assignment can be passed too, but in this case the type of the
-      # variable must be easily inferable from the initial value:
-      #
-      # ```
-      # class Person
-      #   #{@macro_prefix}property? happy = true
-      # end
-      # ```
-      #
-      # Is the same as writing:
-      #
-      # ```
-      # class Person
-      #   #{@var_prefix}happy = true
-      #
-      #   def #{@method_prefix}happy=(#{@var_prefix}happy)
-      #   end
-      #
-      #   def #{@method_prefix}happy?
-      #     #{@var_prefix}happy
-      #   end
-      # end
-      # ```
-      #
-      # If a block is given to the macro, a property is generated
-      # with a variable that is lazily initialized with
-      # the block's contents, for examples see `##{@macro_prefix}property`.
+      # Refer to the aforementioned macros for details.
       macro #{@macro_prefix}property?(*names, &block)
         {% for name in names %}
     #{def_vars}
@@ -589,62 +158,6 @@ struct Generator
 
   def gen_getter!
     puts <<-TEXT
-      # Defines raise-on-nil and nilable getter methods for each of the given arguments.
-      #
-      # Writing:
-      #
-      # ```
-      # class Person
-      #   #{@macro_prefix}getter! name
-      # end
-      # ```
-      #
-      # Is the same as writing:
-      #
-      # ```
-      # class Person
-      #   def #{@method_prefix}name?
-      #     #{@var_prefix}name
-      #   end
-      #
-      #   def #{@method_prefix}name
-      #     #{@var_prefix}name.not_nil!
-      #   end
-      # end
-      # ```
-      #
-      # The arguments can be string literals, symbol literals or plain names:
-      #
-      # ```
-      # class Person
-      #   #{@macro_prefix}getter! :name, "age"
-      # end
-      # ```
-      #
-      # If a type declaration is given, a variable with that name
-      # is declared with that type, as nilable.
-      #
-      # ```
-      # class Person
-      #   #{@macro_prefix}getter! name : String
-      # end
-      # ```
-      #
-      # is the same as writing:
-      #
-      # ```
-      # class Person
-      #   #{@var_prefix}name : String?
-      #
-      #   def #{@method_prefix}name?
-      #     #{@var_prefix}name
-      #   end
-      #
-      #   def #{@method_prefix}name
-      #     #{@var_prefix}name.not_nil!
-      #   end
-      # end
-      # ```
       macro #{@macro_prefix}getter!(*names)
         {% for name in names %}
     #{def_vars!}
@@ -656,68 +169,10 @@ struct Generator
 
   def gen_property!
     puts <<-TEXT
-      # Defines raise-on-nil property methods for each of the given arguments.
+      # Generates both `#{@macro_prefix}getter!` and `#{@macro_prefix}setter`
+      # methods to access instance variables.
       #
-      # Writing:
-      #
-      # ```
-      # class Person
-      #   #{@macro_prefix}property! name
-      # end
-      # ```
-      #
-      # Is the same as writing:
-      #
-      # ```
-      # class Person
-      #   def #{@method_prefix}name=(#{@var_prefix}name)
-      #   end
-      #
-      #   def #{@method_prefix}name?
-      #     #{@var_prefix}name
-      #   end
-      #
-      #   def #{@method_prefix}name
-      #     #{@var_prefix}name.not_nil!
-      #   end
-      # end
-      # ```
-      #
-      # The arguments can be string literals, symbol literals or plain names:
-      #
-      # ```
-      # class Person
-      #   #{@macro_prefix}property! :name, "age"
-      # end
-      # ```
-      #
-      # If a type declaration is given, a variable with that name
-      # is declared with that type, as nilable.
-      #
-      # ```
-      # class Person
-      #   #{@macro_prefix}property! name : String
-      # end
-      # ```
-      #
-      # Is the same as writing:
-      #
-      # ```
-      # class Person
-      #   #{@var_prefix}name : String?
-      #
-      #   def #{@method_prefix}name=(#{@var_prefix}name)
-      #   end
-      #
-      #   def #{@method_prefix}name?
-      #     #{@var_prefix}name
-      #   end
-      #
-      #   def #{@method_prefix}name
-      #     #{@var_prefix}name.not_nil!
-      #   end
-      # end
-      # ```
+      # Refer to the aforementioned macros for details.
       macro #{@macro_prefix}property!(*names)
         {% for name in names %}
     #{def_vars!}
@@ -730,91 +185,6 @@ struct Generator
 
   def gen_setter
     puts <<-TEXT
-      # Defines setter methods for each of the given arguments.
-      #
-      # Writing:
-      #
-      # ```
-      # class Person
-      #   #{@macro_prefix}setter name
-      # end
-      # ```
-      #
-      # Is the same as writing:
-      #
-      # ```
-      # class Person
-      #   def #{@method_prefix}name=(#{@var_prefix}name)
-      #   end
-      # end
-      # ```
-      #
-      # The arguments can be string literals, symbol literals or plain names:
-      #
-      # ```
-      # class Person
-      #   #{@macro_prefix}setter :name, "age"
-      # end
-      # ```
-      #
-      # If a type declaration is given, a variable with that name
-      # is declared with that type.
-      #
-      # ```
-      # class Person
-      #   #{@macro_prefix}setter name : String
-      # end
-      # ```
-      #
-      # is the same as writing:
-      #
-      # ```
-      # class Person
-      #   #{@var_prefix}name : String
-      #
-      #   def #{@method_prefix}name=(#{@var_prefix}name : String)
-      #   end
-      # end
-      # ```
-      #
-      # The type declaration can also include an initial value:
-      #
-      # ```
-      # class Person
-      #   #{@macro_prefix}setter name : String = "John Doe"
-      # end
-      # ```
-      #
-      # Is the same as writing:
-      #
-      # ```
-      # class Person
-      #   #{@var_prefix}name : String = "John Doe"
-      #
-      #   def #{@method_prefix}name=(#{@var_prefix}name : String)
-      #   end
-      # end
-      # ```
-      #
-      # An assignment can be passed too, but in this case the type of the
-      # variable must be easily inferable from the initial value:
-      #
-      # ```
-      # class Person
-      #   #{@macro_prefix}setter name = "John Doe"
-      # end
-      # ```
-      #
-      # Is the same as writing:
-      #
-      # ```
-      # class Person
-      #   #{@var_prefix}name = "John Doe"
-      #
-      #   def #{@method_prefix}name=(#{@var_prefix}name)
-      #   end
-      # end
-      # ```
       macro #{@macro_prefix}setter(*names)
         {% for name in names %}
     #{def_vars_no_macro_block}
@@ -837,10 +207,79 @@ File.open(output, "w") do |f|
 
   g = Generator.new(f, "", "", "@", "#")
 
+  f.puts <<-MARKDOWN
+  # Defines getter method(s) to access instance variable(s).
+  #
+  # Refer to [Getters](#getters) for details.
+  MARKDOWN
   g.gen_getter
+
+  f.puts <<-MARKDOWN
+  # Identical to `getter` but defines query methods.
+  #
+  # For example writing:
+  #
+  # ```
+  # class Robot
+  #   getter? working
+  # end
+  # ```
+  #
+  # Is equivalent to writing:
+  #
+  # ```
+  # class Robot
+  #   def working?
+  #     @working
+  #   end
+  # end
+  # ```
+  #
+  # Refer to [Getters](#getters) for general details.
+  MARKDOWN
   g.gen_getter?
+
+  f.puts <<-MARKDOWN
+  # Similar to `getter` but defines both raise-on-nil methods as well as query
+  # methods that return a nilable value.
+  #
+  # If a type is specified, then it will become a nilable type (union of the
+  # type and `Nil`). Unlike the other `getter` methods the value is always
+  # initialized to `nil`. There are no initial value or lazy initialization.
+  #
+  # For example writing:
+  #
+  # ```
+  # class Robot
+  #   getter! name : String
+  # end
+  # ```
+  #
+  # Is equivalent to writing:
+  #
+  # ```
+  # class Robot
+  #   @name : String?
+  #
+  #   def name? : String?
+  #     @name
+  #   end
+  #
+  #   def name : String
+  #     @name.not_nil!("Robot#name cannot be nil")
+  #   end
+  # end
+  # ```
+  #
+  # Refer to [Getters](#getters) for general details.
+  MARKDOWN
   g.gen_getter!
 
+  f.puts <<-MARKDOWN
+  # Generates setter methods to set instance variables.
+  #
+  # Refer to [Setters](#setters) for general details.
+  MARKDOWN
   g.gen_setter
 
   g.gen_property
@@ -849,10 +288,118 @@ File.open(output, "w") do |f|
 
   g = Generator.new(f, "class_", "self.", "@@", ".")
 
+  f.puts <<-MARKDOWN
+  # Defines getter method(s) to access class variable(s).
+  #
+  # For example writing:
+  #
+  # ```
+  # class Robot
+  #   class_getter backend
+  # end
+  # ```
+  #
+  # Is equivalent to writing:
+  #
+  # ```
+  # class Robot
+  #   @@backend : String
+  #
+  #   def self.backend
+  #     @@backend
+  #   end
+  # end
+  # ```
+  #
+  # Refer to [Getters](#getters) for details.
+  MARKDOWN
   g.gen_getter
+
+  f.puts <<-MARKDOWN
+  # Identical to `class_getter` but defines query methods.
+  #
+  # For example writing:
+  #
+  # ```
+  # class Robot
+  #   class_getter? backend
+  # end
+  # ```
+  #
+  # Is equivalent to writing:
+  #
+  # ```
+  # class Robot
+  #   def self.backend?
+  #     @@backend
+  #   end
+  # end
+  # ```
+  #
+  # Refer to [Getters](#getters) for general details.
+  MARKDOWN
   g.gen_getter?
+
+  f.puts <<-MARKDOWN
+  # Similar to `class_getter` but defines both raise-on-nil methods as well as
+  # query methods that return a nilable value.
+  #
+  # If a type is specified, then it will become a nilable type (union of the
+  # type and `Nil`). Unlike with `class_getter` the value is always initialized
+  # to `nil`. There are no initial value or lazy initialization.
+  #
+  # For example writing:
+  #
+  # ```
+  # class Robot
+  #   class_getter! backend : String
+  # end
+  # ```
+  #
+  # Is equivalent to writing:
+  #
+  # ```
+  # class Robot
+  #   @@backend : String?
+  #
+  #   def self.backend? : String?
+  #     @@backend
+  #   end
+  #
+  #   def backend : String
+  #     @@backend.not_nil!("Robot.backend cannot be nil")
+  #   end
+  # end
+  # ```
+  #
+  # Refer to [Getters](#getters) for general details.
+  MARKDOWN
   g.gen_getter!
 
+  f.puts <<-MARKDOWN
+  # Generates setter method(s) to set class variable(s).
+  #
+  # For example writing:
+  #
+  # ```
+  # class Robot
+  #   class_setter factories
+  # end
+  # ```
+  #
+  # Is equivalent to writing:
+  #
+  # ```
+  # class Robot
+  #   @@factories
+  #
+  #   def self.factories=(@@factories)
+  #   end
+  # end
+  # ```
+  #
+  # Refer to [Setters](#setters) for general details.
+  MARKDOWN
   g.gen_setter
 
   g.gen_property

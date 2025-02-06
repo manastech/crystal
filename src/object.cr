@@ -1,6 +1,201 @@
 require "./object/properties"
 
 # `Object` is the base type of all Crystal objects.
+#
+# ## Getters
+#
+# Multiple macros are available to easily declare, initialize and expose
+# instance variables as well as class variables on an `Object` by generating
+# simple accessor methods.
+#
+# For example writing:
+#
+# ```
+# class Person
+#   getter name
+# end
+# ```
+#
+# Is the same as writing:
+#
+# ```
+# class Person
+#   def name
+#     @name
+#   end
+# end
+# ```
+#
+# For class variables we'd have called `class_getter name` that would have
+# generated a `def self.name` class method returning `@@name`.
+#
+# We can define as many variables as necessary in a single call. For example
+# `getter name, age, city` will create a getter method for each of `name`, `age`
+# and `city`.
+#
+# ### Type and initial value
+#
+# Instead of plain arguments, we can specify a type as well as an initial value.
+# If the initial value is simple enough Crystal should be able to infer the type
+# of the instance or class variable!
+#
+# Specifying a type will also declare the instance or class variable with said
+# type and type the accessor method arguments and return type accordingly.
+#
+# For example writing:
+#
+# ```
+# class Person
+#   getter name : String
+#   getter age = 0
+#   getter city : String = "unspecified"
+# end
+# ```
+#
+# Is the same as writing:
+#
+# ```
+# class Person
+#   @name : String
+#   @age = 0
+#   @city : String = "unspecified"
+#
+#   def name : String
+#     @name
+#   end
+#
+#   def age
+#     @age
+#   end
+#
+#   def city : String
+#     @city
+#   end
+# end
+# ```
+#
+# The initial value of an instance variable is automatically set when the object
+# is constructed. The initial value of a class variable will be set when the
+# program starts up.
+#
+# ### Lazy initialization
+#
+# Instead of eagerly initializing the value, we can lazily initialize it the
+# first time the accessor method is called.
+#
+# Since the variable will be lazily initialized the type of the variable will be
+# a nilable type. The generated method however will return the specified type
+# only (not a nilable).
+#
+# For example writing:
+#
+# ```
+# class Person
+#   getter(city : City) { City.unspecified }
+# end
+# ```
+#
+# Is equivalent to writing:
+#
+# ```
+# class Person
+#   @city : City?
+#
+#   def city : City
+#     if (city == @city).nil?
+#       @city = City.unspecified
+#     else
+#       city
+#     end
+#   end
+# end
+# ```
+#
+# ### Variants
+#
+# Please refer to the different variants to understand how they differ from the
+# general overview presented above:
+#
+# - `getter`
+# - `getter?`
+# - `getter!`
+# - `class_getter`
+# - `class_getter?`
+# - `class_getter!`
+#
+# ## Setters
+#
+# The `setter` and `class_setter` macros are the write counterparts of the
+# getter macros. They declare `name=(value)` accessor methods. The arguments
+# behave just as for the getter macros.
+#
+# For example writing:
+#
+# ```
+# class Person
+#   setter name
+#   setter age = 0
+#   setter city : String = "unspecified"
+# end
+# ```
+#
+# Is the same as writing:
+#
+# ```
+# class Person
+#   @age = 0
+#   @city : String = "unspecified"
+#
+#   def name=(@name)
+#   end
+#
+#   def age=(@age)
+#   end
+#
+#   def city=(@city : String) : String
+#   end
+# end
+# ```
+#
+# For class variables we'd have called `class_setter name` that would have
+# generated a `def self.name=(@@name)` class method instead.
+#
+# ## Properties
+#
+# The property macros define both getter and setter methods at once.
+#
+# For example writing:
+#
+# ```
+# class Person
+#   property name
+# end
+# ```
+#
+# Is equivalent to writing:
+#
+# ```
+# class Person
+#   getter name
+#   setter name
+# end
+# ```
+#
+# Which is the same as writing:
+#
+# ```
+# class Person
+#   def name
+#     @name
+#   end
+#
+#   def name=(@name)
+#   end
+# end
+# ```
+#
+# Refer to [Getters](#getters) and [Setters](#setters) above for details. The
+# macros take the exact same arguments.
 class Object
   # Returns `true` if this object is equal to *other*.
   #
