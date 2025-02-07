@@ -62,15 +62,37 @@ struct Generator
 
   def def_getter(suffix = "")
     <<-TEXT
-          def #{@method_prefix}{{var_name}}#{suffix} {% if type %} : {{type}} {% end %}
+          def {{var_name}}#{suffix} {% if type %} : {{type}} {% end %}
             {% if block %}
-              if (%value = #{@var_prefix}{{var_name}}).nil?
-                #{@var_prefix}{{var_name}} = {{yield}}
+              if (%value = @{{var_name}}).nil?
+                @{{var_name}} = {{yield}}
               else
                 %value
               end
             {% else %}
-              #{@var_prefix}{{var_name}}
+              @{{var_name}}
+            {% end %}
+          end
+
+    TEXT
+  end
+
+  def def_class_getter(suffix = "")
+    <<-TEXT
+          {% if block %} @@__{{var_name}}_flag = false {% end %}
+
+          def self.{{var_name}}#{suffix} {% if type %} : {{type}} {% end %}
+            {% if block %}
+              if (%value = @@{{var_name}}).nil?
+                ::Crystal.once(pointerof(@@__{{var_name}}_flag)) do
+                  @@{{var_name}} = {{yield}} if @@{{var_name}}.nil?
+                end
+                @@{{var_name}}.not_nil!
+              else
+                %value
+              end
+            {% else %}
+              @@{{var_name}}
             {% end %}
           end
 
@@ -111,7 +133,7 @@ struct Generator
       macro #{@macro_prefix}property(*names, &block)
         {% for name in names %}
     #{def_vars}
-    #{def_getter}
+    #{@macro_prefix == "" ? def_getter : def_class_getter}
     #{def_setter}
         {% end %}
       end
@@ -123,7 +145,7 @@ struct Generator
       macro #{@macro_prefix}property?(*names, &block)
         {% for name in names %}
     #{def_vars}
-    #{def_getter "?"}
+    #{@macro_prefix == "" ? def_getter("?") : def_class_getter("?")}
     #{def_setter}
         {% end %}
       end
@@ -269,11 +291,42 @@ File.open(output, "w") do |f|
     # end
     # ```
     #
+    # The lazy initialization of class variables (by passing a block) is
+    # guaranteed to be performed exactly once and be safe of concurrency
+    # (fiber) and parallelism (thread) issues.
+    #
+    # For example writing:
+    #
+    # ```
+    # class Robot
+    #   class_getter(backend) { Backend.default }
+    # end
+    # ```
+    #
+    # Is roughly equivalent to writing:
+    #
+    # ```
+    # class Robot
+    #   @@backend_mutex = Mutex.new
+    #
+    #   def self.backend
+    #     if (backend = @@backend).nil?
+    #       @@backend_mutex.synchronize do
+    #         @@backend = Backend.default if @@backend.nil?
+    #       end
+    #       @@backend.not_nil!
+    #     else
+    #       backend
+    #     end
+    #   end
+    # end
+    # ```
+    #
     # Refer to [Getters](#getters) for details.
     macro class_getter(*names, &block)
       {% for name in names %}
   #{g.def_vars}
-  #{g.def_getter}
+  #{g.def_class_getter}
       {% end %}
     end
 
@@ -301,7 +354,7 @@ File.open(output, "w") do |f|
     macro class_getter?(*names, &block)
       {% for name in names %}
   #{g.def_vars}
-  #{g.def_getter "?"}
+  #{g.def_class_getter "?"}
       {% end %}
     end
 

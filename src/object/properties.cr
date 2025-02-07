@@ -311,6 +311,37 @@ class Object
   # end
   # ```
   #
+  # The lazy initialization of class variables (by passing a block) is
+  # guaranteed to be performed exactly once and be safe of concurrency
+  # (fiber) and parallelism (thread) issues.
+  #
+  # For example writing:
+  #
+  # ```
+  # class Robot
+  #   class_getter(backend) { Backend.default }
+  # end
+  # ```
+  #
+  # Is roughly equivalent to writing:
+  #
+  # ```
+  # class Robot
+  #   @@backend_mutex = Mutex.new
+  #
+  #   def self.backend
+  #     if (backend = @@backend).nil?
+  #       @@backend_mutex.synchronize do
+  #         @@backend = Backend.default if @@backend.nil?
+  #       end
+  #       @@backend.not_nil!
+  #     else
+  #       backend
+  #     end
+  #   end
+  # end
+  # ```
+  #
   # Refer to [Getters](#getters) for details.
   macro class_getter(*names, &block)
     {% for name in names %}
@@ -331,10 +362,15 @@ class Object
         {% type = nil %}
       {% end %}
 
+      {% if block %} @@__{{var_name}}_flag = false {% end %}
+
       def self.{{var_name}} {% if type %} : {{type}} {% end %}
         {% if block %}
           if (%value = @@{{var_name}}).nil?
-            @@{{var_name}} = {{yield}}
+            ::Crystal.once(pointerof(@@__{{var_name}}_flag)) do
+              @@{{var_name}} = {{yield}} if @@{{var_name}}.nil?
+            end
+            @@{{var_name}}.not_nil!
           else
             %value
           end
@@ -386,10 +422,15 @@ class Object
         {% type = nil %}
       {% end %}
 
+      {% if block %} @@__{{var_name}}_flag = false {% end %}
+
       def self.{{var_name}}? {% if type %} : {{type}} {% end %}
         {% if block %}
           if (%value = @@{{var_name}}).nil?
-            @@{{var_name}} = {{yield}}
+            ::Crystal.once(pointerof(@@__{{var_name}}_flag)) do
+              @@{{var_name}} = {{yield}} if @@{{var_name}}.nil?
+            end
+            @@{{var_name}}.not_nil!
           else
             %value
           end
@@ -525,10 +566,15 @@ class Object
         {% type = nil %}
       {% end %}
 
+      {% if block %} @@__{{var_name}}_flag = false {% end %}
+
       def self.{{var_name}} {% if type %} : {{type}} {% end %}
         {% if block %}
           if (%value = @@{{var_name}}).nil?
-            @@{{var_name}} = {{yield}}
+            ::Crystal.once(pointerof(@@__{{var_name}}_flag)) do
+              @@{{var_name}} = {{yield}} if @@{{var_name}}.nil?
+            end
+            @@{{var_name}}.not_nil!
           else
             %value
           end
@@ -566,10 +612,15 @@ class Object
         {% type = nil %}
       {% end %}
 
+      {% if block %} @@__{{var_name}}_flag = false {% end %}
+
       def self.{{var_name}}? {% if type %} : {{type}} {% end %}
         {% if block %}
           if (%value = @@{{var_name}}).nil?
-            @@{{var_name}} = {{yield}}
+            ::Crystal.once(pointerof(@@__{{var_name}}_flag)) do
+              @@{{var_name}} = {{yield}} if @@{{var_name}}.nil?
+            end
+            @@{{var_name}}.not_nil!
           else
             %value
           end
