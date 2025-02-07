@@ -102,29 +102,7 @@ struct Generator
     TEXT
   end
 
-  def gen_getter
-    puts <<-TEXT
-      macro #{@macro_prefix}getter(*names, &block)
-        {% for name in names %}
-    #{def_vars}
-    #{def_getter}
-        {% end %}
-      end
-    TEXT
-  end
-
-  def gen_getter?
-    puts <<-TEXT
-      macro #{@macro_prefix}getter?(*names, &block)
-        {% for name in names %}
-    #{def_vars}
-    #{def_getter "?"}
-        {% end %}
-      end
-    TEXT
-  end
-
-  def gen_property
+  def gen_property_macros
     puts <<-TEXT
       # Generates both `#{@macro_prefix}getter` and `#{@macro_prefix}setter`
       # methods to access instance variables.
@@ -137,11 +115,7 @@ struct Generator
     #{def_setter}
         {% end %}
       end
-    TEXT
-  end
 
-  def gen_property?
-    puts <<-TEXT
       # Generates both `#{@macro_prefix}getter?` and `#{@macro_prefix}setter`
       # methods to access instance variables.
       #
@@ -153,22 +127,7 @@ struct Generator
     #{def_setter}
         {% end %}
       end
-    TEXT
-  end
 
-  def gen_getter!
-    puts <<-TEXT
-      macro #{@macro_prefix}getter!(*names)
-        {% for name in names %}
-    #{def_vars!}
-    #{def_getter!}
-        {% end %}
-      end
-    TEXT
-  end
-
-  def gen_property!
-    puts <<-TEXT
       # Generates both `#{@macro_prefix}getter!` and `#{@macro_prefix}setter`
       # methods to access instance variables.
       #
@@ -177,17 +136,6 @@ struct Generator
         {% for name in names %}
     #{def_vars!}
     #{def_getter!}
-    #{def_setter}
-        {% end %}
-      end
-    TEXT
-  end
-
-  def gen_setter
-    puts <<-TEXT
-      macro #{@macro_prefix}setter(*names)
-        {% for name in names %}
-    #{def_vars_no_macro_block}
     #{def_setter}
         {% end %}
       end
@@ -207,204 +155,226 @@ File.open(output, "w") do |f|
 
   g = Generator.new(f, "", "", "@", "#")
 
-  f.puts <<-MARKDOWN
-  # Defines getter method(s) to access instance variable(s).
-  #
-  # Refer to [Getters](#getters) for details.
-  MARKDOWN
-  g.gen_getter
+  f.puts <<-TEXT
+    # Defines getter method(s) to access instance variable(s).
+    #
+    # Refer to [Getters](#getters) for details.
+    macro getter(*names, &block)
+      {% for name in names %}
+  #{g.def_vars}
+  #{g.def_getter}
+      {% end %}
+    end
 
-  f.puts <<-MARKDOWN
-  # Identical to `getter` but defines query methods.
-  #
-  # For example writing:
-  #
-  # ```
-  # class Robot
-  #   getter? working
-  # end
-  # ```
-  #
-  # Is equivalent to writing:
-  #
-  # ```
-  # class Robot
-  #   def working?
-  #     @working
-  #   end
-  # end
-  # ```
-  #
-  # Refer to [Getters](#getters) for general details.
-  MARKDOWN
-  g.gen_getter?
+    # Identical to `getter` but defines query methods.
+    #
+    # For example writing:
+    #
+    # ```
+    # class Robot
+    #   getter? working
+    # end
+    # ```
+    #
+    # Is equivalent to writing:
+    #
+    # ```
+    # class Robot
+    #   def working?
+    #     @working
+    #   end
+    # end
+    # ```
+    #
+    # Refer to [Getters](#getters) for general details.
+    macro getter?(*names, &block)
+      {% for name in names %}
+  #{g.def_vars}
+  #{g.def_getter "?"}
+      {% end %}
+    end
 
-  f.puts <<-MARKDOWN
-  # Similar to `getter` but defines both raise-on-nil methods as well as query
-  # methods that return a nilable value.
-  #
-  # If a type is specified, then it will become a nilable type (union of the
-  # type and `Nil`). Unlike the other `getter` methods the value is always
-  # initialized to `nil`. There are no initial value or lazy initialization.
-  #
-  # For example writing:
-  #
-  # ```
-  # class Robot
-  #   getter! name : String
-  # end
-  # ```
-  #
-  # Is equivalent to writing:
-  #
-  # ```
-  # class Robot
-  #   @name : String?
-  #
-  #   def name? : String?
-  #     @name
-  #   end
-  #
-  #   def name : String
-  #     @name.not_nil!("Robot#name cannot be nil")
-  #   end
-  # end
-  # ```
-  #
-  # Refer to [Getters](#getters) for general details.
-  MARKDOWN
-  g.gen_getter!
+    # Similar to `getter` but defines both raise-on-nil methods as well as query
+    # methods that return a nilable value.
+    #
+    # If a type is specified, then it will become a nilable type (union of the
+    # type and `Nil`). Unlike the other `getter` methods the value is always
+    # initialized to `nil`. There are no initial value or lazy initialization.
+    #
+    # For example writing:
+    #
+    # ```
+    # class Robot
+    #   getter! name : String
+    # end
+    # ```
+    #
+    # Is equivalent to writing:
+    #
+    # ```
+    # class Robot
+    #   @name : String?
+    #
+    #   def name? : String?
+    #     @name
+    #   end
+    #
+    #   def name : String
+    #     @name.not_nil!("Robot#name cannot be nil")
+    #   end
+    # end
+    # ```
+    #
+    # Refer to [Getters](#getters) for general details.
+    macro getter!(*names)
+      {% for name in names %}
+  #{g.def_vars!}
+  #{g.def_getter!}
+      {% end %}
+    end
 
-  f.puts <<-MARKDOWN
-  # Generates setter methods to set instance variables.
-  #
-  # Refer to [Setters](#setters) for general details.
-  MARKDOWN
-  g.gen_setter
+    # Generates setter methods to set instance variables.
+    #
+    # Refer to [Setters](#setters) for general details.
+    macro setter(*names)
+      {% for name in names %}
+  #{g.def_vars_no_macro_block}
+  #{g.def_setter}
+      {% end %}
+    end
+  TEXT
 
-  g.gen_property
-  g.gen_property?
-  g.gen_property!
+  g.gen_property_macros
 
   g = Generator.new(f, "class_", "self.", "@@", ".")
 
-  f.puts <<-MARKDOWN
-  # Defines getter method(s) to access class variable(s).
-  #
-  # For example writing:
-  #
-  # ```
-  # class Robot
-  #   class_getter backend
-  # end
-  # ```
-  #
-  # Is equivalent to writing:
-  #
-  # ```
-  # class Robot
-  #   @@backend : String
-  #
-  #   def self.backend
-  #     @@backend
-  #   end
-  # end
-  # ```
-  #
-  # Refer to [Getters](#getters) for details.
-  MARKDOWN
-  g.gen_getter
+  f.puts <<-TEXT
+    # Defines getter method(s) to access class variable(s).
+    #
+    # For example writing:
+    #
+    # ```
+    # class Robot
+    #   class_getter backend
+    # end
+    # ```
+    #
+    # Is equivalent to writing:
+    #
+    # ```
+    # class Robot
+    #   def self.backend
+    #     @@backend
+    #   end
+    # end
+    # ```
+    #
+    # Refer to [Getters](#getters) for details.
+    macro class_getter(*names, &block)
+      {% for name in names %}
+  #{g.def_vars}
+  #{g.def_getter}
+      {% end %}
+    end
 
-  f.puts <<-MARKDOWN
-  # Identical to `class_getter` but defines query methods.
-  #
-  # For example writing:
-  #
-  # ```
-  # class Robot
-  #   class_getter? backend
-  # end
-  # ```
-  #
-  # Is equivalent to writing:
-  #
-  # ```
-  # class Robot
-  #   def self.backend?
-  #     @@backend
-  #   end
-  # end
-  # ```
-  #
-  # Refer to [Getters](#getters) for general details.
-  MARKDOWN
-  g.gen_getter?
+    # Identical to `class_getter` but defines query methods.
+    #
+    # For example writing:
+    #
+    # ```
+    # class Robot
+    #   class_getter? backend
+    # end
+    # ```
+    #
+    # Is equivalent to writing:
+    #
+    # ```
+    # class Robot
+    #   def self.backend?
+    #     @@backend
+    #   end
+    # end
+    # ```
+    #
+    # Refer to [Getters](#getters) for general details.
+    macro class_getter?(*names, &block)
+      {% for name in names %}
+  #{g.def_vars}
+  #{g.def_getter "?"}
+      {% end %}
+    end
 
-  f.puts <<-MARKDOWN
-  # Similar to `class_getter` but defines both raise-on-nil methods as well as
-  # query methods that return a nilable value.
-  #
-  # If a type is specified, then it will become a nilable type (union of the
-  # type and `Nil`). Unlike with `class_getter` the value is always initialized
-  # to `nil`. There are no initial value or lazy initialization.
-  #
-  # For example writing:
-  #
-  # ```
-  # class Robot
-  #   class_getter! backend : String
-  # end
-  # ```
-  #
-  # Is equivalent to writing:
-  #
-  # ```
-  # class Robot
-  #   @@backend : String?
-  #
-  #   def self.backend? : String?
-  #     @@backend
-  #   end
-  #
-  #   def backend : String
-  #     @@backend.not_nil!("Robot.backend cannot be nil")
-  #   end
-  # end
-  # ```
-  #
-  # Refer to [Getters](#getters) for general details.
-  MARKDOWN
-  g.gen_getter!
+    # Similar to `class_getter` but defines both raise-on-nil methods as well as
+    # query methods that return a nilable value.
+    #
+    # If a type is specified, then it will become a nilable type (union of the
+    # type and `Nil`). Unlike with `class_getter` the value is always initialized
+    # to `nil`. There are no initial value or lazy initialization.
+    #
+    # For example writing:
+    #
+    # ```
+    # class Robot
+    #   class_getter! backend : String
+    # end
+    # ```
+    #
+    # Is equivalent to writing:
+    #
+    # ```
+    # class Robot
+    #   @@backend : String?
+    #
+    #   def self.backend? : String?
+    #     @@backend
+    #   end
+    #
+    #   def backend : String
+    #     @@backend.not_nil!("Robot.backend cannot be nil")
+    #   end
+    # end
+    # ```
+    #
+    # Refer to [Getters](#getters) for general details.
+    macro class_getter!(*names)
+      {% for name in names %}
+  #{g.def_vars!}
+  #{g.def_getter!}
+      {% end %}
+    end
 
-  f.puts <<-MARKDOWN
-  # Generates setter method(s) to set class variable(s).
-  #
-  # For example writing:
-  #
-  # ```
-  # class Robot
-  #   class_setter factories
-  # end
-  # ```
-  #
-  # Is equivalent to writing:
-  #
-  # ```
-  # class Robot
-  #   @@factories
-  #
-  #   def self.factories=(@@factories)
-  #   end
-  # end
-  # ```
-  #
-  # Refer to [Setters](#setters) for general details.
-  MARKDOWN
-  g.gen_setter
+    # Generates setter method(s) to set class variable(s).
+    #
+    # For example writing:
+    #
+    # ```
+    # class Robot
+    #   class_setter factories
+    # end
+    # ```
+    #
+    # Is equivalent to writing:
+    #
+    # ```
+    # class Robot
+    #   @@factories
+    #
+    #   def self.factories=(@@factories)
+    #   end
+    # end
+    # ```
+    #
+    # Refer to [Setters](#setters) for general details.
+    macro class_setter(*names)
+      {% for name in names %}
+  #{g.def_vars_no_macro_block}
+  #{g.def_setter}
+      {% end %}
+    end
+  TEXT
 
-  g.gen_property
-  g.gen_property?
-  g.gen_property!
+  g.gen_property_macros
 
   f.puts "end"
 end

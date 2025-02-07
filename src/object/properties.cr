@@ -305,8 +305,6 @@ class Object
   #
   # ```
   # class Robot
-  #   @@backend : String
-  #
   #   def self.backend
   #     @@backend
   #   end

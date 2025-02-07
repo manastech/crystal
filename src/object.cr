@@ -127,7 +127,9 @@ require "./object/properties"
 #
 # The `setter` and `class_setter` macros are the write counterparts of the
 # getter macros. They declare `name=(value)` accessor methods. The arguments
-# behave just as for the getter macros.
+# behave just as for the getter macros. Each setter can have a type as well as
+# an initial value. There is no lazy initialization however since the macro
+# doesn't generate a getter method.
 #
 # For example writing:
 #
