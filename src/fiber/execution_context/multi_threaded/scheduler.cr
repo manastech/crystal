@@ -142,9 +142,13 @@ module Fiber::ExecutionContext
           yield @global_queue.grab?(@runnables, divisor: @execution_context.size)
 
           if @execution_context.lock_evloop? { @event_loop.run(pointerof(list), blocking: false) }
-            if fiber = enqueue_many(pointerof(list))
+            unless list.empty?
+              # must stop spinning before calling enqueue_many that may call
+              # wake_scheduler which returns immediately if a thread is
+              # spinning... but we're spinning, so that would always fail to
+              # wake sleeping schedulers despite having runnable fibers
               spin_stop
-              yield fiber
+              yield enqueue_many(pointerof(list))
             end
           end
 
