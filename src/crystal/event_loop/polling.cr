@@ -112,13 +112,24 @@ abstract class Crystal::EventLoop::Polling < Crystal::EventLoop
     end
   {% end %}
 
-  # NOTE: thread unsafe
+  # thread unsafe
   def run(blocking : Bool) : Bool
     system_run(blocking) do |fiber|
-      Crystal::Scheduler.enqueue(fiber)
+      {% if flag?(:execution_context) %}
+        fiber.execution_context.enqueue(fiber)
+      {% else %}
+        Crystal::Scheduler.enqueue(fiber)
+      {% end %}
     end
     true
   end
+
+  {% if flag?(:execution_context) %}
+    # thread unsafe
+    def run(queue : Fiber::List*, blocking : Bool) : Nil
+      system_run(blocking) { |fiber| queue.value.push(fiber) }
+    end
+  {% end %}
 
   # fiber interface, see Crystal::EventLoop
 
@@ -327,13 +338,21 @@ abstract class Crystal::EventLoop::Polling < Crystal::EventLoop
     Polling.arena.free(index) do |pd|
       pd.value.@readers.ready_all do |event|
         pd.value.@event_loop.try(&.unsafe_resume_io(event) do |fiber|
-          Crystal::Scheduler.enqueue(fiber)
+          {% if flag?(:execution_context) %}
+            fiber.execution_context.enqueue(fiber)
+          {% else %}
+            Crystal::Scheduler.enqueue(fiber)
+          {% end %}
         end)
       end
 
       pd.value.@writers.ready_all do |event|
         pd.value.@event_loop.try(&.unsafe_resume_io(event) do |fiber|
-          Crystal::Scheduler.enqueue(fiber)
+          {% if flag?(:execution_context) %}
+            fiber.execution_context.enqueue(fiber)
+          {% else %}
+            Crystal::Scheduler.enqueue(fiber)
+          {% end %}
         end)
       end
 

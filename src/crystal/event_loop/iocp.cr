@@ -55,6 +55,7 @@ class Crystal::EventLoop::IOCP < Crystal::EventLoop
     iocp
   end
 
+  # thread unsafe
   def run(blocking : Bool) : Bool
     enqueued = false
 
@@ -65,6 +66,13 @@ class Crystal::EventLoop::IOCP < Crystal::EventLoop
 
     enqueued
   end
+
+  {% if flag?(:execution_context) %}
+    # thread unsafe
+    def run(queue : Fiber::List*, blocking : Bool) : Nil
+      run_impl(blocking) { |fiber| queue.value.push(fiber) }
+    end
+  {% end %}
 
   # Runs the event loop and enqueues the fiber for the next upcoming event or
   # completion.

@@ -1,5 +1,6 @@
 require "c/stdio"
 require "c/stdlib"
+require "crystal/system/print_error"
 require "exception/call_stack"
 
 Exception::CallStack.skip(__FILE__)
