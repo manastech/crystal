@@ -76,6 +76,9 @@ class Fiber
   property previous : Fiber?
 
   # :nodoc:
+  property list_next : Fiber?
+
+  # :nodoc:
   def self.inactive(fiber : Fiber)
     fibers.delete(fiber)
   end
