@@ -64,8 +64,8 @@ class Crystal::CodeGenVisitor
     initialized_flag_name = const.initialized_llvm_name
     initialized_flag = @main_mod.globals[initialized_flag_name]?
     unless initialized_flag
-      initialized_flag = @main_mod.globals.add(@main_llvm_context.int8, initialized_flag_name)
-      initialized_flag.initializer = @main_llvm_context.int8.const_int(0)
+      initialized_flag = @main_mod.globals.add(@main_llvm_context.int1, initialized_flag_name)
+      initialized_flag.initializer = @main_llvm_context.int1.const_int(0)
       initialized_flag.linkage = LLVM::Linkage::Internal if @single_module
     end
     initialized_flag

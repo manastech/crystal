@@ -40,9 +40,6 @@ class Crystal::CodeGenVisitor
       end
 
       state = load(once_state_type, once_state_global)
-      {% if LibLLVM::IS_LT_150 %}
-        flag = bit_cast(flag, @llvm_context.int1.pointer) # cast Int8* to Bool*
-      {% end %}
       args = [state, flag, initializer]
     end
 

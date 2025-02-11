@@ -56,7 +56,7 @@ module Crystal
     # so we explicitly initialize their class vars, then init crystal/once
     Thread.init
     Fiber.init
-    Crystal.once_init
+    Crystal::Once.init
   end
 
   # :nodoc:

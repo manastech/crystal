@@ -8,10 +8,11 @@
 # appear in the API docs.
 
 # This list requires ordered statements
-require "crystal/once"
 require "lib_c"
 require "macros"
 require "object"
+require "crystal/main"
+require "crystal/once"
 require "comparable"
 require "exception"
 require "iterable"
@@ -34,7 +35,6 @@ require "char/reader"
 require "class"
 require "concurrent"
 require "crystal/compiler_rt"
-require "crystal/main"
 require "deque"
 require "dir"
 require "enum"
