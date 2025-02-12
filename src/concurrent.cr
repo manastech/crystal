@@ -1,7 +1,12 @@
 require "fiber"
 require "channel"
-require "crystal/scheduler"
 require "crystal/tracing"
+
+{% if flag?(:execution_context) %}
+  require "fiber/execution_context"
+{% else %}
+  require "crystal/scheduler"
+{% end %}
 
 # Blocks the current fiber for the specified number of seconds.
 #
@@ -12,8 +17,7 @@ def sleep(seconds : Number) : Nil
   if seconds < 0
     raise ArgumentError.new "Sleep seconds must be positive"
   end
-
-  Crystal::Scheduler.sleep(seconds.seconds)
+  sleep(seconds.seconds)
 end
 
 # Blocks the current Fiber for the specified time span.
@@ -21,16 +25,28 @@ end
 # While this fiber is waiting this time, other ready-to-execute
 # fibers might start their execution.
 def sleep(time : Time::Span) : Nil
-  Crystal::Scheduler.sleep(time)
+  Crystal.trace :sched, "sleep", for: time
+
+  {% if flag?(:execution_context) %}
+    Fiber.current.resume_event.add(time)
+    Fiber::ExecutionContext.reschedule
+  {% else %}
+    Crystal::Scheduler.sleep(time)
+  {% end %}
 end
 
 # Blocks the current fiber forever.
 #
 # Meanwhile, other ready-to-execute fibers might start their execution.
 def sleep : Nil
-  Crystal::Scheduler.reschedule
+  {% if flag?(:execution_context) %}
+    Fiber::ExecutionContext.reschedule
+  {% else %}
+    Crystal::Scheduler.reschedule
+  {% end %}
 end
 
+{% begin %}
 # Spawns a new fiber.
 #
 # NOTE: The newly created fiber doesn't run as soon as spawned.
@@ -64,12 +80,17 @@ end
 # wg.wait
 # ```
 def spawn(*, name : String? = nil, same_thread = false, &block)
-  fiber = Fiber.new(name, &block)
-  Crystal.trace :sched, "spawn", fiber: fiber
-  {% if flag?(:preview_mt) %} fiber.set_current_thread if same_thread {% end %}
-  fiber.enqueue
-  fiber
+  {% if flag?(:execution_context) %}
+    Fiber::ExecutionContext::Scheduler.current.spawn(name: name, same_thread: same_thread, &block)
+  {% else %}
+    fiber = Fiber.new(name, &block)
+    Crystal.trace :sched, "spawn", fiber: fiber
+    {% if flag?(:preview_mt) %} fiber.set_current_thread if same_thread {% end %}
+    fiber.enqueue
+    fiber
+  {% end %}
 end
+{% end %}
 
 # Spawns a fiber by first creating a `Proc`, passing the *call*'s
 # expressions to it, and letting the `Proc` finally invoke the *call*.

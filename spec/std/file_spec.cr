@@ -1,4 +1,5 @@
 require "./spec_helper"
+require "../support/thread"
 
 private def it_raises_on_null_byte(operation, file = __FILE__, line = __LINE__, end_line = __END_LINE__, &block)
   it "errors on #{operation}", file, line, end_line do
@@ -109,7 +110,7 @@ describe "File" do
           #        thread or process also opened the file; we should pass
           #        O_NONBLOCK to the open(2) call itself, not afterwards
           file = nil
-          Thread.new { file = File.new(path, "w", blocking: nil) }
+          new_thread { file = File.new(path, "w", blocking: nil) }
 
           begin
             File.open(path, "r", blocking: false) do |file|

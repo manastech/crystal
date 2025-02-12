@@ -1,4 +1,5 @@
 require "../spec_helper"
+require "../../support/thread"
 
 # interpreter doesn't support threads yet (#14287)
 pending_interpreted describe: Thread::Mutex do
@@ -7,7 +8,7 @@ pending_interpreted describe: Thread::Mutex do
     mutex = Thread::Mutex.new
 
     threads = Array.new(10) do
-      Thread.new do
+      new_thread do
         mutex.synchronize { a += 1 }
       end
     end
@@ -22,7 +23,7 @@ pending_interpreted describe: Thread::Mutex do
     mutex.try_lock.should be_false
     expect_raises(RuntimeError) { mutex.lock }
     mutex.unlock
-    Thread.new { mutex.synchronize { } }.join
+    new_thread { mutex.synchronize { } }.join
   end
 
   it "won't unlock from another thread" do
@@ -30,7 +31,7 @@ pending_interpreted describe: Thread::Mutex do
     mutex.lock
 
     expect_raises(RuntimeError) do
-      Thread.new { mutex.unlock }.join
+      new_thread { mutex.unlock }.join
     end
 
     mutex.unlock

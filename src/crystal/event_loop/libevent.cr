@@ -20,26 +20,55 @@ class Crystal::EventLoop::LibEvent < Crystal::EventLoop
     event_base.loop(flags)
   end
 
+  {% if flag?(:execution_context) %}
+    def run(queue : Fiber::List*, blocking : Bool) : Nil
+      Crystal.trace :evloop, "run", fiber: fiber, blocking: blocking
+      @runnables = queue
+      run(blocking)
+    ensure
+      @runnables = nil
+    end
+
+    def callback_enqueue(fiber : Fiber) : Nil
+      if queue = @runnables
+        queue.value.push(fiber)
+      else
+        raise "BUG: libevent callback executed outside of #run(queue*, blocking) call"
+      end
+    end
+  {% end %}
+
   def interrupt : Nil
     event_base.loop_exit
   end
 
-  # Create a new resume event for a fiber.
+  # Create a new resume event for a fiber (sleep).
   def create_resume_event(fiber : Fiber) : Crystal::EventLoop::LibEvent::Event
     event_base.new_event(-1, LibEvent2::EventFlags::None, fiber) do |s, flags, data|
-      data.as(Fiber).enqueue
+      f = data.as(Fiber)
+      {% if flag?(:execution_context) %}
+        event_loop = Crystal::EventLoop.current.as(Crystal::EventLoop::LibEvent)
+        event_loop.callback_enqueue(f)
+      {% else %}
+        f.enqueue
+      {% end %}
     end
   end
 
-  # Creates a timeout_event.
+  # Creates a timeout event (timeout action of select expression).
   def create_timeout_event(fiber) : Crystal::EventLoop::LibEvent::Event
     event_base.new_event(-1, LibEvent2::EventFlags::None, fiber) do |s, flags, data|
       f = data.as(Fiber)
-      if (select_action = f.timeout_select_action)
+      if select_action = f.timeout_select_action
         f.timeout_select_action = nil
-        select_action.time_expired(f)
-      else
-        f.enqueue
+        if select_action.time_expired?
+          {% if flag?(:execution_context) %}
+            event_loop = Crystal::EventLoop.current.as(Crystal::EventLoop::LibEvent)
+            event_loop.callback_enqueue(f)
+          {% else %}
+            f.enqueue
+          {% end %}
+        end
       end
     end
   end
