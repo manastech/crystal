@@ -5,6 +5,8 @@ class IO::FileDescriptor
   include FinalizeCounter
 end
 
+private CLOSE_ON_EXEC_AVAILABLE = {{ !flag?(:win32) }}
+
 private def shell_command(command)
   {% if flag?(:win32) %}
     "cmd.exe /c #{Process.quote(command)}"
@@ -130,45 +132,51 @@ describe IO::FileDescriptor do
     end
   end
 
-  {% unless flag?(:win32) %}
-    describe "close_on_exec" do
-      it "sets close on exec on the reopened standard descriptors" do
-        unless STDIN.fd == Crystal::System::FileDescriptor::STDIN_HANDLE
-          STDIN.close_on_exec?.should be_true
-        end
-
-        unless STDOUT.fd == Crystal::System::FileDescriptor::STDOUT_HANDLE
-          STDOUT.close_on_exec?.should be_true
-        end
-
-        unless STDERR.fd == Crystal::System::FileDescriptor::STDERR_HANDLE
-          STDERR.close_on_exec?.should be_true
-        end
+  describe "close_on_exec" do
+    it "sets close on exec on the reopened standard descriptors" do
+      unless STDIN.fd == Crystal::System::FileDescriptor::STDIN_HANDLE
+        STDIN.close_on_exec?.should be_true
       end
 
-      it "is enabled by default (open)" do
-        File.open(datapath("test_file.txt")) do |file|
-          file.close_on_exec?.should be_true
-        end
+      unless STDOUT.fd == Crystal::System::FileDescriptor::STDOUT_HANDLE
+        STDOUT.close_on_exec?.should be_true
       end
 
-      it "is enabled by default (pipe)" do
-        IO::FileDescriptor.pipe.each do |fd|
-          fd.close_on_exec?.should be_true
-          fd.close_on_exec?.should be_true
-        end
+      unless STDERR.fd == Crystal::System::FileDescriptor::STDERR_HANDLE
+        STDERR.close_on_exec?.should be_true
       end
+    end
 
-      it "can be disabled and reenabled" do
-        File.open(datapath("test_file.txt")) do |file|
-          file.close_on_exec = false
-          file.close_on_exec?.should be_false
+    it "is enabled by default (open)" do
+      File.open(datapath("test_file.txt")) do |file|
+        file.close_on_exec?.should eq CLOSE_ON_EXEC_AVAILABLE
+      end
+    end
 
+    it "is enabled by default (pipe)" do
+      IO::FileDescriptor.pipe.each do |fd|
+        fd.close_on_exec?.should eq CLOSE_ON_EXEC_AVAILABLE
+        fd.close_on_exec?.should eq CLOSE_ON_EXEC_AVAILABLE
+      end
+    end
+
+    it "can be disabled and reenabled" do
+      File.open(datapath("test_file.txt")) do |file|
+        file.close_on_exec = false
+        file.close_on_exec?.should be_false
+
+        if CLOSE_ON_EXEC_AVAILABLE
           file.close_on_exec = true
           file.close_on_exec?.should be_true
+        else
+          expect_raises(NotImplementedError) do
+            file.close_on_exec = true
+          end
         end
       end
+    end
 
+    if CLOSE_ON_EXEC_AVAILABLE
       it "is copied on reopen" do
         File.open(datapath("test_file.txt")) do |file1|
           file1.close_on_exec = true
@@ -187,7 +195,7 @@ describe IO::FileDescriptor do
         end
       end
     end
-  {% end %}
+  end
 
   typeof(STDIN.noecho { })
   typeof(STDIN.noecho!)

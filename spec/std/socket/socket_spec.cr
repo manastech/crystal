@@ -66,9 +66,7 @@ describe Socket, tags: "network" do
         client.family.should eq(Socket::Family::INET)
         client.type.should eq(Socket::Type::STREAM)
         client.protocol.should eq(Socket::Protocol::TCP)
-        {% unless flag?(:win32) %}
-          client.close_on_exec?.should be_true
-        {% end %}
+        client.close_on_exec?.should eq CLOSE_ON_EXEC_AVAILABLE
       ensure
         client.close
       end
@@ -174,12 +172,10 @@ describe Socket, tags: "network" do
     end
   end
 
-  {% unless flag?(:win32) %}
-    it "closes on exec by default" do
-      socket = Socket.new(Socket::Family::INET, Socket::Type::STREAM, Socket::Protocol::TCP)
-      socket.close_on_exec?.should be_true
-    end
-  {% end %}
+  it "closes on exec by default" do
+    socket = Socket.new(Socket::Family::INET, Socket::Type::STREAM, Socket::Protocol::TCP)
+    socket.close_on_exec?.should eq CLOSE_ON_EXEC_AVAILABLE
+  end
 
   describe "#finalize" do
     it "does not flush" do

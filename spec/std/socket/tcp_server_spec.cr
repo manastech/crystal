@@ -138,16 +138,14 @@ describe TCPServer, tags: "network" do
   {% end %}
 
   describe "accept" do
-    {% unless flag?(:win32) %}
-      it "sets close on exec flag" do
-        TCPServer.open("localhost", 0) do |server|
-          TCPSocket.open("localhost", server.local_address.port) do |client|
-            server.accept? do |sock|
-              sock.close_on_exec?.should be_true
-            end
+    it "sets close on exec flag" do
+      TCPServer.open("localhost", 0) do |server|
+        TCPSocket.open("localhost", server.local_address.port) do |client|
+          server.accept? do |sock|
+            sock.close_on_exec?.should eq CLOSE_ON_EXEC_AVAILABLE
           end
         end
       end
-    {% end %}
+    end
   end
 end
