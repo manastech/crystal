@@ -76,6 +76,17 @@
 class HTTP::Client
   # The set of possible valid body types.
   alias BodyType = String | Bytes | IO | Nil
+  alias ProxyURL = String | URI | Nil
+
+  # HTTP Proxy URL. Empty string equates to no proxy.
+  #
+  # Order of usage is instance -> class -> proxy environment variables
+  class_property proxy : ProxyURL
+
+  # HTTP Proxy URL. Emoty string equates to no proxy.
+  #
+  # Order of usage is instance -> class -> proxy environment variables
+  property proxy : ProxyURL
 
   # Returns the target host.
   #
@@ -111,7 +122,7 @@ class HTTP::Client
     getter! tls : Nil
     alias TLSContext = Bool | Nil
   {% else %}
-    getter! tls : OpenSSL::SSL::Context::Client
+    getter! tls : OpenSSL::SSL::Context::Client | Bool
     alias TLSContext = OpenSSL::SSL::Context::Client | Bool | Nil
   {% end %}
 
@@ -126,24 +137,8 @@ class HTTP::Client
   # be used depending on the *tls* arguments: 80 for if *tls* is `false`,
   # 443 if *tls* is truthy. If *tls* is `true` a new `OpenSSL::SSL::Context::Client` will
   # be used, else the given one. In any case the active context can be accessed through `tls`.
-  def initialize(@host : String, port = nil, tls : TLSContext = nil)
+  def initialize(@host : String, port = nil, @tls : TLSContext = nil)
     check_host_only(@host)
-
-    {% if flag?(:without_openssl) %}
-      if tls
-        raise "HTTP::Client TLS is disabled because `-D without_openssl` was passed at compile time"
-      end
-      @tls = nil
-    {% else %}
-      @tls = case tls
-             when true
-               OpenSSL::SSL::Context::Client.new
-             when OpenSSL::SSL::Context::Client
-               tls
-             when false, nil
-               nil
-             end
-    {% end %}
 
     @port = (port || (@tls ? 443 : 80)).to_i
   end
@@ -785,26 +780,97 @@ class HTTP::Client
       raise "This HTTP::Client cannot be reconnected"
     end
 
-    hostname = @host.starts_with?('[') && @host.ends_with?(']') ? @host[1..-2] : @host
-    io = TCPSocket.new hostname, @port, @dns_timeout, @connect_timeout
+    @io = create_proxy_io || create_io(host, port, @tls)
+  end
+
+  private def create_io(host, port, tls)
+    hostname = host.starts_with?('[') && host.ends_with?(']') ? host[1..-2] : host
+    io = TCPSocket.new hostname, port, @dns_timeout, @connect_timeout
     io.read_timeout = @read_timeout if @read_timeout
     io.write_timeout = @write_timeout if @write_timeout
     io.sync = false
+    tls ? create_tls(io, host, tls) : io
+  end
 
-    {% if !flag?(:without_openssl) %}
-      if tls = @tls
-        tcp_socket = io
-        begin
-          io = OpenSSL::SSL::Socket::Client.new(tcp_socket, context: tls, sync_close: true, hostname: @host.rchop('.'))
-        rescue exc
-          # don't leak the TCP socket when the SSL connection failed
-          tcp_socket.close
-          raise exc
-        end
+  private def create_proxy_io
+    return unless proxy = find_proxy
+
+    tls = HTTP::Client.tls_flag(proxy, nil)
+    proxy_port = proxy.port || (tls ? 443 : 80)
+    host = HTTP::Client.validate_host(proxy)
+
+    io = create_io(host, proxy_port, tls)
+
+    return io unless @tls
+
+    send_connect_request(io)
+    create_tls(io, @host, @tls)
+  end
+
+  private def create_tls(io, host, tls)
+    {% if flag?(:without_openssl) %}
+      raise "HTTP::Client TLS is disabled because `-D without_openssl` was passed at compile time"
+    {% else %}
+      tcp_socket = io
+      begin
+        tls = tls.is_a?(OpenSSL::SSL::Context::Client) ? tls : OpenSSL::SSL::Context::Client.new
+        OpenSSL::SSL::Socket::Client.new(tcp_socket, context: tls, sync_close: true, hostname: host.rchop('.'))
+      rescue exc
+        # don't leak the TCP socket when the SSL connection failed
+        tcp_socket.close
+        raise exc
       end
     {% end %}
+  end
 
-    @io = io
+  private def find_proxy : URI | Nil
+    # Order of lookup is class -> instance -> environment
+    # Both class and instance properties will stop on empty strings.
+
+    case proxy
+    when ""
+      return nil
+    when String
+      return URI.parse(proxy.as(String))
+    when URI
+      return proxy.as(URI)
+    end
+
+    case self.class.proxy
+    when ""
+      return nil
+    when String
+      return URI.parse(self.class.proxy.as(String))
+    when URI
+      return self.class.proxy.as(URI)
+    end
+
+    # Find an appropriate environment variable
+    type = @tls ? "https_proxy" : "http_proxy"
+    key = if ENV.has_key?(type)
+            type
+          elsif @tls && ENV.has_key?("HTTPS_PROXY")
+            "HTTPS_PROXY"
+          elsif ENV.has_key?("all_proxy")
+            "all_proxy"
+          elsif ENV.has_key?("ALL_PROXY")
+            "ALL_PROXY"
+          end
+    return URI.parse(ENV[key]) if key
+  end
+
+  private def send_connect_request(io)
+    io << "CONNECT #{@host}:#{@port} HTTP/1.1\r\n"
+    io << "Host: #{@host}:#{@port}\r\n"
+    io << "\r\n"
+    io.flush
+
+    resp = HTTP::Client::Response.from_io(io, ignore_body: true)
+
+    unless resp.success?
+      io.close
+      raise IO::Error.new("Unable to connect to https proxy")
+    end
   end
 
   private def host_header
