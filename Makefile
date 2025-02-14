@@ -256,6 +256,9 @@ $(LLVM_EXT_OBJ): $(LLVM_EXT_DIR)/llvm_ext.cc
 man/%.gz: man/%
 	gzip -c -9 $< > $@
 
+man/crystal.1: doc/man/crystal.adoc
+	SOURCE_DATE_EPOCH=$(SOURCE_DATE_EPOCH) asciidoctor -a crystal_version=$(CRYSTAL_VERSION) $< -b manpage -o $@
+
 .PHONY: clean
 clean: clean_crystal ## Clean up built directories and files
 	rm -rf $(LLVM_EXT_OBJ)

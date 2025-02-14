@@ -1,535 +1,838 @@
-.\"Crystal Programming Language
-.Dd
-.Dt CRYSTAL(1) "" "Crystal Compiler Command Line Reference Guide"
-.\".Dt CRYSTAL 1
-.Os UNIX
-.Sh NAME
-.Nm crystal
-.Nd Compiler for the Crystal language.
-.Sh SYNOPSIS
-.Nm
-command
-.Op switches
-programfile
---
-.Op arguments
-.Sh DESCRIPTION
-Crystal is a statically type-checked programming language. It was created with the beauty of Ruby and the performance of C in mind.
-.Sh USAGE
+'\" t
+.\"     Title: crystal
+.\"    Author: [see the "AUTHOR(S)" section]
+.\" Generator: Asciidoctor 2.0.23
+.\"      Date: 2025-02-14
+.\"    Manual: Crystal Compiler Command Line Reference Guide
+.\"    Source: crystal 1.16.0-dev
+.\"  Language: English
+.\"
+.TH "CRYSTAL" "1" "2025-02-14" "crystal 1.16.0\-dev" "Crystal Compiler Command Line Reference Guide"
+.ie \n(.g .ds Aq \(aq
+.el       .ds Aq '
+.ss \n[.ss] 0
+.nh
+.ad l
+.de URL
+\fI\\$2\fP <\\$1>\\$3
+..
+.als MTO URL
+.if \n[.g] \{\
+.  mso www.tmac
+.  am URL
+.    ad l
+.  .
+.  am MTO
+.    ad l
+.  .
+.  LINKSTYLE blue R < >
+.\}
+.SH "NAME"
+crystal \- compiler for the Crystal language
+.SH "SYNOPSIS"
+.sp
+\fBcrystal\fP command [switches] programfile \(em [arguments]
+.SH "DESCRIPTION"
+.sp
+Crystal is a statically type\-checked programming language. It was created with the
+beauty of Ruby and the performance of C in mind.
+.SH "USAGE"
+.sp
 You can compile and run a program by invoking the compiler with a single filename:
-.Bd -offset indent-two
-.Nm
-some_program.cr
-.Ed
-
+.sp
+.if n .RS 4
+.nf
+.fam C
+crystal some_program.cr
+.fam
+.fi
+.if n .RE
+.sp
 Crystal files usually end with the .cr extension, though this is not mandatory.
-
+.sp
 Alternatively you can use the run command:
-.Bd -offset indent-two
-.Nm
-run
-some_program.cr
-.Ed
-
+.sp
+.if n .RS 4
+.nf
+.fam C
+crystal run some_program.cr
+.fam
+.fi
+.if n .RE
+.sp
 To create an executable use the build command:
-.Bd -offset indent-two
-.Nm
-build
-some_program.cr
-.Ed
-
+.sp
+.if n .RS 4
+.nf
+.fam C
+crystal build some_program.cr
+.fam
+.fi
+.if n .RE
+.sp
 This will create an executable named "some_program".
-
-Note that by default the generated executables are not fully optimized.
-To turn optimizations on, use the --release flag:
-.Bd -offset indent-two
-.Nm
-build
---release
-some_program.cr
-.Ed
-
-Make sure to always use --release for production-ready executables and when performing benchmarks.
-
-The optimizations are not turned on by default because the compile times are much faster without them and the performance of the program is still pretty good without them, so it allows to use the crystal command almost to be used as if it was an interpreter.
-
-.Bl -tag -width "12345678" -compact
-.Pp
-.Sh OPTIONS
-The crystal command accepts the following options
-
-.Bl -tag -width "12345678" -compact
-.Pp
-.It
-.Cm init
-TYPE
-.Op DIR | NAME DIR
-.Pp
+.sp
+Note that by default the generated executables are not fully optimized.  To turn optimizations on, use the \fB\-\-release\fP  flag:
+.sp
+.if n .RS 4
+.nf
+.fam C
+crystal build \-\-release some_program.cr
+.fam
+.fi
+.if n .RE
+.sp
+Make sure to always use \fB\-\-release\fP  for production\-ready executables and when performing benchmarks.
+.sp
+The optimizations are not turned on by default because the compile times are much
+faster without them and the performance of the program is still pretty good without
+them, so it allows to use the \fBcrystal\fP command almost to be used as if it was an interpreter.
+.SH "OPTIONS"
+.sp
+The \fBcrystal\fP command accepts the following options
+.SS "init"
+.sp
+\fBinit\fP TYPE [DIR | NAME DIR]
+.sp
 Generates a new Crystal project.
-.Pp
+.sp
 TYPE is one of:
-.Bl -tag -width "12345678" -compact
-.Pp
-.It Sy lib
-Creates a library skeleton
-.It Sy app
-Creates an application skeleton
-.El
-
+.sp
+\fBlib\fP	 Creates a library skeleton
+.br
+\fBapp\fP	 Creates an application skeleton
+.sp
 This initializes the lib/app project folder as a git repository, with a license file, a README file, a shard.yml for use with shards (the Crystal dependency manager), a .gitignore file, and src and spec folders.
-.Bd -literal -offset
-DIR  - directory where project will be generated
-.Pp
-NAME - name of project to be generated (default: basename of DIR)
-.Ed
-.Pp
+.sp
+DIR  \- directory where project will be generated
+.sp
+NAME \- name of project to be generated (default: basename of DIR)
+.sp
 Options:
-.Bl -tag -width "12345678" -compact
-.Pp
-.It Fl f, Fl -force
+.sp
+\fB\-f, \-\-force\fP
+.RS 4
 Force overwrite existing files.
-.It Fl s, Fl -skip-existing
+.RE
+.sp
+\fB\-s, \-\-skip\-existing\fP
+.RS 4
 Skip existing files.
-.El
-
-.Pp
-.It
-.Cm build
-.Op options
-.Op programfile
-.Op --
-.Op arguments
-.Pp
+.RE
+.SS "build"
+.sp
+\fBbuild\fP [options] [programfile] [\-\-] [arguments]
+.sp
 Compile program.
-.Pp
+.sp
 Options:
-.Bl -tag -width "12345678" -compact
-.Pp
-.It Fl -cross-compile
-Generate an object file for cross compilation and prints the command to build the executable.
-The object file should be copied to the target system and the printed command should be executed there. This flag mainly exists for porting the compiler to new platforms, where possible run the compiler on the target platform directly.
-.It Fl d, Fl -debug
-Generate the output with symbolic debug symbols.
-These are read when debugging the built program with tools like lldb, gdb, valgrind etc. and provide mappings to the original source code for those tools.
-.It Fl -no-debug
+.sp
+\fB\-\-cross\-compile\fP
+.RS 4
+Generate an object file for cross compilation and prints the command to build the executable.	The object file should be copied
+to the target system and the printed command should be executed
+there. This flag mainly exists for porting the compiler to new
+platforms, where possible run the compiler on the target platform
+directly.
+.RE
+.sp
+\fB\-d\fP, \fB\-\-debug\fP
+.RS 4
+Generate the output with symbolic debug symbols.  These are read
+when debugging the built program with tools like lldb, gdb, valgrind etc. and provide mappings to the original source code for
+those tools.
+.RE
+.sp
+\fB\-\-no\-debug\fP
+.RS 4
 Generate the output without any symbolic debug symbols.
-.It Fl D Ar FLAG, Fl -define Ar FLAG
-Define a compile-time flag. This is useful to conditionally define types, methods, or commands based on flags available at compile time. The default flags are from the target triple given with --target-triple or the hosts default, if none is given.
-.It Fl -emit Op asm|llvm-bc|llvm-ir|obj
-Comma separated list of types of output for the compiler to emit. You can use this to see the generated LLVM IR, LLVM bitcode, assembly, and object files.
-.It Fl -frame-pointers Op auto|always|non-leaf
-Control the preservation of frame pointers. The default value, --frame-pointers=auto, will preserve frame pointers on debug builds and try to omit them on release builds (certain platforms require them to stay enabled). --frame-pointers=always will always preserve them, and non-leaf will only force their preservation on non-leaf functions.
-.It Fl f Ar text|json, Fl -format Ar text|json
-Format of output. Defaults to text. The json format can be used to get a more parser-friendly output.
-.It Fl -error-trace
+.RE
+.sp
+\fB\-D\fP \fIFLAG\fP, \fB\-\-define\fP \fIFLAG\fP
+.RS 4
+Define a compile\-time flag. This is useful to conditionally define types, methods, or commands based on flags available at compile time. The default flags are from the target triple given
+with \fB\-\-target\-triple\fP  or the hosts default, if none is given.
+.RE
+.sp
+\fB\-\-emit\fP [asm|llvm\-bc|llvm\-ir|obj]
+.RS 4
+Comma separated list of types of output for the compiler to emit.
+You can use this to see the generated LLVM IR, LLVM bitcode, assembly, and object files.
+.RE
+.sp
+\fB\-\-frame\-pointers\fP [auto|always|non\-leaf]
+.RS 4
+Control the preservation of frame pointers. The default value,
+\f(CR\-\-frame\-pointers=auto\fP, will preserve frame pointers on debug
+builds and try to omit them on release builds (certain platforms
+require them to stay enabled). \f(CR\-\-frame\-pointers=always\fP will always preserve them, and non\-leaf will only force their preservation on non\-leaf functions.
+.RE
+.sp
+\fB\-f\fP text|json, \fB\-\-format\fP text|json
+.RS 4
+Format of output. Defaults to text. The json format can be used
+to get a more parser\-friendly output.
+.RE
+.sp
+\fB\-\-error\-trace\fP
+.RS 4
 Show full error trace.
-.It Fl -ll
+.RE
+.sp
+\fB\-\-ll\fP
+.RS 4
 Dump LLVM assembly file to output directory.
-.It Fl -link-flags Ar FLAGS
-Pass additional flags to the linker. Though you can specify those flags on the source code, this is useful for passing environment specific information directly to the linker, like non-standard library paths or names. For more information on specifying linker flags on source, you can read the "C bindings" section of the documentation available on the official web site.
-.It Fl -mcpu Ar CPU
-Specify a specific CPU to generate code for. This will pass a -mcpu flag to LLVM, and is only intended to be used for cross-compilation. For a list of available CPUs, invoke "llvm-as < /dev/null | llc -march=xyz -mcpu=help".
-Passing --mcpu native will pass the host CPU name to tune performance for the host.
-.It Fl -mattr Ar CPU
-Override or control specific attributes of the target, such as whether SIMD operations are enabled or not. The default set of attributes is set by the current CPU. This will pass a -mattr flag to LLVM, and is only intended to be used for cross-compilation. For a list of available attributes, invoke "llvm-as < /dev/null | llc -march=xyz -mattr=help".
-.It Fl -mcmodel Ar default|kernel|small|medium|large
-Specifies a specific code model to generate code for. This will pass a --code-model flag to LLVM.
-.It Fl -no-color
+.RE
+.sp
+\fB\-\-link\-flags\fP \fIFLAGS\fP
+.RS 4
+Pass additional flags to the linker. Though you can specify those
+flags on the source code, this is useful for passing environment
+specific information directly to the linker, like non\-standard
+library paths or names. For more information on specifying linker
+flags on source, you can read the "C bindings" section of the
+documentation available on the official web site.
+.RE
+.sp
+\fB\-\-mcpu\fP \fICPU\fP
+.RS 4
+Specify a specific CPU to generate code for. This will pass a
+\-mcpu flag to LLVM, and is only intended to be used for cross\-
+compilation. For a list of available CPUs, invoke "llvm\-as <
+/dev/null | llc \-march=xyz \-mcpu=help".  Passing \-\-mcpu native
+will pass the host CPU name to tune performance for the host.
+.RE
+.sp
+\fB\-\-mattr\fP \fICPU\fP
+.RS 4
+Override or control specific attributes of the target, such as
+whether SIMD operations are enabled or not. The default set of
+attributes is set by the current CPU. This will pass a \-mattr
+flag to LLVM, and is only intended to be used for cross\-compilation. For a list of available attributes, invoke "llvm\-as <
+/dev/null | llc \-march=xyz \-mattr=help".
+.RE
+.sp
+\fB\-\-mcmodel\fP default|kernel|small|medium|large
+.RS 4
+Specifies a specific code model to generate code for. This will
+pass a \-\-code\-model flag to LLVM.
+.RE
+.sp
+\fB\-\-no\-color\fP
+.RS 4
 Disable colored output.
-.It Fl -no-codegen
-Don't do code generation, just parse the file.
-.It Fl o
+.RE
+.sp
+\fB\-\-no\-codegen\fP
+.RS 4
+Don\(cqt do code generation, just parse the file.
+.RE
+.sp
+\fB\-o\fP
+.RS 4
 Specify filename of output.
-.It Fl -prelude
-Specify prelude to use. The default one initializes the garbage collector. You can also use --prelude=empty to use no preludes. This can be useful for checking code generation for a specific source code file.
-.It Fl O Ar LEVEL
-Optimization mode: 0 (default), 1, 2, 3. See
-.Sy OPTIMIZATIONS
-for details.
-.It Fl -release
-Compile in release mode. Equivalent to
-.Fl O3
-.Fl -single-module
-.It Fl -error-trace
-Show full stack trace. Disabled by default, as the full trace usually makes error messages less readable and not always deliver relevant information.
-.It Fl s, -stats
+.RE
+.sp
+\fB\-\-prelude\fP
+.RS 4
+Specify prelude to use. The default one initializes the garbage
+collector. You can also use \-\-prelude=empty to use no preludes.
+This can be useful for checking code generation for a specific
+source code file.
+.RE
+.sp
+\fB\-O\fP \fILEVEL\fP
+.RS 4
+Optimization mode: 0 (default), 1, 2, 3. See \fBOPTIMIZATIONS\fP for
+details.
+.RE
+.sp
+\fB\-\-release\fP
+.RS 4
+Compile in release mode. Equivalent to \fB\-O3 \-\-single\-module\fP
+.RE
+.sp
+\fB\-\-error\-trace\fP
+.RS 4
+Show full stack trace. Disabled by default, as the full trace
+usually makes error messages less readable and not always deliver
+relevant information.
+.RE
+.sp
+\fB\-s\fP, \fB\-\-stats\fP
+.RS 4
 Print statistics about the different compiler stages for the current build. Output time and used memory for each compiler process.
-.It Fl p, -progress
+.RE
+.sp
+\fB\-p\fP, \fB\-\-progress\fP
+.RS 4
 Print statistics about the progress for the current build.
-.It Fl t, -time
+.RE
+.sp
+\fB\-t\fP, \fB\-\-time\fP
+.RS 4
 Print statistics about the execution time.
-.It Fl -single-module
-Generate a single LLVM module.
-By default, one LLVM module is created for each type in a program.
-.Fl -release
-implies this option.
-.It Fl -threads Ar NUM
-Maximum number of threads to use for code generation. The default is 8 threads.
-.It Fl -target Ar TRIPLE
-Enable target triple; intended to use for cross-compilation. See llvm documentation for more information about target triple.
-.It Fl -verbose
+.RE
+.sp
+\fB\-\-single\-module\fP
+.RS 4
+Generate a single LLVM module.  By default, one LLVM module is
+created for each type in a program.  \fB\-\-release\fP implies this option.
+.RE
+.sp
+\fB\-\-threads\fP \fINUM\fP
+.RS 4
+Maximum number of threads to use for code generation. The default
+is 8 threads.
+.RE
+.sp
+\fB\-\-target\fP \fITRIPLE\fP
+.RS 4
+Enable target triple; intended to use for cross\-compilation. See
+llvm documentation for more information about target triple.
+.RE
+.sp
+\fB\-\-verbose\fP
+.RS 4
 Display the commands executed by the system.
-.It Fl -static
+.RE
+.sp
+\fB\-\-static\fP
+.RS 4
 Create a statically linked executable.
-.It Fl -stdin-filename Ar FILENAME
+.RE
+.sp
+\fB\-\-stdin\-filename\fP \fIFILENAME\fP
+.RS 4
 Source file name to be read from STDIN.
-.El
-
-.Pp
-.It
-.Cm docs
-.Pp
-Generate documentation from comments using a subset of markdown. The output is saved in html format on the created docs/ folder. More information about documentation conventions can be found at https://crystal-lang.org/docs/conventions/documenting_code.html.
-.Pp
+.RE
+.SS "docs"
+.sp
+Generate documentation from comments using a subset of markdown. The output
+is saved in html format on the created docs/ folder. More information about
+documentation conventions can be found at \c
+.URL "https://crystal\-lang.org/docs/conventions/documenting_code.html" "" "."
+.sp
 Options:
-.Bl -tag -width "12345678" -compact
-.Pp
-.It Fl -project-name Ar NAME
-Set the project name. The default value is extracted from shard.yml if available.
-
+.sp
+\fB\-\-project\-name\fP \fINAME\fP
+.RS 4
+Set the project name. The default value is extracted from
+shard.yml if available.
+.sp
 In case no default can be found, this option is mandatory.
-.It Fl -project-version Ar VERSION
+.RE
+.sp
+\fB\-\-project\-version\fP \fIVERSION\fP
+.RS 4
 Set the project version. The default value is extracted from current git commit or shard.yml if available.
-
+.sp
 In case no default can be found, this option is mandatory.
-.It Fl -json-config-url Ar URL
+.RE
+.sp
+\fB\-\-json\-config\-url\fP \fIURL\fP
+.RS 4
 Set the URL pointing to a config file (used for discovering versions).
-.It Fl -source-refname Ar REFNAME
-Set source refname (e.g. git tag, commit hash). The default value is extracted from current git commit if available.
-
-If this option is missing and can't be automatically determined, the generator can't produce source code links.
-.It Fl -source-url-pattern Ar URL
-Set URL pattern for source code links. The default value is extracted from git remotes ("origin" or first one) if available and the provider's URL pattern is recognized.
-
-.Pp
+.RE
+.sp
+\fB\-\-source\-refname\fP \fIREFNAME\fP
+.RS 4
+Set source refname (e.g. git tag, commit hash). The default value
+is extracted from current git commit if available.
+.sp
+If this option is missing and can\(cqt be automatically determined,
+the generator can\(cqt produce source code links.
+.RE
+.sp
+\fB\-\-source\-url\-pattern\fP \fIURL\fP
+.RS 4
+Set URL pattern for source code links. The default value is extracted from git remotes ("origin" or first one) if available and
+the provider\(cqs URL pattern is recognized.
+.sp
 Supported replacement tags:
-.Pp
-.Bl -tag -width "%{refname}" -compact
-.It Sy %{refname}
+.sp
+\fB%{refname}\fP
+.RS 4
 commit reference
-.It Sy %{path}
+.RE
+.sp
+\fB%{path}\fP
+.RS 4
 path to source file inside the repository
-.It Sy %{filename}
+.RE
+.sp
+\fB%{filename}\fP
+.RS 4
 basename of the source file
-.It Sy %{line}
+.RE
+.sp
+\fB%{line}\fP
+.RS 4
 line number
-.El
-.Pp
-If this option is missing and can't be automatically determined, the generator can't produce source code links.
-.It Fl o Ar DIR, Fl -output Ar DIR
+.RE
+.sp
+If this option is missing and can\(cqt be automatically determined,
+the generator can\(cqt produce source code links.
+.RE
+.sp
+\fB\-o\fP \fIDIR\fP, \fB\-\-output\fP \fIDIR\fP
+.RS 4
 Set the output directory (default: ./docs).
-.It Fl b Ar URL, Fl -canonical-base-url Ar URL
+.RE
+.sp
+\fB\-b\fP \fIURL\fP, \fB\-\-canonical\-base\-url\fP \fIURL\fP
+.RS 4
 Indicate the preferred URL with rel="canonical" link element.
-.It Fl b Ar URL, Fl -sitemap-base-url Ar URL
-Set the sitemap base URL. Sitemap will only be generated when this option is set.
-.It Fl -sitemap-priority Ar PRIO
+.RE
+.sp
+\fB\-b\fP \fIURL\fP, \fB\-\-sitemap\-base\-url\fP \fIURL\fP
+.RS 4
+Set the sitemap base URL. Sitemap will only be generated when
+this option is set.
+.RE
+.sp
+\fB\-\-sitemap\-priority\fP \fIPRIO\fP
+.RS 4
 Set the priority assigned to sitemap entries (default: 1.0).
-.It Fl -sitemap-changefreq Ar FREQ
+.RE
+.sp
+\fB\-\-sitemap\-changefreq\fP \fIFREQ\fP
+.RS 4
 Set the changefreq assigned to sitemap entries (default: never).
-.El
-.Pp
-.It
-.Cm env
-.Op variables
-.Pp
-Print Crystal-specific environment variables in a format compatible with shell scripts. If one or more variable names are given as arguments, it prints only the value of each named variable on its own line.
-.Pp
+.RE
+.SS "env"
+.sp
+\fBenv\fP [variables]
+.sp
+Print Crystal\-specific environment variables in a format compatible with
+shell scripts. If one or more variable names are given as arguments, it
+prints only the value of each named variable on its own line.
+.sp
 Variables:
-.Bl -tag -width "12345678" -compact
-.Pp
-.It
-.It Sy CRYSTAL_CACHE_DIR
-Please see
-.Sm "ENVIRONMENT VARIABLES".
-.Pp
-.It
-.It Sy CRYSTAL_LIBRARY_PATH
-Please see
-.Sm "ENVIRONMENT VARIABLES".
-.Pp
-.It
-.It Sy CRYSTAL_PATH
-Please see
-.Sm "ENVIRONMENT VARIABLES".
-.Pp
-.It
-.It Sy CRYSTAL_VERSION
+.sp
+\fBCRYSTAL_CACHE_DIR\fP
+.RS 4
+Please see ENVIRONMENT VARIABLES.
+.RE
+.sp
+\fBCRYSTAL_LIBRARY_PATH\fP
+.RS 4
+Please see ENVIRONMENT VARIABLES.
+.RE
+.sp
+\fBCRYSTAL_PATH\fP
+.RS 4
+Please see ENVIRONMENT VARIABLES.
+.RE
+.sp
+\fBCRYSTAL_VERSION\fP
+.RS 4
 Contains Crystal version.
-.El
-.Pp
-.It
-.Cm eval
-.Op options
-.Op source
-.Pp
+.RE
+.SS "eval"
+.sp
+\fBeval\fP [options] [source]
+.sp
 Evaluate code from arguments or, if no arguments are passed, from the standard input. Useful for experiments.
-.Pp
+.sp
 Options:
-.Bl -tag -width "12345678" -compact
-.Pp
-.It Fl d, Fl -debug
-Generate the output with symbolic debug symbols.
-These are read when debugging the built program with tools like lldb, gdb, valgrind etc. and provide mappings to the original source code for those tools.
-.It Fl -no-debug
+.sp
+\fB\-d\fP, \fB\-\-debug\fP
+.RS 4
+Generate the output with symbolic debug symbols.  These are read
+when debugging the built program with tools like lldb, gdb, valgrind etc. and provide mappings to the original source code for
+those tools.
+.RE
+.sp
+\fB\-\-no\-debug\fP
+.RS 4
 Generate the output without any symbolic debug symbols.
-.It Fl D Ar FLAG, Fl -define Ar FLAG
-Define a compile-time flag. This is useful to conditionally define types, methods, or commands based on flags available at compile time. The default flags are from the target triple given with --target-triple or the hosts default, if none is given.
-.It Fl -error-trace
+.RE
+.sp
+\fB\-D\fP \fIFLAG\fP, \fB\-\-define\fP \fIFLAG\fP
+.RS 4
+Define a compile\-time flag. This is useful to conditionally define types, methods, or commands based on flags available at compile time. The default flags are from the target triple given
+with \-\-target\-triple or the hosts default, if none is given.
+.RE
+.sp
+\fB\-\-error\-trace\fP
+.RS 4
 Show full error trace.
-.It Fl O Ar LEVEL
-Optimization mode: 0 (default), 1, 2, 3. See
-.Sy OPTIMIZATIONS
-for details.
-.It Fl -release
-Compile in release mode. Equivalent to
-.Fl O3
-.Fl -single-module
-.It Fl s, -stats
-Print statistics about the different compiler stages for the current build. Output time and used memory for each compiler process.
-.It Fl p, -progress
+.RE
+.sp
+\fB\-O\fP \fILEVEL\fP
+.RS 4
+Optimization mode: 0 (default), 1, 2, 3. See \fBOPTIMIZATIONS\fP for details.
+.RE
+.sp
+\fB\-\-release\fP
+.RS 4
+Compile in release mode. Equivalent to \fB\-O3 \-\-single\-module\fP
+.RE
+.sp
+\fB\-s\fP, \fB\-\-stats\fP
+.RS 4
+Print statistics about the different compiler stages for the current build. Output time and used memory for each compiler
+process.
+.RE
+.sp
+\fB\-p\fP, \fB\-\-progress\fP
+.RS 4
 Print statistics about the progress for the current build.
-.It Fl t, -time
+.RE
+.sp
+\fB\-t\fP, \fB\-\-time\fP
+.RS 4
 Print statistics about the execution time.
-.It Fl -no-color
+.RE
+.sp
+\fB\-\-no\-color\fP
+.RS 4
 Disable colored output.
-.El
-.Pp
-.It
-.Cm play
-.Op options
-.Op file
-.Pp
-Starts the crystal playground server on port 8080, by default.
-.Pp
+.RE
+.SS "play"
+.sp
+\fBplay\fP [options] [file]
+.sp
+Starts the \fBcrystal\fP playground server on port 8080, by default.
+.sp
 Options:
-.Bl -tag -width "12345678" -compact
-.Pp
-.It Fl p Ar PORT, Fl -port Ar PORT
+.sp
+\fB\-p\fP \fIPORT\fP, \fB\-\-port\fP \fIPORT\fP
+.RS 4
 Run the playground on the specified port. Default is 8080.
-.It Fl b Ar HOST, Fl -binding Ar HOST
+.RE
+.sp
+\fB\-b\fP \fIHOST\fP, \fB\-\-binding\fP \fIHOST\fP
+.RS 4
 Bind the playground to the specified IP.
-.It Fl v, Fl -verbose
+.RE
+.sp
+\fB\-v\fP, \fB\-\-verbose\fP
+.RS 4
 Display detailed information of the executed code.
-.El
-.Pp
-.It
-.Cm run
-.Op options
-.Op programfile
-.Op --
-.Op arguments
-.Pp
+.RE
+.SS "run"
+.sp
+\fBrun\fP [options] [programfile] [\-\-] [arguments]
+.sp
 The default command. Compile and run program.
-.Pp
-Options:
-Same as the build options.
-.Pp
-.It
-.Cm spec
-.Op options
-.Op files
-.Pp
+.sp
+Options: Same as the build options.
+.SS "spec"
+.sp
+spec [options] [files]
+.sp
 Compile and run specs (in spec directory).
-.Pp
+.sp
 Options:
-.Bl -tag -width "12345678" -compact
-.Pp
-.It Fl d, Fl -debug
-Generate the output with symbolic debug symbols.
-These are read when debugging the built program with tools like lldb, gdb, valgrind etc. and provide mappings to the original source code for those tools.
-.It Fl -no-debug
+.sp
+\fB\-d\fP, \fB\-\-debug\fP
+.RS 4
+Generate the output with symbolic debug symbols.  These are read
+when debugging the built program with tools like lldb, gdb, valgrind etc. and provide mappings to the original source code for
+those tools.
+.RE
+.sp
+\fB\-\-no\-debug\fP
+.RS 4
 Generate the output without any symbolic debug symbols.
-.It Fl D Ar FLAG, Fl -define Ar FLAG
-Define a compile-time flag. This is useful to conditionally define types, methods, or commands based on flags available at compile time. The default flags are from the target triple given with --target-triple or the hosts default, if none is given.
-.It Fl -error-trace
+.RE
+.sp
+\fB\-D\fP \fIFLAG\fP, \fB\-\-define\fP \fIFLAG\fP
+.RS 4
+Define a compile\-time flag. This is useful to conditionally define types, methods, or commands based on flags available at compile time. The default flags are from the target triple given
+with \fB\-\-target\-triple\fP  or the hosts default, if none is given.
+.RE
+.sp
+\fB\-\-error\-trace\fP
+.RS 4
 Show full error trace.
-.It Fl O Ar LEVEL
-Optimization mode: 0 (default), 1, 2, 3. See
-.Sy OPTIMIZATIONS
-for details.
-.It Fl -release
-Compile in release mode. Equivalent to
-.Fl O3
-.Fl -single-module
-.It Fl s, -stats
-Print statistics about the different compiler stages for the current build. Output time and used memory for each compiler process.
-.It Fl p, -progress
+.RE
+.sp
+\fB\-O\fP \fILEVEL\fP
+.RS 4
+Optimization mode: 0 (default), 1, 2, 3. See \fBOPTIMIZATIONS\fP for details.
+.RE
+.sp
+\fB\-\-release\fP
+.RS 4
+Compile in release mode. Equivalent to \fB\-O3 \-\-single\-module\fP
+.RE
+.sp
+\fB\-s\fP, \fB\-\-stats\fP
+.RS 4
+Print statistics about the different compiler stages for the current build. Output time and used memory for each compiler
+process.
+.RE
+.sp
+\fB\-p\fP, \fB\-\-progress\fP
+.RS 4
 Print statistics about the progress for the current build.
-.It Fl t, -time
+.RE
+.sp
+\fB\-t\fP, \fB\-\-time\fP
+.RS 4
 Print statistics about the execution time.
-.It Fl -no-color
+.RE
+.sp
+\fB\-\-no\-color\fP
+.RS 4
 Disable colored output.
-.El
-.Pp
-.It
-.Cm tool
-.Op tool
-.Op switches
-.Op programfile
-.Op --
-.Op arguments
-.Pp
-Run a tool. The available tools are: context, dependencies, expand, flags, format, hierarchy, implementations, types, and unreachable.
-.Pp
+.RE
+.SS "tool"
+.sp
+\fBtool\fP [tool] [switches] [programfile] [\-\-] [arguments]
+.sp
+Run a tool. The available tools are: context, dependencies, expand, flags,
+format, hierarchy, implementations, types, and unreachable.
+.sp
 Tools:
-.Bl -tag -offset indent
-.It Cm context
+.sp
+\fBcontext\fP
+.RS 4
 Show context for given location.
-.It Cm dependencies
+.RE
+.sp
+\fBdependencies\fP
+.RS 4
 Show tree of required source files.
-.Pp
+.sp
 Options:
-.Bl -tag -width "12345678" -compact
-.Pp
-.It Fl D Ar FLAG, Fl -define= Ar FLAG
-Define a compile-time flag. This is useful to conditionally define types, methods, or commands based on flags available at compile time. The default flags are from the target triple given with --target-triple or the hosts default, if none is given.
-.It Fl f Ar FORMAT, Fl -format= Ar FORMAT
-Output format 'tree' (default), 'flat', 'dot', or 'mermaid'.
-.It Fl i Ar PATH, Fl -include= Ar PATH
+.sp
+\fB\-D\fP \fIFLAG\fP, \fB\-\-define\fP=\fIFLAG\fP
+.RS 4
+Define a compile\-time flag. This is useful to con    ditionally define types, methods, or commands based
+on flags available at compile time. The default
+flags are from the target triple given with \fB\-\-tar\fP     get\-triple or the hosts default, if none is given.
+.RE
+.sp
+\fB\-f\fP \fIFORMAT\fP, \fB\-\-format\fP=\fIFORMAT\fP
+.RS 4
+Output format \*(Aqtree\*(Aq (default), \*(Aqflat\*(Aq, \*(Aqdot\*(Aq, or
+\*(Aqmermaid\*(Aq.
+.RE
+.sp
+\fB\-i\fP \fIPATH\fP, \fB\-\-include\fP=\fIPATH\fP
+.RS 4
 Include path in output.
-.It Fl e Ar PATH, Fl -exclude= Ar PATH
+.RE
+.sp
+\fB\-e\fP \fIPATH\fP, \fB\-\-exclude\fP=\fIPATH\fP
+.RS 4
 Exclude path in output.
-.It Fl -error-trace
+.RE
+.sp
+\fB\-\-error\-trace\fP
+.RS 4
 Show full error trace.
-.It Fl -prelude
-Specify prelude to use. The default one initializes the garbage collector. You can also use --prelude=empty to use no preludes. This can be useful for checking code generation for a specific source code file.
-.It Fl -verbose
+.RE
+.sp
+\fB\-\-prelude\fP
+.RS 4
+Specify prelude to use. The default one initializes
+the garbage collector. You can also use \fB\-\-pre\fP     lude=empty to use no preludes. This can be useful
+for checking code generation for a specific source
+code file.
+.RE
+.sp
+\fB\-\-verbose\fP
+.RS 4
 Show skipped and heads of filtered paths
-.El
-.It Cm expand
+.RE
+.RE
+.sp
+\fBexpand\fP
+.RS 4
 Show macro expansion for given location.
-.It Cm flags
-Print all macro 'flag?' values
-.It Cm format
-Format project, directories and/or files with the coding style used in the standard library. You can use the
-.Fl -check
-flag to check whether the formatter would make any changes.
-.It Cm hierarchy
-Show hierarchy of types from file. Also show class and struct members, with type and size. Types can be filtered with a regex by using the
-.Fl e
-flag.
-.It Cm implementations
-Show implementations for a given call. Use
-.Fl -cursor
- to specify the cursor position. The format for the cursor position is file:line:column.
-.It Cm types
+.RE
+.sp
+\fBflags\fP
+.RS 4
+Print all macro \*(Aqflag?\*(Aq values
+.RE
+.sp
+\fBformat\fP
+.RS 4
+Format project, directories and/or files with the coding
+style used in the standard library. You can use the
+\fB\-\-checkflag\fP  to check whether the formatter would make any
+changes.
+.RE
+.sp
+\fBhierarchy\fP
+.RS 4
+Show hierarchy of types from file. Also show class and struct
+members, with type and size. Types can be filtered with a
+regex by using the \fB\-e\fP flag.
+.RE
+.sp
+\fBimplementations\fP
+.RS 4
+Show implementations for a given call. Use \fB\-\-cursor\fP  to specify the cursor position. The format for the cursor position
+is file:line:column.
+.RE
+.sp
+\fBtypes\fP
+.RS 4
 Show type of main variables of file.
-.It Cm unreachable
-Show methods that are never called. The text output is a list of lines with columns
-separated by tab.
-
-.Pp
+.RE
+.sp
+\fBunreachable\fP
+.RS 4
+Show methods that are never called. The text output is a list
+of lines with columns separated by tab.
+.sp
 Output fields:
-
-.Bl -tag -width "1234567890" -compact
-.Pp
-.It Cm count
+.sp
+\fBcount\fP
+.RS 4
 sum of all calls to this method (only with
-.Fl -tallies
- option; otherwise skipped)
-.It Cm location
+\fB\-\-tallies\fP  option; otherwise skipped)
+.RE
+.sp
+\fBlocation\fP
+.RS 4
 pathname, line and column, all separated by colon
-.It Cm name
-.It Cm lines
+name
+.RE
+.sp
+\fBlines\fP
+.RS 4
 length of the def in lines
-.It Cm annotations
-.El
-
-.Pp
+annotations
+.RE
+.sp
 Options:
-.Bl -tag -width "12345678" -compact
-.Pp
-.It Fl D Ar FLAG, Fl -define= Ar FLAG
-Define a compile-time flag. This is useful to conditionally define types, methods, or commands based on flags available at compile time. The default flags are from the target triple given with --target-triple or the hosts default, if none is given.
-.It Fl f Ar FORMAT, Fl -format= Ar FORMAT
-Output format 'text' (default), 'json', 'codecov', or 'csv'.
-.It Fl -tallies
+.sp
+\fB\-D\fP \fIFLAG\fP, \fB\-\-define\fP=\fIFLAG\fP
+.RS 4
+Define a compile\-time flag. This is useful to con    ditionally define types,
+methods, or commands based on flags available at compile time. The default
+flags are from the target triple given with \fB\-\-target\-triple\fP or the hosts
+default, if none is given.
+.RE
+.sp
+\fB\-f\fP \fIFORMAT\fP, \fB\-\-format\fP=\fIFORMAT\fP
+.RS 4
+Output format \*(Aqtext\*(Aq (default), \*(Aqjson\*(Aq, \*(Aqcodecov\*(Aq, or \*(Aqcsv\*(Aq.
+.RE
+.sp
+\fB\-\-tallies\fP
+.RS 4
 Print reachable methods and their call counts as well.
-.It Fl -check
+.RE
+.sp
+\fB\-\-check\fP
+.RS 4
 Exit with error if there is any unreachable code.
-.It Fl i Ar PATH, Fl -include= Ar PATH
+.RE
+.sp
+\fB\-i\fP \fIPATH\fP, \fB\-\-include\fP=\fIPATH\fP
+.RS 4
 Include path in output.
-.It Fl e Ar PATH, Fl -exclude= Ar PATH
-Exclude path in output (default:
-.Sy lib
-).
-.It Fl -error-trace
+.RE
+.sp
+\fB\-e\fP \fIPATH\fP, \fB\-\-exclude\fP=\fIPATH\fP
+.RS 4
+Exclude path in output (default: lib).
+.RE
+.sp
+\fB\-\-error\-trace\fP
+.RS 4
 Show full error trace.
-.It Fl -prelude
-Specify prelude to use. The default one initializes the garbage collector. You can also use --prelude=empty to use no preludes. This can be useful for checking code generation for a specific source code file.
-.El
-.El
-.Pp
-.It
-.Cm clear_cache
-.Pp
-Clear the compiler cache (located at 'CRYSTAL_CACHE_DIR').
-.El
-.Pp
-.It Cm help, Fl -help, h
-.Pp
-Show help. Option --help or -h can also be added to each command for command-specific help.
-.Pp
-.It Cm version, Fl -version, v
-.Pp
+.RE
+.sp
+\fB\-\-prelude\fP
+.RS 4
+Specify prelude to use. The default one initializes the garbage collector. You
+can also use \fB\-\-prelude=empty\fP to use no preludes. This can be useful for
+checking code generation for a specific source code file.
+.RE
+.RE
+.SS "clear_cache"
+.sp
+Clear the compiler cache (located at \*(AqCRYSTAL_CACHE_DIR\*(Aq).
+.SS "help"
+.sp
+Show help. Option \fB\-\-help\fP  or \fB\-h\fP  can also be added to each command for command\-specific
+help.
+.SS "version"
+.sp
 Show version.
-.El
-.
-.Sh OPTIMIZATIONS
-.Bl -tag -width "12345678" -compact
-.Pp
-The optimization level specifies the codegen effort for producing optimal code.
-It's a trade-off between compilation performance (decreasing per optimization level) and runtime performance (increasing per optimization level).
-.Pp
-Production builds should usually have the highest optimization level.
-Best results are achieved with
-.Fl -release
- which also implies
-.Fl -single-module
-.Pp
-.It
-.It Fl O0
+.SH "OPTIMIZATIONS"
+.sp
+The optimization level specifies the codegen effort for producing optimal code.  It\(cqs
+a trade\-off between compilation performance (decreasing per optimization level) and
+runtime performance (increasing per optimization level).
+.sp
+Production builds should usually have the highest optimization level.  Best results
+are achieved with \fB\-\-release\fP  which also implies \fB\-\-single\-module\fP
+.sp
+\fB\-O0\fP
+.RS 4
 No optimization (default)
-.It Fl O1
+.RE
+.sp
+\fB\-O1\fP
+.RS 4
 Low optimization
-.It Fl O2
+.RE
+.sp
+\fB\-O2\fP
+.RS 4
 Middle optimization
-.It Fl O3
+.RE
+.sp
+\fB\-O3\fP
+.RS 4
 High optimization
-.It Fl \!Os
+.RE
+.sp
+\fB\-Os\fP
+.RS 4
 Middle optimization with focus on file size
-.It Fl Oz
+.RE
+.sp
+\fB\-Oz\fP
+.RS 4
 Middle optimization aggressively focused on file size
-.
-.Sh ENVIRONMENT\ VARIABLES
-.Bl -tag -width "12345678" -compact
-.Pp
-.It
-.It Sy CRYSTAL_CACHE_DIR
-Defines path where Crystal caches partial compilation results for faster subsequent builds. This path is also used to temporarily store executables when Crystal programs are run with 'crystal run' rather than 'crystal build'.
-.Pp
-.It
-.It Sy CRYSTAL_LIBRARY_PATH
-Defines paths where Crystal searches for (binary) libraries. Multiple paths can be separated by ":".
-These paths are passed to the linker as `-L` flags.
-.Pp
-The pattern '$ORIGIN' at the start of the path expands to the directory where the compiler binary is located. For example, '$ORIGIN/../lib/crystal' resolves the standard library path relative to the compiler location in a generic way, independent of the absolute paths (assuming the relative location is correct).
-.Pp
-.It
-.It Sy CRYSTAL_PATH
-Defines paths where Crystal searches for required source files. Multiple paths can be separated by ":".
-.Pp
-The pattern '$ORIGIN' at the start of the path expands to the directory where the compiler binary is located. For example, '$ORIGIN/../share/crystal/src' resolves the standard library path relative to the compiler location in a generic way, independent of the absolute paths (assuming the relative location is correct).
-.Pp
-.It
-.It Sy CRYSTAL_OPTS
-Defines options for the Crystal compiler to be used besides the command line arguments. The syntax is identical to the command line arguments. This is handy when using Crystal in build setups, for example 'CRYSTAL_OPTS=--debug make build'.
-.El
-.Sh SEE ALSO
-.Fn shards 1
-.Bl -hang -compact -width "https://github.com/crystal-lang/crystal/1234"
-.It https://crystal-lang.org/
+.RE
+.SH "ENVIRONMENT VARIABLES"
+.SS "CRYSTAL_CACHE_DIR"
+.sp
+Defines path where Crystal caches partial compilation results for faster
+subsequent builds. This path is also used to temporarily store executables
+when Crystal programs are run with \*(Aq\fBcrystal\fP run\*(Aq rather than \*(Aq\fBcrystal\fP
+build\*(Aq.
+.SS "CRYSTAL_LIBRARY_PATH"
+.sp
+Defines paths where Crystal searches for (binary) libraries. Multiple paths
+can be separated by ":".	 These paths are passed to the linker as \f(CR\-L\fP
+flags.
+.sp
+The pattern \*(Aq$ORIGIN\*(Aq at the start of the path expands to the directory
+where the compiler binary is located. For example, \*(Aq$ORIGIN/../lib/crystal\*(Aq
+resolves the standard library path relative to the compiler location in a
+generic way, independent of the absolute paths (assuming the relative location is correct).
+.SS "CRYSTAL_PATH"
+.sp
+Defines paths where Crystal searches for required source files. Multiple
+paths can be separated by ":".
+.sp
+The pattern \*(Aq$ORIGIN\*(Aq at the start of the path expands to the directory
+where the compiler binary is located. For example, \*(Aq$ORIGIN/../share/crystal/src\*(Aq resolves the standard library path relative to the compiler location in a generic way, independent of the absolute paths (assuming the relative location is correct).
+.SS "CRYSTAL_OPTS"
+.sp
+Defines options for the Crystal compiler to be used besides the command
+line arguments. The syntax is identical to the command line arguments. This
+is handy when using Crystal in build setups, for example \*(AqCRYSTAL_OPTS=\-\-debug make build\*(Aq.
+.SH "SEEALSO"
+.sp
+\fBshards\fP(1)
+.sp
+.URL "https://crystal\-lang.org/" "" ""
 The official web site.
-.It https://github.com/crystal-lang/crystal
+.sp
+.URL "https://github.com/crystal\-lang/crystal" "" ""
 Official Repository.
-.El

@@ -1,0 +1,496 @@
+= crystal(1)
+:doctype: manpage
+:date: {localdate}
+:crystal_version: {crystal_version}
+:man manual: Crystal Compiler Command Line Reference Guide
+:man source: crystal {crystal_version}
+
+== Name
+crystal - compiler for the Crystal language
+
+== Synopsis
+*crystal* command [switches] programfile -- [arguments]
+
+== Description
+Crystal is a statically type-checked programming language. It was created with the
+beauty of Ruby and the performance of C in mind.
+
+== Usage
+You can compile and run a program by invoking the compiler with a single filename:
+
+```shell
+crystal some_program.cr
+```
+
+Crystal files usually end with the .cr extension, though this is not mandatory.
+
+Alternatively you can use the run command:
+
+```shell
+crystal run some_program.cr
+```
+
+To create an executable use the build command:
+
+```shell
+crystal build some_program.cr
+```
+
+This will create an executable named "some_program".
+
+Note that by default the generated executables are not fully optimized.  To turn optimizations on, use the *--release*  flag:
+
+```shell
+crystal build --release some_program.cr
+```
+
+Make sure to always use *--release*  for production-ready executables and when performing benchmarks.
+
+The optimizations are not turned on by default because the compile times are much
+faster without them and the performance of the program is still pretty good without
+them, so it allows to use the *crystal* command almost to be used as if it was an interpreter.
+
+== Options
+The *crystal* command accepts the following options
+
+=== init
+
+*init* TYPE [DIR | NAME DIR]
+
+Generates a new Crystal project.
+
+TYPE is one of:
+
+*lib*	 Creates a library skeleton +
+*app*	 Creates an application skeleton
+
+This initializes the lib/app project folder as a git repository, with a license file, a README file, a shard.yml for use with shards (the Crystal dependency manager), a .gitignore file, and src and spec folders.
+
+DIR  - directory where project will be generated
+
+NAME - name of project to be generated (default: basename of DIR)
+
+Options:
+
+*-f, --force*:: Force overwrite existing files.
+*-s, --skip-existing*:: Skip existing files.
+
+=== build
+
+*build* [options] [programfile] [--] [arguments]
+
+Compile program.
+
+Options:
+
+*--cross-compile*::
+Generate an object file for cross compilation and prints the command to build the executable.	The object file should be copied
+to the target system and the printed command should be executed
+there. This flag mainly exists for porting the compiler to new
+platforms, where possible run the compiler on the target platform
+directly.
+*-d*, *--debug*::
+Generate the output with symbolic debug symbols.  These are read
+when debugging the built program with tools like lldb, gdb, valgrind etc. and provide mappings to the original source code for
+those tools.
+*--no-debug*::
+Generate the output without any symbolic debug symbols.
+*-D* _FLAG_, *--define* _FLAG_::
+Define a compile-time flag. This is useful to conditionally define types, methods, or commands based on flags available at compile time. The default flags are from the target triple given
+with *--target-triple*  or the hosts default, if none is given.
+*--emit* [asm|llvm-bc|llvm-ir|obj]::
+Comma separated list of types of output for the compiler to emit.
+You can use this to see the generated LLVM IR, LLVM bitcode, assembly, and object files.
+*--frame-pointers* [auto|always|non-leaf]::
+Control the preservation of frame pointers. The default value,
+`--frame-pointers=auto`, will preserve frame pointers on debug
+builds and try to omit them on release builds (certain platforms
+require them to stay enabled). `--frame-pointers=always` will always preserve them, and non-leaf will only force their preservation on non-leaf functions.
+*-f* text|json, *--format* text|json::
+Format of output. Defaults to text. The json format can be used
+to get a more parser-friendly output.
+*--error-trace*::
+Show full error trace.
+*--ll*:: 	 Dump LLVM assembly file to output directory.
+*--link-flags* _FLAGS_::
+Pass additional flags to the linker. Though you can specify those
+flags on the source code, this is useful for passing environment
+specific information directly to the linker, like non-standard
+library paths or names. For more information on specifying linker
+flags on source, you can read the "C bindings" section of the
+documentation available on the official web site.
+*--mcpu* _CPU_::
+Specify a specific CPU to generate code for. This will pass a
+-mcpu flag to LLVM, and is only intended to be used for cross-
+compilation. For a list of available CPUs, invoke "llvm-as <
+/dev/null | llc -march=xyz -mcpu=help".  Passing --mcpu native
+will pass the host CPU name to tune performance for the host.
+*--mattr* _CPU_::
+Override or control specific attributes of the target, such as
+whether SIMD operations are enabled or not. The default set of
+attributes is set by the current CPU. This will pass a -mattr
+flag to LLVM, and is only intended to be used for cross-compilation. For a list of available attributes, invoke "llvm-as <
+/dev/null | llc -march=xyz -mattr=help".
+*--mcmodel* default|kernel|small|medium|large::
+Specifies a specific code model to generate code for. This will
+pass a --code-model flag to LLVM.
+*--no-color*::
+Disable colored output.
+*--no-codegen*::
+Don't do code generation, just parse the file.
+*-o*::  Specify filename of output.
+*--prelude*::
+Specify prelude to use. The default one initializes the garbage
+collector. You can also use --prelude=empty to use no preludes.
+This can be useful for checking code generation for a specific
+source code file.
+*-O* _LEVEL_::  Optimization mode: 0 (default), 1, 2, 3. See *OPTIMIZATIONS* for
+details.
+*--release*::
+Compile in release mode. Equivalent to *-O3 --single-module*
+*--error-trace*::
+Show full stack trace. Disabled by default, as the full trace
+usually makes error messages less readable and not always deliver
+relevant information.
+*-s*, *--stats*::
+Print statistics about the different compiler stages for the current build. Output time and used memory for each compiler process.
+*-p*, *--progress*::
+Print statistics about the progress for the current build.
+*-t*, *--time*::
+Print statistics about the execution time.
+*--single-module*::
+Generate a single LLVM module.  By default, one LLVM module is
+created for each type in a program.  *--release* implies this option.
+*--threads* _NUM_::
+Maximum number of threads to use for code generation. The default
+is 8 threads.
+*--target* _TRIPLE_::
+Enable target triple; intended to use for cross-compilation. See
+llvm documentation for more information about target triple.
+*--verbose*::
+Display the commands executed by the system.
+*--static*::	 Create a statically linked executable.
+*--stdin-filename* _FILENAME_::
+Source file name to be read from STDIN.
+
+=== docs
+
+Generate documentation from comments using a subset of markdown. The output
+is saved in html format on the created docs/ folder. More information about
+documentation conventions can be found at <https://crystal-lang.org/docs/conventions/documenting_code.html>.
+
+Options:
+
+*--project-name* _NAME_::
+Set the project name. The default value is extracted from
+shard.yml if available.
++
+In case no default can be found, this option is mandatory.
+*--project-version* _VERSION_::
+Set the project version. The default value is extracted from current git commit or shard.yml if available.
++
+In case no default can be found, this option is mandatory.
+*--json-config-url* _URL_::
+Set the URL pointing to a config file (used for discovering versions).
+*--source-refname* _REFNAME_::
+Set source refname (e.g. git tag, commit hash). The default value
+is extracted from current git commit if available.
++
+If this option is missing and can't be automatically determined,
+the generator can't produce source code links.
+*--source-url-pattern* _URL_::
+Set URL pattern for source code links. The default value is extracted from git remotes ("origin" or first one) if available and
+the provider's URL pattern is recognized.
++
+Supported replacement tags:
++
+--
+*%{refname}*::  commit reference
+*%{path}*::     path to source file inside the repository
+*%{filename}*::
+  basename of the source file
+*%{line}*::     line number
+--
++
+If this option is missing and can't be automatically determined,
+the generator can't produce source code links.
+*-o* _DIR_, *--output* _DIR_::
+Set the output directory (default: ./docs).
+*-b* _URL_, **--canonical-base-url** _URL_::
+Indicate the preferred URL with rel="canonical" link element.
+*-b* _URL_, *--sitemap-base-url* _URL_::
+Set the sitemap base URL. Sitemap will only be generated when
+this option is set.
+*--sitemap-priority* _PRIO_::
+Set the priority assigned to sitemap entries (default: 1.0).
+*--sitemap-changefreq* _FREQ_::
+Set the changefreq assigned to sitemap entries (default: never).
+
+=== env
+*env* [variables]
+
+Print Crystal-specific environment variables in a format compatible with
+shell scripts. If one or more variable names are given as arguments, it
+prints only the value of each named variable on its own line.
+
+Variables:
+
+--
+*CRYSTAL_CACHE_DIR*::
+Please see ENVIRONMENT VARIABLES.
+
+*CRYSTAL_LIBRARY_PATH*::
+Please see ENVIRONMENT VARIABLES.
+
+*CRYSTAL_PATH*::
+Please see ENVIRONMENT VARIABLES.
+
+*CRYSTAL_VERSION*::
+Contains Crystal version.
+--
+
+=== eval
+*eval* [options] [source]
+
+Evaluate code from arguments or, if no arguments are passed, from the standard input. Useful for experiments.
+
+Options:
+
+*-d*, *--debug*::
+Generate the output with symbolic debug symbols.  These are read
+when debugging the built program with tools like lldb, gdb, valgrind etc. and provide mappings to the original source code for
+those tools.
+*--no-debug*::
+Generate the output without any symbolic debug symbols.
+*-D* _FLAG_, *--define* _FLAG_::
+Define a compile-time flag. This is useful to conditionally define types, methods, or commands based on flags available at compile time. The default flags are from the target triple given
+with --target-triple or the hosts default, if none is given.
+*--error-trace*::
+Show full error trace.
+*-O* _LEVEL_::	 Optimization mode: 0 (default), 1, 2, 3. See *OPTIMIZATIONS* for details.
+*--release*::
+Compile in release mode. Equivalent to *-O3 --single-module*
+*-s*, *--stats*::
+Print statistics about the different compiler stages for the current build. Output time and used memory for each compiler
+process.
+*-p*, *--progress*::
+Print statistics about the progress for the current build.
+*-t*, *--time*::
+Print statistics about the execution time.
+*--no-color*::
+Disable colored output.
+
+=== play
+*play* [options] [file]
+
+Starts the *crystal* playground server on port 8080, by default.
+
+Options:
+
+*-p* _PORT_, *--port* _PORT_::
+Run the playground on the specified port. Default is 8080.
+*-b* _HOST_, *--binding* _HOST_::
+Bind the playground to the specified IP.
+*-v*, *--verbose*::
+Display detailed information of the executed code.
+
+=== run
+*run* [options] [programfile] [--] [arguments]
+
+The default command. Compile and run program.
+
+Options: Same as the build options.
+
+=== spec
+spec [options] [files]
+
+Compile and run specs (in spec directory).
+
+Options:
+
+*-d*, *--debug*::
+Generate the output with symbolic debug symbols.  These are read
+when debugging the built program with tools like lldb, gdb, valgrind etc. and provide mappings to the original source code for
+those tools.
+*--no-debug*::
+Generate the output without any symbolic debug symbols.
+*-D* _FLAG_, *--define* _FLAG_::
+Define a compile-time flag. This is useful to conditionally define types, methods, or commands based on flags available at compile time. The default flags are from the target triple given
+with *--target-triple*  or the hosts default, if none is given.
+*--error-trace*::
+Show full error trace.
+*-O* _LEVEL_::	 Optimization mode: 0 (default), 1, 2, 3. See *OPTIMIZATIONS* for details.
+*--release*::
+Compile in release mode. Equivalent to *-O3 --single-module*
+*-s*, *--stats*::
+Print statistics about the different compiler stages for the current build. Output time and used memory for each compiler
+process.
+*-p*, *--progress*::
+Print statistics about the progress for the current build.
+*-t*, *--time*::
+Print statistics about the execution time.
+*--no-color*::
+Disable colored output.
+
+=== tool
+*tool* [tool] [switches] [programfile] [--] [arguments]
+
+Run a tool. The available tools are: context, dependencies, expand, flags,
+format, hierarchy, implementations, types, and unreachable.
+
+Tools:
+
+*context*::
+Show context for given location.
+
+*dependencies*::
+Show tree of required source files.
++
+Options:
++
+--
+*-D* _FLAG_, *--define*=_FLAG_::
+  Define a compile-time flag. This is useful to con    ditionally define types, methods, or commands based
+  on flags available at compile time. The default
+  flags are from the target triple given with *--tar*     get-triple or the hosts default, if none is given.
+*-f* _FORMAT_, *--format*=_FORMAT_::
+  Output format 'tree' (default), 'flat', 'dot', or
+  'mermaid'.
+*-i* _PATH_, *--include*=_PATH_::
+  Include path in output.
+*-e* _PATH_, *--exclude*=_PATH_::
+  Exclude path in output.
+*--error-trace*::
+  Show full error trace.
+*--prelude*::
+  Specify prelude to use. The default one initializes
+  the garbage collector. You can also use *--pre*     lude=empty to use no preludes. This can be useful
+  for checking code generation for a specific source
+  code file.
+*--verbose*::
+  Show skipped and heads of filtered paths
+--
+
+*expand*::  Show macro expansion for given location.
+
+*flags*::   Print all macro 'flag?' values
+
+*format*::  Format project, directories and/or files with the coding
+style used in the standard library. You can use the
+*--checkflag*  to check whether the formatter would make any
+changes.
+
+*hierarchy*::
+Show hierarchy of types from file. Also show class and struct
+members, with type and size. Types can be filtered with a
+regex by using the *-e* flag.
+
+*implementations*::
+Show implementations for a given call. Use *--cursor*  to specify the cursor position. The format for the cursor position
+is file:line:column.
+
+*types*::   Show type of main variables of file.
+
+*unreachable*::
+Show methods that are never called. The text output is a list
+of lines with columns separated by tab.
++
+Output fields:
++
+--
+*count*::	 sum of all calls to this method (only with
+*--tallies*  option; otherwise skipped)
+*location*::	 pathname, line and column, all separated by colon
+name
+*lines*::	 length of the def in lines
+annotations
+--
++
+Options:
++
+--
+*-D* _FLAG_, *--define*=_FLAG_::
+  Define a compile-time flag. This is useful to con    ditionally define types,
+  methods, or commands based on flags available at compile time. The default
+  flags are from the target triple given with *--target-triple* or the hosts
+  default, if none is given.
+*-f* _FORMAT_, *--format*=_FORMAT_::
+  Output format 'text' (default), 'json', 'codecov', or 'csv'.
+*--tallies*::
+  Print reachable methods and their call counts as well.
+*--check*::    Exit with error if there is any unreachable code.
+*-i* _PATH_, *--include*=_PATH_::
+  Include path in output.
+*-e* _PATH_, *--exclude*=_PATH_::
+  Exclude path in output (default: lib).
+*--error-trace*::
+  Show full error trace.
+*--prelude*::
+  Specify prelude to use. The default one initializes the garbage collector. You
+  can also use *--prelude=empty* to use no preludes. This can be useful for
+  checking code generation for a specific source code file.
+--
+
+=== clear_cache
+
+Clear the compiler cache (located at 'CRYSTAL_CACHE_DIR').
+
+=== help
+Show help. Option *--help*  or *-h*  can also be added to each command for command-specific
+help.
+
+=== version
+Show version.
+
+== Optimizations
+The optimization level specifies the codegen effort for producing optimal code.  It's
+a trade-off between compilation performance (decreasing per optimization level) and
+runtime performance (increasing per optimization level).
+
+Production builds should usually have the highest optimization level.  Best results
+are achieved with *--release*  which also implies *--single-module*
+
+*-O0*::       No optimization (default)
+*-O1*::       Low optimization
+*-O2*::       Middle optimization
+*-O3*::       High optimization
+*-Os*::        Middle optimization with focus on file size
+*-Oz*::        Middle optimization aggressively focused on file size
+
+== Environment Variables
+
+=== CRYSTAL_CACHE_DIR
+Defines path where Crystal caches partial compilation results for faster
+subsequent builds. This path is also used to temporarily store executables
+when Crystal programs are run with '*crystal* run' rather than '*crystal*
+build'.
+
+=== CRYSTAL_LIBRARY_PATH
+Defines paths where Crystal searches for (binary) libraries. Multiple paths
+can be separated by ":".	 These paths are passed to the linker as `-L`
+flags.
+
+The pattern '$ORIGIN' at the start of the path expands to the directory
+where the compiler binary is located. For example, '$ORIGIN/../lib/crystal'
+resolves the standard library path relative to the compiler location in a
+generic way, independent of the absolute paths (assuming the relative location is correct).
+
+=== CRYSTAL_PATH
+Defines paths where Crystal searches for required source files. Multiple
+paths can be separated by ":".
+
+The pattern '$ORIGIN' at the start of the path expands to the directory
+where the compiler binary is located. For example, '$ORIGIN/../share/crystal/src' resolves the standard library path relative to the compiler location in a generic way, independent of the absolute paths (assuming the relative location is correct).
+
+=== CRYSTAL_OPTS
+Defines options for the Crystal compiler to be used besides the command
+line arguments. The syntax is identical to the command line arguments. This
+is handy when using Crystal in build setups, for example 'CRYSTAL_OPTS=--debug make build'.
+
+== Seealso
+
+*shards*(1)
+
+<https://crystal-lang.org/>			   The official web site.
+
+<https://github.com/crystal-lang/crystal> 	   Official Repository.
