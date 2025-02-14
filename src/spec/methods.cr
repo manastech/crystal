@@ -16,6 +16,11 @@ module Spec::Methods
   # ```
   #
   # If `focus` is `true`, only this `describe`, and others marked with `focus: true`, will run.
+  def describe(description = nil, *, file = __FILE__, line = __LINE__, end_line = __END_LINE__, focus : Bool = false, tags : String | Enumerable(String) | Nil = nil, &block)
+    Spec.cli.root_context.describe(description.to_s, file, line, end_line, focus, tags, &block)
+  end
+
+  @[Deprecated]
   def describe(description = nil, file = __FILE__, line = __LINE__, end_line = __END_LINE__, focus : Bool = false, tags : String | Enumerable(String) | Nil = nil, &block)
     Spec.cli.root_context.describe(description.to_s, file, line, end_line, focus, tags, &block)
   end
@@ -27,6 +32,11 @@ module Spec::Methods
   # It is functionally equivalent to `#describe`.
   #
   # If `focus` is `true`, only this `context`, and others marked with `focus: true`, will run.
+  def context(description = nil, *, file = __FILE__, line = __LINE__, end_line = __END_LINE__, focus : Bool = false, tags : String | Enumerable(String) | Nil = nil, &block)
+    describe(description.to_s, file, line, end_line, focus, tags, &block)
+  end
+
+  @[Deprecated]
   def context(description = nil, file = __FILE__, line = __LINE__, end_line = __END_LINE__, focus : Bool = false, tags : String | Enumerable(String) | Nil = nil, &block)
     describe(description.to_s, file, line, end_line, focus, tags, &block)
   end
@@ -45,6 +55,11 @@ module Spec::Methods
   # It is usually used inside a `#describe` or `#context` section.
   #
   # If `focus` is `true`, only this test, and others marked with `focus: true`, will run.
+  def it(description = "assert", *, file = __FILE__, line = __LINE__, end_line = __END_LINE__, focus : Bool = false, tags : String | Enumerable(String) | Nil = nil, &block)
+    Spec.cli.root_context.it(description.to_s, file, line, end_line, focus, tags, &block)
+  end
+
+  @[Deprecated]
   def it(description = "assert", file = __FILE__, line = __LINE__, end_line = __END_LINE__, focus : Bool = false, tags : String | Enumerable(String) | Nil = nil, &block)
     Spec.cli.root_context.it(description.to_s, file, line, end_line, focus, tags, &block)
   end
@@ -64,6 +79,11 @@ module Spec::Methods
   # It is usually used inside a `#describe` or `#context` section.
   #
   # If `focus` is `true`, only this test, and others marked with `focus: true`, will run.
+  def pending(description = "assert", *, file = __FILE__, line = __LINE__, end_line = __END_LINE__, focus : Bool = false, tags : String | Enumerable(String) | Nil = nil, &block)
+    pending(description, file, line, end_line, focus, tags)
+  end
+
+  @[Deprecated]
   def pending(description = "assert", file = __FILE__, line = __LINE__, end_line = __END_LINE__, focus : Bool = false, tags : String | Enumerable(String) | Nil = nil, &block)
     pending(description, file, line, end_line, focus, tags)
   end
@@ -71,6 +91,11 @@ module Spec::Methods
   # Defines a yet-to-be-implemented pending test case
   #
   # If `focus` is `true`, only this test, and others marked with `focus: true`, will run.
+  def pending(description = "assert", *, file = __FILE__, line = __LINE__, end_line = __END_LINE__, focus : Bool = false, tags : String | Enumerable(String) | Nil = nil)
+    Spec.cli.root_context.pending(description.to_s, file, line, end_line, focus, tags)
+  end
+
+  @[Deprecated]
   def pending(description = "assert", file = __FILE__, line = __LINE__, end_line = __END_LINE__, focus : Bool = false, tags : String | Enumerable(String) | Nil = nil)
     Spec.cli.root_context.pending(description.to_s, file, line, end_line, focus, tags)
   end
@@ -78,6 +103,11 @@ module Spec::Methods
   # Fails an example.
   #
   # This method can be used to manually fail an example defined in an `#it` block.
+  def fail(msg, *, file = __FILE__, line = __LINE__)
+    raise Spec::AssertionFailed.new(msg, file, line)
+  end
+
+  @[Deprecated]
   def fail(msg, file = __FILE__, line = __LINE__)
     raise Spec::AssertionFailed.new(msg, file, line)
   end
@@ -96,6 +126,11 @@ module Spec::Methods
   #   cmd.should end_with("git")
   # end
   # ```
+  def pending!(msg = "Cannot run example", *, file = __FILE__, line = __LINE__)
+    raise Spec::ExamplePending.new(msg, file, line)
+  end
+
+  @[Deprecated]
   def pending!(msg = "Cannot run example", file = __FILE__, line = __LINE__)
     raise Spec::ExamplePending.new(msg, file, line)
   end
