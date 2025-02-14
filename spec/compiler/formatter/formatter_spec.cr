@@ -2343,6 +2343,22 @@ describe Crystal::Formatter do
   assert_format "foo\n  .bar\n  .baz(\n    1\n  )"
   assert_format "foo.bar\n  .baz(\n    1\n  )"
 
+  # #13202
+  describe "assignment syntax" do
+    assert_format "x.foo=bar", "x.foo = bar"
+    assert_format "x.foo=(bar)"
+    assert_format "x.foo = bar"
+    assert_format "x.foo = (bar)"
+    assert_format "x.foo= bar", "x.foo = bar"
+    assert_format "x.foo =bar", "x.foo = bar"
+    assert_format "x.foo= (bar)", "x.foo = (bar)"
+    assert_format "x.foo =(bar)", "x.foo = (bar)"
+
+    assert_format "x.foo = (y).bar"
+    assert_format "x.foo =(y).bar", "x.foo = (y).bar"
+    assert_format "x.foo= (y).bar", "x.foo = (y).bar"
+  end
+
   assert_format <<-CRYSTAL,
     def foo
       {% if flag?(:foo) %}

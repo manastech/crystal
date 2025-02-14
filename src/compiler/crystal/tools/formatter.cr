@@ -2744,10 +2744,12 @@ module Crystal
       passed_backslash_newline = @token.passed_backslash_newline
 
       if assignment
+        space_before_assignment = @token.type.space?
         skip_space
-
         next_token
-        if @token.type.op_lparen?
+
+        if @token.type.op_lparen? && !space_before_assignment
+          # Standard call syntax for `foo=(x)`
           write "=("
           slash_is_regex!
           next_token
@@ -2755,6 +2757,7 @@ module Crystal
           skip_space_or_newline
           write_token :OP_RPAREN
         else
+          # Assignment syntax for `foo =x` or `foo= x`.
           write " ="
           skip_space
           accept_assign_value_after_equals node.args.last
