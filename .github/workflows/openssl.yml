@@ -38,6 +38,8 @@ jobs:
             repository: http://dl-cdn.alpinelinux.org/alpine/v3.17/main
           - pkg: "openssl-dev=~3.3"
             repository: http://dl-cdn.alpinelinux.org/alpine/v3.20/main
+          - pkg: "libressl-dev=~2.7"
+            repository: http://dl-cdn.alpinelinux.org/alpine/v3.9/main
           - pkg: "libressl-dev=~3.4"
             repository: http://dl-cdn.alpinelinux.org/alpine/v3.15/community
           - pkg: "libressl-dev=~3.5"
@@ -50,8 +52,18 @@ jobs:
       - name: Uninstall openssl and conflicts
         run: apk del openssl-dev openssl-libs-static libxml2-static
       - name: Install ${{ matrix.pkg }}
-        run: apk add "${{ matrix.pkg }}" --repository=${{ matrix.repository }}
-      - name: Print LibSSL version
-        run: bin/crystal eval 'require "openssl"; p! LibSSL::OPENSSL_VERSION, LibSSL::LIBRESSL_VERSION'
+        # `apk add` may exit with a failure status due to some file incompatibilities,
+        # but still install all the necessary parts for our purposes. So we ignore failure.
+        # Reason: ERROR: libressl2.7-libcrypto-2.7.5-r0: trying to overwrite etc/ssl/openssl.cnf owned by libcrypto3-3.3.2-r0.
+        run: apk add "${{ matrix.pkg }}" --repository=${{ matrix.repository }} || true
+      - name: Check LibSSL version
+        run: |
+          bin/crystal eval <<CRYSTAL
+          require "openssl"
+          p! LibSSL::OPENSSL_VERSION, LibSSL::LIBRESSL_VERSION
+          restriction = "${{ matrix.pkg}}".partition("=~")[2]
+          version = "${{ matrix.pkg }}".starts_with?("openssl") ? LibSSL::OPENSSL_VERSION : LibSSL::LIBRESSL_VERSION
+          exit version.starts_with?(restriction) ? 0 : 1
+          CRYSTAL
       - name: Run OpenSSL specs
         run: bin/crystal spec --order=random spec/std/openssl/
