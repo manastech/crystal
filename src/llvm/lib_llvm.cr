@@ -5,14 +5,10 @@
       {% config ||= read_file?("#{dir.id}/llvm_VERSION") %}
     {% end %}
 
-    {% unless config %}
-      {% raise "Cannot determine LLVM configuration; ensure the file `llvm_VERSION` exists under `CRYSTAL_LIBRARY_PATH`" %}
-    {% end %}
-
-    {% lines = config.lines.map(&.chomp) %}
-    {% llvm_version = lines[0] %}
-    {% llvm_targets = lines[1] %}
-    {% llvm_ldflags = lines[2] %}
+    {% lines = config ? config.lines.map(&.chomp) : nil %}
+    {% llvm_version = env("LLVM_VERSION") || (lines && lines[0]) %}
+    {% llvm_targets = env("LLVM_TARGETS") || (lines && lines[1]) %}
+    {% llvm_ldflags = env("LLVM_LDFLAGS") || (lines && lines[2]) %}
 
     @[Link("llvm")]
     {% if compare_versions(Crystal::VERSION, "1.11.0-dev") >= 0 %}
@@ -22,9 +18,9 @@
     end
   {% else %}
     {% llvm_config = env("LLVM_CONFIG") || `sh #{__DIR__}/ext/find-llvm-config`.stringify %}
-    {% llvm_version = `#{llvm_config.id} --version`.stringify %}
+    {% llvm_version = env("LLVM_VERSION") || `#{llvm_config.id} --version`.stringify %}
     {% llvm_targets = env("LLVM_TARGETS") || `#{llvm_config.id} --targets-built`.stringify %}
-    {% llvm_ldflags = "`#{llvm_config.id} --libs --system-libs --ldflags#{" --link-static".id if flag?(:static)}#{" 2> /dev/null".id unless flag?(:win32)}`" %}
+    {% llvm_ldflags = env("LLVM_LDFLAGS") || "`#{llvm_config.id} --libs --system-libs --ldflags#{" --link-static".id if flag?(:static)}#{" 2> /dev/null".id unless flag?(:win32)}`" %}
 
     {% unless flag?(:win32) %}
       @[Link("stdc++")]
@@ -33,7 +29,25 @@
     {% end %}
   {% end %}
 
-  @[Link(ldflags: {{ llvm_ldflags }})]
+  {% llvm_version ||= Crystal::DESCRIPTION.gsub(/.*LLVM: ([^\n]*).*/m, "\\1") %}
+
+  {% unless llvm_targets %}
+    {% if flag?(:i386) || flag?(:x86_64) %}
+      {% llvm_targets = "X86" %}
+    {% elsif flag?(:arm) %}
+      {% llvm_targets = "ARM" %}
+    {% elsif flag?(:aarch64) %}
+      {% llvm_targets = "AArch64" %}
+    {% elsif flag?(:wasm32) %}
+      {% llvm_targets = "WebAssembly" %}
+    {% elsif flag?(:avr) %}
+      {% llvm_targets = "AVR" %}
+    {% end %}
+  {% end %}
+
+  {% if llvm_ldflags %}
+    @[Link(ldflags: {{ llvm_ldflags }})]
+  {% end %}
   lib LibLLVM
     VERSION = {{ llvm_version.strip.gsub(/git/, "").gsub(/-?rc.*/, "") }}
     BUILT_TARGETS = {{ llvm_targets.strip.downcase.split(' ').map(&.id.symbolize) }}
