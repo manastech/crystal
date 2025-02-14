@@ -9,7 +9,7 @@ SCRIPT_PATH="$(realpath "$0")"
 SCRIPT_ROOT="$(dirname "$SCRIPT_PATH")"
 
 BUILD_DIR=$SCRIPT_ROOT/../../.build
-LLVM_CONFIG="$(basename $($SCRIPT_ROOT/../../src/llvm/ext/find-llvm-config))"
+LLVM_CONFIG="$(basename $($SCRIPT_ROOT/../../src/llvm/ext/find-llvm-config.sh))"
 FILE_CHECK=FileCheck-"${LLVM_CONFIG#llvm-config-}"
 crystal=${CRYSTAL_SPEC_COMPILER_BIN:-$SCRIPT_ROOT/../../bin/crystal}
 

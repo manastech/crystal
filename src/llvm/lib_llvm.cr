@@ -21,7 +21,7 @@
     lib LibLLVM
     end
   {% else %}
-    {% llvm_config = env("LLVM_CONFIG") || `sh #{__DIR__}/ext/find-llvm-config`.stringify %}
+    {% llvm_config = env("LLVM_CONFIG") || `sh #{__DIR__}/ext/find-llvm-config.sh`.stringify %}
     {% llvm_version = `#{llvm_config.id} --version`.stringify %}
     {% llvm_targets = env("LLVM_TARGETS") || `#{llvm_config.id} --targets-built`.stringify %}
     {% llvm_ldflags = "`#{llvm_config.id} --libs --system-libs --ldflags#{" --link-static".id if flag?(:static)}#{" 2> /dev/null".id unless flag?(:win32)}`" %}

@@ -1,6 +1,6 @@
 abstract class DebuggerRunner
   CRYSTAL    = ENV["CRYSTAL_SPEC_COMPILER_BIN"]? || "#{REPO_BASE_DIR}/bin/crystal"
-  FILE_CHECK = "FileCheck#{File.basename(`#{__DIR__}/../../src/llvm/ext/find-llvm-config`).lchop("llvm-config")}"
+  FILE_CHECK = "FileCheck#{File.basename(`#{__DIR__}/../../src/llvm/ext/find-llvm-config.sh`).lchop("llvm-config")}"
 
   REPO_BASE_DIR      = "#{__DIR__}/../../"
   SESSION_OUTPUT_DIR = File.join(REPO_BASE_DIR, "tmp", "debug")

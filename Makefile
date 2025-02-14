@@ -61,7 +61,7 @@ override EXPORTS_BUILD += \
 	$(EXPORT_CC) \
 	CRYSTAL_CONFIG_LIBRARY_PATH=$(CRYSTAL_CONFIG_LIBRARY_PATH)
 SHELL = sh
-LLVM_CONFIG := $(shell src/llvm/ext/find-llvm-config)
+LLVM_CONFIG := $(shell src/llvm/ext/find-llvm-config.sh)
 LLVM_VERSION := $(if $(LLVM_CONFIG),$(shell "$(LLVM_CONFIG)" --version 2> /dev/null))
 LLVM_EXT_DIR = src/llvm/ext
 LLVM_EXT_OBJ = $(LLVM_EXT_DIR)/llvm_ext.o
