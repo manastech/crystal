@@ -139,7 +139,7 @@ Disable colored output.
 .It Fl -no-codegen
 Don't do code generation, just parse the file.
 .It Fl o
-Specify filename of output.
+Specify output path. If a directory, the filename is derived from the first source file (default: ./)
 .It Fl -prelude
 Specify prelude to use. The default one initializes the garbage collector. You can also use --prelude=empty to use no preludes. This can be useful for checking code generation for a specific source code file.
 .It Fl O Ar LEVEL
