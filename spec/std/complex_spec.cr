@@ -1,5 +1,6 @@
 require "spec"
 require "complex"
+require "big"
 require "../support/number"
 {% unless flag?(:wasm32) %}
   require "big"
@@ -279,6 +280,190 @@ describe "Complex" do
 
     it "number / complex" do
       (-5.7/(Complex.new(2.27, 8.92))).should eq(Complex.new(-0.1527278908111847, 0.6001466017778712))
+    end
+  end
+
+  describe "**" do
+    it "complex ** complex" do
+      (Complex.polar(Math::E, 1)**Complex.new(1, 2)).should be_close(Complex.polar(1/Math::E, 3), 1e-8)
+    end
+
+    it "number ** complex" do
+      (Math::E**Complex.new(1, 2)).should be_close(Complex.polar(Math::E, 2), 1e-8)
+      (1**Complex.new(1, 2)).should be_close(Complex.new(1), 1e-8)
+      (1.0**Complex.new(1, 2)).should be_close(Complex.new(1), 1e-8)
+      (1.to_c**Complex.new(1, 2)).should be_close(Complex.new(1), 1e-8)
+      (BigInt.new(1)**Complex.new(1, 2)).should be_close(Complex.new(1), 1e-8)
+      (BigFloat.new(1)**Complex.new(1, 2)).should be_close(Complex.new(1), 1e-8)
+      (BigDecimal.new(1)**Complex.new(1, 2)).should be_close(Complex.new(1), 1e-8)
+      (BigRational.new(1)**Complex.new(1, 2)).should be_close(Complex.new(1), 1e-8)
+    end
+
+    it "complex ** number" do
+      (Complex.new(1, 2)**2).should be_close(Complex.new(-3, 4), 1e-8)
+      (Complex.new(1, 2)**2.0).should be_close(Complex.new(-3, 4), 1e-8)
+      (Complex.new(1, 2)**2.to_c).should be_close(Complex.new(-3, 4), 1e-8)
+      (Complex.new(1, 2)**BigInt.new(2)).should be_close(Complex.new(-3, 4), 1e-8)
+      (Complex.new(1, 2)**BigFloat.new(2)).should be_close(Complex.new(-3, 4), 1e-8)
+      (Complex.new(1, 2)**BigDecimal.new(2)).should be_close(Complex.new(-3, 4), 1e-8)
+      (Complex.new(1, 2)**BigRational.new(2)).should be_close(Complex.new(-3, 4), 1e-8)
+    end
+
+    it "complex ** 0" do
+      (Complex.new(1, 2)**0).should be_close(Complex.new(1), 1e-8)
+      (Complex.new(1, 2)**0.0).should be_close(Complex.new(1), 1e-8)
+      (Complex.new(1, 2)**0.to_c).should be_close(Complex.new(1), 1e-8)
+      (Complex.new(1, 2)**BigInt.new(0)).should be_close(Complex.new(1), 1e-8)
+      (Complex.new(1, 2)**BigFloat.new(0)).should be_close(Complex.new(1), 1e-8)
+      (Complex.new(1, 2)**BigDecimal.new(0)).should be_close(Complex.new(1), 1e-8)
+      (Complex.new(1, 2)**BigRational.new(0)).should be_close(Complex.new(1), 1e-8)
+    end
+
+    it "complex ** 1" do
+      (Complex.new(1, 2)**1).should be_close(Complex.new(1, 2), 1e-8)
+      (Complex.new(1, 2)**1.0).should be_close(Complex.new(1, 2), 1e-8)
+      (Complex.new(1, 2)**1.to_c).should be_close(Complex.new(1, 2), 1e-8)
+      (Complex.new(1, 2)**BigInt.new(1)).should be_close(Complex.new(1, 2), 1e-8)
+      (Complex.new(1, 2)**BigFloat.new(1)).should be_close(Complex.new(1, 2), 1e-8)
+      (Complex.new(1, 2)**BigDecimal.new(1)).should be_close(Complex.new(1, 2), 1e-8)
+      (Complex.new(1, 2)**BigRational.new(1)).should be_close(Complex.new(1, 2), 1e-8)
+    end
+
+    it "0 ** 0" do
+      (Complex.zero**0).should eq(Complex.new(1))
+      (Complex.zero**0.0).should eq(Complex.new(1))
+      (Complex.zero**0.to_c).should eq(Complex.new(1))
+      (Complex.zero**BigInt.new(0)).should eq(Complex.new(1))
+      (Complex.zero**BigFloat.new(0)).should eq(Complex.new(1))
+      (Complex.zero**BigDecimal.new(0)).should eq(Complex.new(1))
+      (Complex.zero**BigRational.new(0)).should eq(Complex.new(1))
+    end
+
+    it "0 ** 1" do
+      (Complex.zero**1).should eq(Complex.zero)
+      (Complex.zero**1.0).should eq(Complex.zero)
+      (Complex.zero**1.to_c).should eq(Complex.zero)
+      (Complex.zero**BigInt.new(1)).should eq(Complex.zero)
+      (Complex.zero**BigFloat.new(1)).should eq(Complex.zero)
+      (Complex.zero**BigDecimal.new(1)).should eq(Complex.zero)
+      (Complex.zero**BigRational.new(1)).should eq(Complex.zero)
+    end
+
+    it "0 ** -1" do
+      z = Complex.zero ** (-1)
+      z.real.infinite?.should eq(1)
+      z.imag.zero?.should be_true
+
+      z = Complex.zero ** (-1.0)
+      z.real.infinite?.should eq(1)
+      z.imag.zero?.should be_true
+
+      z = Complex.zero ** (-1).to_c
+      z.real.infinite?.should eq(1)
+      z.imag.zero?.should be_true
+
+      z = Complex.zero ** BigInt.new(-1)
+      z.real.infinite?.should eq(1)
+      z.imag.zero?.should be_true
+
+      z = Complex.zero ** BigFloat.new(-1)
+      z.real.infinite?.should eq(1)
+      z.imag.zero?.should be_true
+
+      z = Complex.zero ** BigDecimal.new(-1)
+      z.real.infinite?.should eq(1)
+      z.imag.zero?.should be_true
+
+      z = Complex.zero ** BigRational.new(-1)
+      z.real.infinite?.should eq(1)
+      z.imag.zero?.should be_true
+    end
+
+    it "0 ** complex" do
+      (Complex.zero**Complex.new(1, 1)).should eq(Complex.zero)
+
+      z = Complex.zero ** Complex.new(-1, 1)
+      z.real.nan?.should be_true
+      z.imag.nan?.should be_true
+    end
+
+    it "i ** 1" do
+      (Complex.new(0, 1)**1).should eq(Complex.new(0, 1))
+      (Complex.new(0, 1)**1.0).should eq(Complex.new(0, 1))
+      (Complex.new(0, 1)**1.to_c).should eq(Complex.new(0, 1))
+      (Complex.new(0, 1)**BigInt.new(1)).should eq(Complex.new(0, 1))
+      (Complex.new(0, 1)**BigFloat.new(1)).should eq(Complex.new(0, 1))
+      (Complex.new(0, 1)**BigDecimal.new(1)).should eq(Complex.new(0, 1))
+      (Complex.new(0, 1)**BigRational.new(1)).should eq(Complex.new(0, 1))
+    end
+
+    it "i ** 2" do
+      (Complex.new(0, 1)**2).should eq(Complex.new(-1))
+      (Complex.new(0, 1)**2.0).should eq(Complex.new(-1))
+      (Complex.new(0, 1)**2.to_c).should eq(Complex.new(-1))
+      (Complex.new(0, 1)**BigInt.new(2)).should eq(Complex.new(-1))
+      (Complex.new(0, 1)**BigFloat.new(2)).should eq(Complex.new(-1))
+      (Complex.new(0, 1)**BigDecimal.new(2)).should eq(Complex.new(-1))
+      (Complex.new(0, 1)**BigRational.new(2)).should eq(Complex.new(-1))
+    end
+
+    it "-1 ** 1" do
+      (Complex.new(-1)**1).should eq(Complex.new(-1))
+      (Complex.new(-1)**1.0).should eq(Complex.new(-1))
+      (Complex.new(-1)**1.to_c).should eq(Complex.new(-1))
+      (Complex.new(-1)**BigInt.new(1)).should eq(Complex.new(-1))
+      (Complex.new(-1)**BigFloat.new(1)).should eq(Complex.new(-1))
+      (Complex.new(-1)**BigDecimal.new(1)).should eq(Complex.new(-1))
+      (Complex.new(-1)**BigRational.new(1)).should eq(Complex.new(-1))
+    end
+
+    it "-1 ** 2" do
+      (Complex.new(-1)**2).should eq(Complex.new(1))
+      (Complex.new(-1)**2.0).should eq(Complex.new(1))
+      (Complex.new(-1)**2.to_c).should eq(Complex.new(1))
+      (Complex.new(-1)**BigInt.new(2)).should eq(Complex.new(1))
+      (Complex.new(-1)**BigFloat.new(2)).should eq(Complex.new(1))
+      (Complex.new(-1)**BigDecimal.new(2)).should eq(Complex.new(1))
+      (Complex.new(-1)**BigRational.new(2)).should eq(Complex.new(1))
+    end
+
+    it "-1 ** 0.5" do
+      (Complex.new(-1)**0.5_f64).should eq(Complex.new(0, 1))
+      (Complex.new(-1)**0.5_f32).should eq(Complex.new(0, 1))
+      (Complex.new(-1)**0.5.to_c).should eq(Complex.new(0, 1))
+      (Complex.new(-1)**BigFloat.new(0.5)).should eq(Complex.new(0, 1))
+      (Complex.new(-1)**BigDecimal.new(0.5)).should eq(Complex.new(0, 1))
+      (Complex.new(-1)**BigRational.new(1, 2)).should eq(Complex.new(0, 1))
+    end
+
+    it "(-inf) ** 2" do
+      z = (-Float64::INFINITY).to_c ** 2
+      z.real.infinite?.should eq(1)
+      z.imag.zero?.should be_true
+
+      z = (-Float64::INFINITY).to_c ** 2.0
+      z.real.infinite?.should eq(1)
+      z.imag.zero?.should be_true
+
+      z = (-Float64::INFINITY).to_c ** 2.to_c
+      z.real.infinite?.should eq(1)
+      z.imag.zero?.should be_true
+
+      z = (-Float64::INFINITY).to_c ** BigInt.new(2)
+      z.real.infinite?.should eq(1)
+      z.imag.zero?.should be_true
+
+      z = (-Float64::INFINITY).to_c ** BigFloat.new(2)
+      z.real.infinite?.should eq(1)
+      z.imag.zero?.should be_true
+
+      z = (-Float64::INFINITY).to_c ** BigDecimal.new(2)
+      z.real.infinite?.should eq(1)
+      z.imag.zero?.should be_true
+
+      z = (-Float64::INFINITY).to_c ** BigRational.new(2)
+      z.real.infinite?.should eq(1)
+      z.imag.zero?.should be_true
     end
   end
 

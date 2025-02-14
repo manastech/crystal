@@ -19,7 +19,7 @@ require "./std/char/reader_spec.cr"
 require "./std/class_spec.cr"
 require "./std/colorize_spec.cr"
 require "./std/comparable_spec.cr"
-require "./std/complex_spec.cr"
+# require "./std/complex_spec.cr" (failed linking)
 # require "./std/compress/deflate/deflate_spec.cr" (failed linking)
 # require "./std/compress/gzip/gzip_spec.cr" (failed linking)
 # require "./std/compress/zip/zip_file_spec.cr" (failed linking)

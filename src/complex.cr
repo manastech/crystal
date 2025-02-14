@@ -30,6 +30,11 @@ struct Complex
     c
   end
 
+  # Returns a complex number which denotes the given polar form.
+  def self.polar(abs : Number, phase : Number = 0)
+    new(abs*Math.cos(phase), abs*Math.sin(phase))
+  end
+
   # Determines whether `self` equals *other* or not.
   def ==(other : Complex)
     @real == other.real && @imag == other.imag
@@ -267,6 +272,57 @@ struct Complex
     Complex.new(@real / other, @imag / other)
   end
 
+  # Returns the base `self` exponential of *other*.
+  def **(other : Complex) : Complex
+    return self ** other.real if other.imag.zero?
+    return Complex.zero if zero? && other.real > 0
+    abs, phase = polar
+    Complex.polar((abs**other.real) / Math.exp(phase*other.imag), phase*other.real + Math.log(abs)*other.imag)
+  end
+
+  # :ditto:
+  def **(other : Number) : Complex
+    if @imag.zero?
+      return Complex.new(@real ** other) if @real >= 0
+      r = (-@real) ** other
+      k = other * 2
+    else
+      return Complex.polar(abs**other, phase*other.to_f64) unless @real.zero?
+      if @imag > 0
+        r = @imag ** other
+        k = other
+      else
+        r = (-@imag) ** other
+        k = other * 3
+      end
+    end
+
+    n = k.to_i64
+    return Complex.polar(r, k.to_f64 * Math::PI/2) unless n == k
+    case n % 4
+    when 0 then Complex.new(r, 0)
+    when 1 then Complex.new(0, r)
+    when 2 then Complex.new(-r, 0)
+    else        Complex.new(0, -r)
+    end
+  end
+
+  # :ditto:
+  def **(other : Int) : Complex
+    return Complex.new(@real ** other) if @imag.zero?
+    if @real.zero?
+      power = @imag ** other
+      case other % 4
+      when 0 then Complex.new(power, 0)
+      when 1 then Complex.new(0, power)
+      when 2 then Complex.new(-power, 0)
+      else        Complex.new(0, -power)
+      end
+    else
+      Complex.polar(abs ** other, phase * other.to_f64)
+    end
+  end
+
   def clone
     self
   end
@@ -347,6 +403,22 @@ struct Number
 
   def /(other : Complex) : Complex
     self * other.inv
+  end
+
+  def **(other : Complex) : Complex
+    self.to_c ** other
+  end
+end
+
+struct Float64
+  def **(other : Complex) : Complex
+    self.to_c ** other
+  end
+end
+
+struct Float32
+  def **(other : Complex) : Complex
+    self.to_c ** other
   end
 end
 
