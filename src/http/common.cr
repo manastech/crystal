@@ -193,7 +193,6 @@ module HTTP
     {name, value}
   end
 
-  # Important! These have to be in lexicographic order.
   private COMMON_HEADERS = %w(
     Accept-Encoding
     Accept-Language
@@ -241,17 +240,17 @@ module HTTP
     referer
     user-agent
   )
+    .to_h { |header| {header.to_slice, header} }
 
   # :nodoc:
   def self.header_name(slice : Bytes) : String
     # Check if the header name is a common one.
     # If so we avoid having to allocate a string for it.
-    if slice.size < 20
-      name = COMMON_HEADERS.bsearch { |string| slice <= string.to_slice }
-      return name if name && name.to_slice == slice
+    if slice.size < 20 && (name = COMMON_HEADERS[slice]?)
+      name
+    else
+      String.new(slice)
     end
-
-    String.new(slice)
   end
 
   # :nodoc:
