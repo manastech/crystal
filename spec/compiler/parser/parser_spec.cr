@@ -606,6 +606,51 @@ module Crystal
     it_parses "1.x; foo do\nend", [Call.new(1.int32, "x"), Call.new("foo", block: Block.new)] of ASTNode
     it_parses "x = 1; foo.bar x do\nend", [Assign.new("x".var, 1.int32), Call.new("foo".call, "bar", ["x".var] of ASTNode, Block.new)]
 
+    describe "block associativity" do
+      describe "surprise one: binds to second-to-the-right (#15303)" do
+        it_parses "a b c d e do; end", Call.new("a", Call.new("b", Call.new("c", Call.new("d", Call.new("e"), block: Block.new))))
+        it_parses "a b c d e {}", Call.new("a", Call.new("b", Call.new("c", Call.new("d", Call.new("e", block: Block.new)))))
+      end
+
+      describe "surprise two: block chains bind right-to-left starting from second-to-the-right (#15303)" do
+        it_parses "a b c d e do 1 end do 2 end { 3 } do 4 end", Call.new("a",
+          Call.new("b",
+            Call.new("c",
+              Call.new("d",
+                Call.new("e"),
+                block: Block.new(body: 1.int32)
+              ),
+              block: Block.new(body: 2.int32)
+            ),
+            block: Block.new(body: 3.int32)
+          ),
+          block: Block.new(body: 4.int32))
+        it_parses "a b c d e { 1 } { 2 } do 3 end { 4 }", Call.new("a",
+          Call.new("b",
+            Call.new("c",
+              Call.new("d",
+                Call.new("e",
+                  block: Block.new(body: 1.int32)
+                ),
+                block: Block.new(body: 2.int32)
+              ),
+              block: Block.new(body: 3.int32)
+            ),
+            block: Block.new(body: 4.int32))
+          )
+      end
+
+      describe "surprise three: arguments affect block binding (#15303)" do
+        it_parses "a b c d e 1, 2 do; end", Call.new("a", Call.new("b", Call.new("c", Call.new("d", Call.new("e", 1.int32, 2.int32, block: Block.new)))))
+        it_parses "a b c d e 1, 2 {}", Call.new("a", Call.new("b", Call.new("c", Call.new("d", Call.new("e", 1.int32, 2.int32, block: Block.new)))))
+      end
+
+      describe "surprise four: parentheses affect block binding (#15303)" do
+        it_parses "a 1, (2), b do end", Call.new("a", 1.int32, Expressions.new([2.int32] of ASTNode), Call.new("b", block: Block.new))
+        it_parses "a 1, (2), b {}", Call.new("a", 1.int32, Expressions.new([2.int32] of ASTNode), Call.new("b", block: Block.new))
+      end
+    end
+
     it_parses "foo do\n//\nend", Call.new("foo", [] of ASTNode, Block.new(body: regex("")))
     it_parses "foo x do\n//\nend", Call.new("foo", ["x".call] of ASTNode, Block.new(body: regex("")))
     it_parses "foo(x) do\n//\nend", Call.new("foo", ["x".call] of ASTNode, Block.new(body: regex("")))
