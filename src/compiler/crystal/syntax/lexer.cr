@@ -157,7 +157,7 @@ module Crystal
         case next_char
         when '\r', '\n'
           handle_slash_r_slash_n_or_slash_n
-          incr_line_number
+          incr_line_number 0
           @token.passed_backslash_newline = true
           consume_whitespace
           reset_regex_flags = false
