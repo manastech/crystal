@@ -222,7 +222,7 @@ module Markd
       @last_output = ">"
     end
 
-    private def tag(name : String, attrs = nil)
+    private def tag(name : String, attrs = nil, &)
       tag(name, attrs)
       yield
       tag(name, end_tag: true)

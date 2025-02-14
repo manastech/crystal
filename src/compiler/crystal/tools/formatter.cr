@@ -3649,9 +3649,9 @@ module Crystal
       if value = node.value
         skip_space
         check :OP_EQ
-        next_token_skip_space_or_newline
-        write " = "
-        accept value
+        next_token_skip_space
+        write " ="
+        accept_assign_value_after_equals value
       end
       false
     end

@@ -50,7 +50,7 @@ module Markd
       @source_pos = false,
       @safe = false,
       @prettyprint = false,
-      @base_url = nil
+      @base_url = nil,
     )
     end
   end

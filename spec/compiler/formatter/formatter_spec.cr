@@ -1116,6 +1116,9 @@ describe Crystal::Formatter do
   assert_format "a = # foo\n  bar(1)"
   assert_format "a = \\\n  # foo\n  bar(1)"
   assert_format "a = \\\n  # foo\n  nil"
+  assert_format "a : String = if 1\n\"One\"\nelse\"Zero\"\nend", "a : String = if 1\n               \"One\"\n             else\n               \"Zero\"\n             end"
+  assert_format "a : String = case 1\nwhen 2\n3\nend", "a : String = case 1\n             when 2\n               3\n             end"
+  assert_format "a : String = \nif 1\n1\nelse\n2\nend", "a : String =\n  if 1\n    1\n  else\n    2\n  end"
 
   assert_format %(require   "foo"), %(require "foo")
 
