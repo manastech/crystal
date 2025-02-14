@@ -91,14 +91,38 @@ module Crystal
     it_parses %(%q{hello \\n world}), "hello \\n world".string
     it_parses %(%q{hello \#{foo} world}), "hello \#{foo} world".string
 
-    [":foo", ":foo!", ":foo?", ":\"foo\"", ":かたな", ":+", ":-", ":*", ":/", ":==", ":<", ":<=", ":>",
-     ":>=", ":!", ":!=", ":=~", ":!~", ":&", ":|", ":^", ":~", ":**", ":&**", ":>>", ":<<", ":%", ":[]", ":[]?",
-     ":[]=", ":<=>", ":==="].each do |symbol|
-      value = symbol[1, symbol.size - 1]
-      value = value[1, value.size - 2] if value.starts_with?('"')
-      it_parses symbol, value.symbol
-    end
     it_parses ":foo", "foo".symbol
+    it_parses ":foo!", "foo!".symbol
+    it_parses ":foo?", "foo?".symbol
+    it_parses ":\"foo\"", "foo".symbol
+    it_parses ":かたな", "かたな".symbol
+    it_parses ":+", "+".symbol
+    it_parses ":-", "-".symbol
+    it_parses ":*", "*".symbol
+    it_parses ":/", "/".symbol
+    it_parses ":==", "==".symbol
+    it_parses ":<", "<".symbol
+    it_parses ":<=", "<=".symbol
+    it_parses ":>", ">".symbol
+    it_parses ":>=", ">=".symbol
+    it_parses ":!", "!".symbol
+    it_parses ":!=", "!=".symbol
+    it_parses ":=~", "=~".symbol
+    it_parses ":!~", "!~".symbol
+    it_parses ":&", "&".symbol
+    it_parses ":|", "|".symbol
+    it_parses ":^", "^".symbol
+    it_parses ":~", "~".symbol
+    it_parses ":**", "**".symbol
+    it_parses ":&**", "&**".symbol
+    it_parses ":>>", ">>".symbol
+    it_parses ":<<", "<<".symbol
+    it_parses ":%", "%".symbol
+    it_parses ":[]", "[]".symbol
+    it_parses ":[]?", "[]?".symbol
+    it_parses ":[]=", "[]=".symbol
+    it_parses ":<=>", "<=>".symbol
+    it_parses ":===", "===".symbol
     it_parses ":[]=", "[]=".symbol
     it_parses ":[]?", "[]?".symbol
     it_parses %(:"\\\\foo"), "\\foo".symbol
@@ -307,11 +331,26 @@ module Crystal
     assert_syntax_error "def foo=(&block); end", "setter method 'foo=' cannot have a block"
 
     # #10397
-    %w(<= >= == != []= ===).each do |operator|
-      it_parses "def #{operator}(other, file = 1); end", Def.new(operator, ["other".arg, Arg.new("file", 1.int32)])
-      it_parses "def #{operator}(*args, **opts); end", Def.new(operator, ["args".arg], splat_index: 0, double_splat: "opts".arg)
-      it_parses "def #{operator}(*args, **opts, &); end", Def.new(operator, ["args".arg], splat_index: 0, double_splat: "opts".arg, block_arg: Arg.new(""), block_arity: 0)
-    end
+    it_parses "def <=(other, file = 1); end", Def.new("<=", ["other".arg, Arg.new("file", 1.int32)])
+    it_parses "def >=(other, file = 1); end", Def.new(">=", ["other".arg, Arg.new("file", 1.int32)])
+    it_parses "def ==(other, file = 1); end", Def.new("==", ["other".arg, Arg.new("file", 1.int32)])
+    it_parses "def !=(other, file = 1); end", Def.new("!=", ["other".arg, Arg.new("file", 1.int32)])
+    it_parses "def []=(other, file = 1); end", Def.new("[]=", ["other".arg, Arg.new("file", 1.int32)])
+    it_parses "def ===(other, file = 1); end", Def.new("===", ["other".arg, Arg.new("file", 1.int32)])
+
+    it_parses "def <=(*args, **opts); end", Def.new("<=", ["args".arg], splat_index: 0, double_splat: "opts".arg)
+    it_parses "def >=(*args, **opts); end", Def.new(">=", ["args".arg], splat_index: 0, double_splat: "opts".arg)
+    it_parses "def ==(*args, **opts); end", Def.new("==", ["args".arg], splat_index: 0, double_splat: "opts".arg)
+    it_parses "def !=(*args, **opts); end", Def.new("!=", ["args".arg], splat_index: 0, double_splat: "opts".arg)
+    it_parses "def []=(*args, **opts); end", Def.new("[]=", ["args".arg], splat_index: 0, double_splat: "opts".arg)
+    it_parses "def ===(*args, **opts); end", Def.new("===", ["args".arg], splat_index: 0, double_splat: "opts".arg)
+
+    it_parses "def <=(*args, **opts, &); end", Def.new("<=", ["args".arg], splat_index: 0, double_splat: "opts".arg, block_arg: Arg.new(""), block_arity: 0)
+    it_parses "def >=(*args, **opts, &); end", Def.new(">=", ["args".arg], splat_index: 0, double_splat: "opts".arg, block_arg: Arg.new(""), block_arity: 0)
+    it_parses "def ==(*args, **opts, &); end", Def.new("==", ["args".arg], splat_index: 0, double_splat: "opts".arg, block_arg: Arg.new(""), block_arity: 0)
+    it_parses "def !=(*args, **opts, &); end", Def.new("!=", ["args".arg], splat_index: 0, double_splat: "opts".arg, block_arg: Arg.new(""), block_arity: 0)
+    it_parses "def []=(*args, **opts, &); end", Def.new("[]=", ["args".arg], splat_index: 0, double_splat: "opts".arg, block_arg: Arg.new(""), block_arity: 0)
+    it_parses "def ===(*args, **opts, &); end", Def.new("===", ["args".arg], splat_index: 0, double_splat: "opts".arg, block_arg: Arg.new(""), block_arity: 0)
 
     # #5895, #6042, #5997
     %w(
@@ -618,18 +657,30 @@ module Crystal
     it_parses "f.x = Foo.new", Call.new("f".call, "x=", [Call.new("Foo".path, "new")] of ASTNode)
     it_parses "f.x = - 1", Call.new("f".call, "x=", [Call.new(1.int32, "-")] of ASTNode)
 
-    ["+", "-", "*", "/", "//", "%", "|", "&", "^", "**", "<<", ">>", "&+", "&-", "&*"].each do |op|
-      it_parses "f.x #{op}= 2", OpAssign.new(Call.new("f".call, "x"), op, 2.int32)
-    end
+    it_parses "f.x += 2", OpAssign.new(Call.new("f".call, "x"), "+", 2.int32)
+    it_parses "f.x -= 2", OpAssign.new(Call.new("f".call, "x"), "-", 2.int32)
+    it_parses "f.x *= 2", OpAssign.new(Call.new("f".call, "x"), "*", 2.int32)
+    it_parses "f.x /= 2", OpAssign.new(Call.new("f".call, "x"), "/", 2.int32)
+    it_parses "f.x //= 2", OpAssign.new(Call.new("f".call, "x"), "//", 2.int32)
+    it_parses "f.x %= 2", OpAssign.new(Call.new("f".call, "x"), "%", 2.int32)
+    it_parses "f.x |= 2", OpAssign.new(Call.new("f".call, "x"), "|", 2.int32)
+    it_parses "f.x &= 2", OpAssign.new(Call.new("f".call, "x"), "&", 2.int32)
+    it_parses "f.x ^= 2", OpAssign.new(Call.new("f".call, "x"), "^", 2.int32)
+    it_parses "f.x **= 2", OpAssign.new(Call.new("f".call, "x"), "**", 2.int32)
+    it_parses "f.x <<= 2", OpAssign.new(Call.new("f".call, "x"), "<<", 2.int32)
+    it_parses "f.x >>= 2", OpAssign.new(Call.new("f".call, "x"), ">>", 2.int32)
+    it_parses "f.x &+= 2", OpAssign.new(Call.new("f".call, "x"), "&+", 2.int32)
+    it_parses "f.x &-= 2", OpAssign.new(Call.new("f".call, "x"), "&-", 2.int32)
+    it_parses "f.x &*= 2", OpAssign.new(Call.new("f".call, "x"), "&*", 2.int32)
 
-    ["/", "<", "<=", "==", "!=", "=~", "!~", ">", ">=", "+", "-", "*", "/", "~", "%", "&", "|", "^", "**", "==="].each do |op|
+    %w(/ < <= == != =~ !~ > >= + - * / ~ % & | ^ ** ===).each do |op|
       it_parses "def #{op}; end;", Def.new(op)
       it_parses "def #{op}(); end;", Def.new(op)
       it_parses "def self.#{op}; end;", Def.new(op, receiver: "self".var)
       it_parses "def self.#{op}(); end;", Def.new(op, receiver: "self".var)
     end
 
-    ["<<", "<", "<=", "==", ">>", ">", ">=", "+", "-", "*", "/", "//", "%", "|", "&", "^", "**", "===", "=~", "!~", "&+", "&-", "&*", "&**"].each do |op|
+    %w(<< < <= == >> > >= + - * / // % | & ^ ** === =~ !~ &+ &- &* &**).each do |op|
       it_parses "1 #{op} 2", Call.new(1.int32, op, 2.int32)
       it_parses "n #{op} 2", Call.new("n".call, op, 2.int32)
       it_parses "foo(n #{op} 2)", Call.new("foo", Call.new("n".call, op, 2.int32))
@@ -642,12 +693,13 @@ module Crystal
       it_parses "->Foo.#{op}(Int32)", ProcPointer.new("Foo".path, op, ["Int32".path] of ASTNode)
     end
 
-    ["[]", "[]="].each do |op|
-      it_parses "foo = 1; ->foo.#{op}(Int32)", [Assign.new("foo".var, 1.int32), ProcPointer.new("foo".var, op, ["Int32".path] of ASTNode)]
-      it_parses "->Foo.#{op}(Int32)", ProcPointer.new("Foo".path, op, ["Int32".path] of ASTNode)
-    end
+    it_parses "foo = 1; ->foo.[](Int32)", [Assign.new("foo".var, 1.int32), ProcPointer.new("foo".var, "[]", ["Int32".path] of ASTNode)]
+    it_parses "foo = 1; ->foo.[]=(Int32)", [Assign.new("foo".var, 1.int32), ProcPointer.new("foo".var, "[]=", ["Int32".path] of ASTNode)]
 
-    ["bar", "+", "-", "*", "/", "<", "<=", "==", ">", ">=", "%", "|", "&", "^", "**", "===", "=~", "!=", "[]=", "!~"].each do |name|
+    it_parses "->Foo.[](Int32)", ProcPointer.new("Foo".path, "[]", ["Int32".path] of ASTNode)
+    it_parses "->Foo.[]=(Int32)", ProcPointer.new("Foo".path, "[]=", ["Int32".path] of ASTNode)
+
+    %w(bar + - * / < <= == > >= % | & ^ ** === =~ != []= !~).each do |name|
       it_parses "foo.#{name}", Call.new("foo".call, name)
       it_parses "foo.#{name} 1, 2", Call.new("foo".call, name, 1.int32, 2.int32)
       it_parses "foo.#{name}(1, 2)", Call.new("foo".call, name, 1.int32, 2.int32)
@@ -655,7 +707,7 @@ module Crystal
       it_parses "foo.#{name} do end", Call.new("foo".call, name, block: Block.new)
     end
 
-    ["+", "-", "*", "/", "//", "%", "|", "&", "^", "**", "<<", ">>", "&+", "&-", "&*"].each do |op|
+    %w(+ - * / // % | & ^ ** << >> &+ &- &*).each do |op|
       it_parses "a = 1; a #{op}= 1", [Assign.new("a".var, 1.int32), OpAssign.new("a".var, op, 1.int32)]
       it_parses "a = 1; a #{op}=\n1", [Assign.new("a".var, 1.int32), OpAssign.new("a".var, op, 1.int32)]
       it_parses "a.b #{op}=\n1", OpAssign.new(Call.new("a".call, "b"), op, 1.int32)
@@ -966,12 +1018,28 @@ module Crystal
       assert_syntax_error "1 ... #{keyword}", "void value expression"
       assert_syntax_error "#{keyword} ? 1 : 2", "void value expression"
       assert_syntax_error "+#{keyword}", "void value expression"
-
-      ["<<", "<", "<=", "==", ">>", ">", ">=", "+", "-", "*", "/", "//", "%", "|",
-       "&", "^", "**", "===", "&+", "&-", "&*", "&**"].each do |op|
-        assert_syntax_error "#{keyword} #{op} 1", "void value expression"
-      end
-
+      assert_syntax_error "#{keyword} << 1", "void value expression"
+      assert_syntax_error "#{keyword} < 1", "void value expression"
+      assert_syntax_error "#{keyword} <= 1", "void value expression"
+      assert_syntax_error "#{keyword} == 1", "void value expression"
+      assert_syntax_error "#{keyword} >> 1", "void value expression"
+      assert_syntax_error "#{keyword} > 1", "void value expression"
+      assert_syntax_error "#{keyword} >= 1", "void value expression"
+      assert_syntax_error "#{keyword} + 1", "void value expression"
+      assert_syntax_error "#{keyword} - 1", "void value expression"
+      assert_syntax_error "#{keyword} * 1", "void value expression"
+      assert_syntax_error "#{keyword} / 1", "void value expression"
+      assert_syntax_error "#{keyword} // 1", "void value expression"
+      assert_syntax_error "#{keyword} % 1", "void value expression"
+      assert_syntax_error "#{keyword} | 1", "void value expression"
+      assert_syntax_error "#{keyword} & 1", "void value expression"
+      assert_syntax_error "#{keyword} ^ 1", "void value expression"
+      assert_syntax_error "#{keyword} ** 1", "void value expression"
+      assert_syntax_error "#{keyword} === 1", "void value expression"
+      assert_syntax_error "#{keyword} &+ 1", "void value expression"
+      assert_syntax_error "#{keyword} &- 1", "void value expression"
+      assert_syntax_error "#{keyword} &* 1", "void value expression"
+      assert_syntax_error "#{keyword} &** 1", "void value expression"
       assert_syntax_error "case #{keyword}; when 1; end; end", "void value expression"
       assert_syntax_error "case 1; when #{keyword}; end; end", "void value expression"
     end
@@ -1203,9 +1271,36 @@ module Crystal
     assert_syntax_error "macro foo&&;end"
     assert_syntax_error "macro foo"
 
-    ["`", "<<", "<", "<=", "==", "===", "!=", "=~", "!~", ">>", ">", ">=", "+", "-", "*", "/", "//", "~", "%", "&", "|", "^", "**", "[]?", "[]=", "<=>", "&+", "&-", "&*", "&**"].each do |op|
-      it_parses "macro #{op};end", Macro.new(op, body: Expressions.new)
-    end
+    it_parses "macro `;end", Macro.new("`", body: Expressions.new)
+    it_parses "macro <<;end", Macro.new("<<", body: Expressions.new)
+    it_parses "macro <;end", Macro.new("<", body: Expressions.new)
+    it_parses "macro <=;end", Macro.new("<=", body: Expressions.new)
+    it_parses "macro ==;end", Macro.new("==", body: Expressions.new)
+    it_parses "macro ===;end", Macro.new("===", body: Expressions.new)
+    it_parses "macro !=;end", Macro.new("!=", body: Expressions.new)
+    it_parses "macro =~;end", Macro.new("=~", body: Expressions.new)
+    it_parses "macro !~;end", Macro.new("!~", body: Expressions.new)
+    it_parses "macro >>;end", Macro.new(">>", body: Expressions.new)
+    it_parses "macro >;end", Macro.new(">", body: Expressions.new)
+    it_parses "macro >=;end", Macro.new(">=", body: Expressions.new)
+    it_parses "macro +;end", Macro.new("+", body: Expressions.new)
+    it_parses "macro -;end", Macro.new("-", body: Expressions.new)
+    it_parses "macro *;end", Macro.new("*", body: Expressions.new)
+    it_parses "macro /;end", Macro.new("/", body: Expressions.new)
+    it_parses "macro //;end", Macro.new("//", body: Expressions.new)
+    it_parses "macro ~;end", Macro.new("~", body: Expressions.new)
+    it_parses "macro %;end", Macro.new("%", body: Expressions.new)
+    it_parses "macro &;end", Macro.new("&", body: Expressions.new)
+    it_parses "macro |;end", Macro.new("|", body: Expressions.new)
+    it_parses "macro ^;end", Macro.new("^", body: Expressions.new)
+    it_parses "macro **;end", Macro.new("**", body: Expressions.new)
+    it_parses "macro []?;end", Macro.new("[]?", body: Expressions.new)
+    it_parses "macro []=;end", Macro.new("[]=", body: Expressions.new)
+    it_parses "macro <=>;end", Macro.new("<=>", body: Expressions.new)
+    it_parses "macro &+;end", Macro.new("&+", body: Expressions.new)
+    it_parses "macro &-;end", Macro.new("&-", body: Expressions.new)
+    it_parses "macro &*;end", Macro.new("&*", body: Expressions.new)
+    it_parses "macro &**;end", Macro.new("&**", body: Expressions.new)
 
     assert_syntax_error "macro !;end", "'!' is a pseudo-method and can't be redefined"
 
@@ -1230,12 +1325,15 @@ module Crystal
     it_parses "macro foo;%var;end", Macro.new("foo", [] of Arg, Expressions.from([MacroVar.new("var"), MacroLiteral.new(";")] of ASTNode))
     it_parses "macro foo;%var{1, x} = hello;end", Macro.new("foo", [] of Arg, Expressions.from([MacroVar.new("var", [1.int32, "x".var] of ASTNode), MacroLiteral.new(" = hello;")] of ASTNode))
 
-    ["if", "unless"].each do |keyword|
-      it_parses "macro foo;%var #{keyword} true;end", Macro.new("foo", [] of Arg, Expressions.from([MacroVar.new("var"), " #{keyword} true;".macro_literal] of ASTNode))
-      it_parses "macro foo;var #{keyword} true;end", Macro.new("foo", [] of Arg, "var #{keyword} true;".macro_literal)
-      it_parses "macro foo;#{keyword} %var;true;end;end", Macro.new("foo", [] of Arg, Expressions.from(["#{keyword} ".macro_literal, MacroVar.new("var"), ";true;".macro_literal, "end;".macro_literal] of ASTNode))
-      it_parses "macro foo;#{keyword} var;true;end;end", Macro.new("foo", [] of Arg, Expressions.from(["#{keyword} var;true;".macro_literal, "end;".macro_literal] of ASTNode))
-    end
+    it_parses "macro foo;%var if true;end", Macro.new("foo", [] of Arg, Expressions.from([MacroVar.new("var"), " if true;".macro_literal] of ASTNode))
+    it_parses "macro foo;var if true;end", Macro.new("foo", [] of Arg, "var if true;".macro_literal)
+    it_parses "macro foo;if %var;true;end;end", Macro.new("foo", [] of Arg, Expressions.from(["if ".macro_literal, MacroVar.new("var"), ";true;".macro_literal, "end;".macro_literal] of ASTNode))
+    it_parses "macro foo;if var;true;end;end", Macro.new("foo", [] of Arg, Expressions.from(["if var;true;".macro_literal, "end;".macro_literal] of ASTNode))
+
+    it_parses "macro foo;%var unless true;end", Macro.new("foo", [] of Arg, Expressions.from([MacroVar.new("var"), " unless true;".macro_literal] of ASTNode))
+    it_parses "macro foo;var unless true;end", Macro.new("foo", [] of Arg, "var unless true;".macro_literal)
+    it_parses "macro foo;unless %var;true;end;end", Macro.new("foo", [] of Arg, Expressions.from(["unless ".macro_literal, MacroVar.new("var"), ";true;".macro_literal, "end;".macro_literal] of ASTNode))
+    it_parses "macro foo;unless var;true;end;end", Macro.new("foo", [] of Arg, Expressions.from(["unless var;true;".macro_literal, "end;".macro_literal] of ASTNode))
 
     it_parses "a = 1; pointerof(a)", [Assign.new("a".var, 1.int32), PointerOf.new("a".var)]
     it_parses "pointerof(@a)", PointerOf.new("@a".instance_var)
@@ -1904,8 +2002,14 @@ module Crystal
     it_parses "foo 1.bar do\nend", Call.new("foo", args: [Call.new(1.int32, "bar")] of ASTNode, block: Block.new)
     it_parses "return 1.bar do\nend", Return.new(Call.new(1.int32, "bar", block: Block.new))
 
-    %w(begin nil true false yield with abstract def macro require case if unless include extend class struct module enum while
-      until return next break lib fun alias pointerof sizeof instance_sizeof offsetof typeof private protected asm end do else elsif when rescue ensure).each do |keyword|
+    %w(
+      begin nil true false yield with abstract
+      def macro require case if unless include
+      extend class struct module enum while until return
+      next break lib fun alias pointerof sizeof
+      instance_sizeof offsetof typeof private protected asm
+      end do else elsif when rescue ensure
+    ).each do |keyword|
       it_parses "#{keyword} : Int32", TypeDeclaration.new(keyword.var, "Int32".path)
       it_parses "property #{keyword} : Int32", Call.new("property", TypeDeclaration.new(keyword.var, "Int32".path))
     end
@@ -1974,9 +2078,17 @@ module Crystal
 
     assert_syntax_error "return do\nend", %(unexpected token: "do")
 
-    %w(def macro class struct module fun alias abstract include extend lib).each do |keyword|
-      assert_syntax_error "def foo\n#{keyword}\nend"
-    end
+    assert_syntax_error "def foo\ndef\nend"
+    assert_syntax_error "def foo\nmacro\nend"
+    assert_syntax_error "def foo\nclass\nend"
+    assert_syntax_error "def foo\nstruct\nend"
+    assert_syntax_error "def foo\nmodule\nend"
+    assert_syntax_error "def foo\nfun\nend"
+    assert_syntax_error "def foo\nalias\nend"
+    assert_syntax_error "def foo\nabstract\nend"
+    assert_syntax_error "def foo\ninclude\nend"
+    assert_syntax_error "def foo\nextend\nend"
+    assert_syntax_error "def foo\nlib\nend"
 
     assert_syntax_error "def foo(x = 1, y); end",
       "parameter must have a default value"
@@ -2144,20 +2256,35 @@ module Crystal
 
     assert_syntax_error "def foo(var : Foo+); end"
 
-    %w(&& ||).each do |name|
-      assert_syntax_error "foo.#{name}"
-      assert_syntax_error "foo.#{name}()"
-      assert_syntax_error "foo &.#{name}"
-      assert_syntax_error "foo &.#{name}()"
-    end
+    assert_syntax_error "foo.&&"
+    assert_syntax_error "foo.&&()"
+    assert_syntax_error "foo &.&&"
+    assert_syntax_error "foo &.&&()"
 
-    %w(! is_a? as as? responds_to? nil?).each do |name|
-      assert_syntax_error "def #{name}; end", "'#{name}' is a pseudo-method and can't be redefined"
-      assert_syntax_error "def self.#{name}; end", "'#{name}' is a pseudo-method and can't be redefined"
-      if name != "!"
-        assert_syntax_error "macro #{name}; end", "'#{name}' is a pseudo-method and can't be redefined"
-      end
-    end
+    assert_syntax_error "foo.||"
+    assert_syntax_error "foo.||()"
+    assert_syntax_error "foo &.||"
+    assert_syntax_error "foo &.||()"
+
+    assert_syntax_error "def !; end", "'!' is a pseudo-method and can't be redefined"
+    assert_syntax_error "def is_a?; end", "'is_a?' is a pseudo-method and can't be redefined"
+    assert_syntax_error "def as; end", "'as' is a pseudo-method and can't be redefined"
+    assert_syntax_error "def as?; end", "'as?' is a pseudo-method and can't be redefined"
+    assert_syntax_error "def responds_to?; end", "'responds_to?' is a pseudo-method and can't be redefined"
+    assert_syntax_error "def nil?; end", "'nil?' is a pseudo-method and can't be redefined"
+
+    assert_syntax_error "def self.!; end", "'!' is a pseudo-method and can't be redefined"
+    assert_syntax_error "def self.is_a?; end", "'is_a?' is a pseudo-method and can't be redefined"
+    assert_syntax_error "def self.as; end", "'as' is a pseudo-method and can't be redefined"
+    assert_syntax_error "def self.as?; end", "'as?' is a pseudo-method and can't be redefined"
+    assert_syntax_error "def self.responds_to?; end", "'responds_to?' is a pseudo-method and can't be redefined"
+    assert_syntax_error "def self.nil?; end", "'nil?' is a pseudo-method and can't be redefined"
+
+    assert_syntax_error "macro is_a?; end", "'is_a?' is a pseudo-method and can't be redefined"
+    assert_syntax_error "macro as; end", "'as' is a pseudo-method and can't be redefined"
+    assert_syntax_error "macro as?; end", "'as?' is a pseudo-method and can't be redefined"
+    assert_syntax_error "macro responds_to?; end", "'responds_to?' is a pseudo-method and can't be redefined"
+    assert_syntax_error "macro nil?; end", "'nil?' is a pseudo-method and can't be redefined"
 
     assert_syntax_error "Foo{one: :two, three: :four}", "can't use named tuple syntax for Hash-like literal"
     assert_syntax_error "{one: :two, three: :four} of Symbol => Symbol"
@@ -2371,601 +2498,601 @@ module Crystal
       assert_end_location "1 rescue 2"
       assert_end_location "1 ensure 2"
       assert_end_location "foo.bar= *baz"
+    end
 
-      assert_syntax_error %({"a" : 1}), "space not allowed between named argument name and ':'"
-      assert_syntax_error %({"a": 1, "b" : 2}), "space not allowed between named argument name and ':'"
+    assert_syntax_error %({"a" : 1}), "space not allowed between named argument name and ':'"
+    assert_syntax_error %({"a": 1, "b" : 2}), "space not allowed between named argument name and ':'"
 
-      assert_syntax_error "case x; when nil; 2; when nil; end", "duplicate when nil in case"
-      assert_syntax_error "case x; when true; 2; when true; end", "duplicate when true in case"
-      assert_syntax_error "case x; when 1; 2; when 1; end", "duplicate when 1 in case"
-      assert_syntax_error "case x; when 'a'; 2; when 'a'; end", "duplicate when 'a' in case"
-      assert_syntax_error %(case x; when "a"; 2; when "a"; end), %(duplicate when "a" in case)
-      assert_syntax_error %(case x; when :a; 2; when :a; end), "duplicate when :a in case"
-      assert_syntax_error %(case x; when {1, 2}; 2; when {1, 2}; end), "duplicate when {1, 2} in case"
-      assert_syntax_error %(case x; when [1, 2]; 2; when [1, 2]; end), "duplicate when [1, 2] in case"
-      assert_syntax_error %(case x; when 1..2; 2; when 1..2; end), "duplicate when 1..2 in case"
-      assert_syntax_error %(case x; when /x/; 2; when /x/; end), "duplicate when /x/ in case"
-      assert_syntax_error %(case x; when X; 2; when X; end), "duplicate when X in case"
-      assert_syntax_error "case x; when _; end", "'when _' is not supported, use 'else' block instead"
-      assert_syntax_error "case x; when 1; when _; end", "'when _' is not supported, use 'else' block instead"
-      assert_syntax_error "case x; when 1, _; end", "'when _' is not supported, use 'else' block instead"
+    assert_syntax_error "case x; when nil; 2; when nil; end", "duplicate when nil in case"
+    assert_syntax_error "case x; when true; 2; when true; end", "duplicate when true in case"
+    assert_syntax_error "case x; when 1; 2; when 1; end", "duplicate when 1 in case"
+    assert_syntax_error "case x; when 'a'; 2; when 'a'; end", "duplicate when 'a' in case"
+    assert_syntax_error %(case x; when "a"; 2; when "a"; end), %(duplicate when "a" in case)
+    assert_syntax_error %(case x; when :a; 2; when :a; end), "duplicate when :a in case"
+    assert_syntax_error %(case x; when {1, 2}; 2; when {1, 2}; end), "duplicate when {1, 2} in case"
+    assert_syntax_error %(case x; when [1, 2]; 2; when [1, 2]; end), "duplicate when [1, 2] in case"
+    assert_syntax_error %(case x; when 1..2; 2; when 1..2; end), "duplicate when 1..2 in case"
+    assert_syntax_error %(case x; when /x/; 2; when /x/; end), "duplicate when /x/ in case"
+    assert_syntax_error %(case x; when X; 2; when X; end), "duplicate when X in case"
+    assert_syntax_error "case x; when _; end", "'when _' is not supported, use 'else' block instead"
+    assert_syntax_error "case x; when 1; when _; end", "'when _' is not supported, use 'else' block instead"
+    assert_syntax_error "case x; when 1, _; end", "'when _' is not supported, use 'else' block instead"
 
-      it_parses "%w{one  two}", (["one".string, "two".string] of ASTNode).array_of(Path.global("String"))
-      it_parses "%w{one\ntwo}", (["one".string, "two".string] of ASTNode).array_of(Path.global("String"))
-      it_parses "%w{one\ttwo}", (["one".string, "two".string] of ASTNode).array_of(Path.global("String"))
-      it_parses "%w{\n}", ([] of ASTNode).array_of(Path.global("String"))
-      it_parses "%w{one\\ two}", (["one two".string] of ASTNode).array_of(Path.global("String"))
-      it_parses "%w{one{} two}", (["one{}".string, "two".string] of ASTNode).array_of(Path.global("String"))
-      it_parses "%w{\\{one}", (["{one".string] of ASTNode).array_of(Path.global("String"))
-      it_parses "%w{one\\}}", (["one}".string] of ASTNode).array_of(Path.global("String"))
-      it_parses "%i(one\\ two)", (["one two".symbol] of ASTNode).array_of(Path.global("Symbol"))
-      it_parses "%i{(one two)}", (["(one".symbol, "two)".symbol] of ASTNode).array_of(Path.global("Symbol"))
-      it_parses "%i((one two))", (["(one".symbol, "two)".symbol] of ASTNode).array_of(Path.global("Symbol"))
-      it_parses "%i(foo(bar) baz)", (["foo(bar)".symbol, "baz".symbol] of ASTNode).array_of(Path.global("Symbol"))
-      it_parses "%i{foo\\nbar baz}", (["foo\\nbar".symbol, "baz".symbol] of ASTNode).array_of(Path.global("Symbol"))
+    it_parses "%w{one  two}", (["one".string, "two".string] of ASTNode).array_of(Path.global("String"))
+    it_parses "%w{one\ntwo}", (["one".string, "two".string] of ASTNode).array_of(Path.global("String"))
+    it_parses "%w{one\ttwo}", (["one".string, "two".string] of ASTNode).array_of(Path.global("String"))
+    it_parses "%w{\n}", ([] of ASTNode).array_of(Path.global("String"))
+    it_parses "%w{one\\ two}", (["one two".string] of ASTNode).array_of(Path.global("String"))
+    it_parses "%w{one{} two}", (["one{}".string, "two".string] of ASTNode).array_of(Path.global("String"))
+    it_parses "%w{\\{one}", (["{one".string] of ASTNode).array_of(Path.global("String"))
+    it_parses "%w{one\\}}", (["one}".string] of ASTNode).array_of(Path.global("String"))
+    it_parses "%i(one\\ two)", (["one two".symbol] of ASTNode).array_of(Path.global("Symbol"))
+    it_parses "%i{(one two)}", (["(one".symbol, "two)".symbol] of ASTNode).array_of(Path.global("Symbol"))
+    it_parses "%i((one two))", (["(one".symbol, "two)".symbol] of ASTNode).array_of(Path.global("Symbol"))
+    it_parses "%i(foo(bar) baz)", (["foo(bar)".symbol, "baz".symbol] of ASTNode).array_of(Path.global("Symbol"))
+    it_parses "%i{foo\\nbar baz}", (["foo\\nbar".symbol, "baz".symbol] of ASTNode).array_of(Path.global("Symbol"))
 
-      assert_syntax_error "%w(", "Unterminated string array literal"
-      assert_syntax_error "%w{one}}", "expecting token 'EOF', not '}'"
-      assert_syntax_error "%w{{one}", "Unterminated string array literal"
-      assert_syntax_error "%i(", "Unterminated symbol array literal"
-      assert_syntax_error "%i{one}}", "expecting token 'EOF', not '}'"
-      assert_syntax_error "%i{{one}", "Unterminated symbol array literal"
-      assert_syntax_error "%x(", "Unterminated command literal"
-      assert_syntax_error "%r(", "Unterminated regular expression"
-      assert_syntax_error "%q(", "Unterminated string literal"
-      assert_syntax_error "%Q(", "Unterminated string literal"
-      assert_syntax_error "<<-HEREDOC", "Unexpected EOF on heredoc identifier"
-      assert_syntax_error "<<-HEREDOC\n", "Unterminated heredoc"
+    assert_syntax_error "%w(", "Unterminated string array literal"
+    assert_syntax_error "%w{one}}", "expecting token 'EOF', not '}'"
+    assert_syntax_error "%w{{one}", "Unterminated string array literal"
+    assert_syntax_error "%i(", "Unterminated symbol array literal"
+    assert_syntax_error "%i{one}}", "expecting token 'EOF', not '}'"
+    assert_syntax_error "%i{{one}", "Unterminated symbol array literal"
+    assert_syntax_error "%x(", "Unterminated command literal"
+    assert_syntax_error "%r(", "Unterminated regular expression"
+    assert_syntax_error "%q(", "Unterminated string literal"
+    assert_syntax_error "%Q(", "Unterminated string literal"
+    assert_syntax_error "<<-HEREDOC", "Unexpected EOF on heredoc identifier"
+    assert_syntax_error "<<-HEREDOC\n", "Unterminated heredoc"
 
-      assert_syntax_error "[1\n,2]", "expecting token ']', not ','"
-      assert_syntax_error "{1\n,2}", "expecting token '}', not ','"
-      assert_syntax_error "{1, 2\n,3}", "expecting token '}', not ','"
-      assert_syntax_error "{1 => 2\n,3 => 4}", "expecting token '}', not ','"
-      assert_syntax_error "foo(1\n,2)", "expecting token ')', not ','"
-      assert_syntax_error "foo(a: 1\n,b: 2)", "expecting token ')', not ','"
-      assert_syntax_error "def foo(x\n,y); 1; end", "expecting token ')', not ','"
-      assert_syntax_error "macro foo(x\n,y); 1; end", "expecting token ')', not ','"
-      assert_syntax_error "class Foo(X\n,Y); 1; end", "expecting token ')', not ','"
-      assert_syntax_error "Foo(X\n,Y)", "expecting token ')', not ','"
-      assert_syntax_error "Foo(x: X\n,y: Y)", "expecting token ')', not ','"
+    assert_syntax_error "[1\n,2]", "expecting token ']', not ','"
+    assert_syntax_error "{1\n,2}", "expecting token '}', not ','"
+    assert_syntax_error "{1, 2\n,3}", "expecting token '}', not ','"
+    assert_syntax_error "{1 => 2\n,3 => 4}", "expecting token '}', not ','"
+    assert_syntax_error "foo(1\n,2)", "expecting token ')', not ','"
+    assert_syntax_error "foo(a: 1\n,b: 2)", "expecting token ')', not ','"
+    assert_syntax_error "def foo(x\n,y); 1; end", "expecting token ')', not ','"
+    assert_syntax_error "macro foo(x\n,y); 1; end", "expecting token ')', not ','"
+    assert_syntax_error "class Foo(X\n,Y); 1; end", "expecting token ')', not ','"
+    assert_syntax_error "Foo(X\n,Y)", "expecting token ')', not ','"
+    assert_syntax_error "Foo(x: X\n,y: Y)", "expecting token ')', not ','"
 
-      it_parses "annotation Foo; end", AnnotationDef.new("Foo".path)
-      it_parses "annotation Foo\n\nend", AnnotationDef.new("Foo".path)
-      it_parses "annotation Foo::Bar\n\nend", AnnotationDef.new(Path.new("Foo", "Bar"))
+    it_parses "annotation Foo; end", AnnotationDef.new("Foo".path)
+    it_parses "annotation Foo\n\nend", AnnotationDef.new("Foo".path)
+    it_parses "annotation Foo::Bar\n\nend", AnnotationDef.new(Path.new("Foo", "Bar"))
 
-      it_parses %(annotation Foo\nend\nrequire "bar"), [AnnotationDef.new("Foo".path), Require.new("bar")]
+    it_parses %(annotation Foo\nend\nrequire "bar"), [AnnotationDef.new("Foo".path), Require.new("bar")]
 
-      assert_syntax_error "def foo(x : *Int32); end", "invalid type splat"
-      assert_syntax_error "def foo(x : (*Int32)); end", "invalid type splat"
-      assert_syntax_error "def foo(x : Int32, Int32); end"
-      assert_syntax_error "def foo(x : (Int32, Int32)); end"
-      assert_syntax_error "def foo(x : (Int32, Int32) | Int32); end"
-      assert_syntax_error "def foo(x : Int32 | (Int32, Int32)); end"
-      assert_syntax_error "def foo(x : {Int32, (Int32, Int32)}); end"
-      assert_syntax_error "def foo(x : 1); end"
-      assert_syntax_error "def foo(x : {sizeof(Int32), 2}); end"
-      assert_syntax_error "def foo(x : Array({sizeof(Int32), 2})); end"
+    assert_syntax_error "def foo(x : *Int32); end", "invalid type splat"
+    assert_syntax_error "def foo(x : (*Int32)); end", "invalid type splat"
+    assert_syntax_error "def foo(x : Int32, Int32); end"
+    assert_syntax_error "def foo(x : (Int32, Int32)); end"
+    assert_syntax_error "def foo(x : (Int32, Int32) | Int32); end"
+    assert_syntax_error "def foo(x : Int32 | (Int32, Int32)); end"
+    assert_syntax_error "def foo(x : {Int32, (Int32, Int32)}); end"
+    assert_syntax_error "def foo(x : 1); end"
+    assert_syntax_error "def foo(x : {sizeof(Int32), 2}); end"
+    assert_syntax_error "def foo(x : Array({sizeof(Int32), 2})); end"
 
-      it "gets corrects of ~" do
-        node = Parser.parse("\n  ~1")
-        loc = node.location.not_nil!
-        loc.line_number.should eq(2)
-        loc.column_number.should eq(3)
-      end
+    it "gets corrects of ~" do
+      node = Parser.parse("\n  ~1")
+      loc = node.location.not_nil!
+      loc.line_number.should eq(2)
+      loc.column_number.should eq(3)
+    end
 
-      it "gets corrects end location for var" do
-        parser = Parser.new("foo = 1\nfoo; 1")
-        node = parser.parse.as(Expressions).expressions[1]
-        end_loc = node.end_location.not_nil!
-        end_loc.line_number.should eq(2)
-        end_loc.column_number.should eq(3)
-      end
+    it "gets corrects end location for var" do
+      parser = Parser.new("foo = 1\nfoo; 1")
+      node = parser.parse.as(Expressions).expressions[1]
+      end_loc = node.end_location.not_nil!
+      end_loc.line_number.should eq(2)
+      end_loc.column_number.should eq(3)
+    end
 
-      it "gets corrects end location for var + var" do
-        parser = Parser.new("foo = 1\nfoo + nfoo; 1")
-        node = parser.parse.as(Expressions).expressions[1].as(Call).obj.as(Var)
-        end_loc = node.end_location.not_nil!
-        end_loc.line_number.should eq(2)
-        end_loc.column_number.should eq(3)
-      end
+    it "gets corrects end location for var + var" do
+      parser = Parser.new("foo = 1\nfoo + nfoo; 1")
+      node = parser.parse.as(Expressions).expressions[1].as(Call).obj.as(Var)
+      end_loc = node.end_location.not_nil!
+      end_loc.line_number.should eq(2)
+      end_loc.column_number.should eq(3)
+    end
 
-      it "gets corrects end location for block with { ... }" do
-        parser = Parser.new("foo { 1 + 2 }; 1")
-        node = parser.parse.as(Expressions).expressions[0].as(Call)
-        block = node.block.not_nil!
-        end_loc = block.end_location.not_nil!
-        end_loc.line_number.should eq(1)
-        end_loc.column_number.should eq(13)
-        node.end_location.should eq(end_loc)
-      end
+    it "gets corrects end location for block with { ... }" do
+      parser = Parser.new("foo { 1 + 2 }; 1")
+      node = parser.parse.as(Expressions).expressions[0].as(Call)
+      block = node.block.not_nil!
+      end_loc = block.end_location.not_nil!
+      end_loc.line_number.should eq(1)
+      end_loc.column_number.should eq(13)
+      node.end_location.should eq(end_loc)
+    end
 
-      it "gets corrects end location for block with do ... end" do
-        parser = Parser.new("foo do\n  1 + 2\nend; 1")
-        node = parser.parse.as(Expressions).expressions[0].as(Call)
-        block = node.block.not_nil!
-        end_loc = block.end_location.not_nil!
-        end_loc.line_number.should eq(3)
-        end_loc.column_number.should eq(3)
-        node.end_location.should eq(end_loc)
-      end
+    it "gets corrects end location for block with do ... end" do
+      parser = Parser.new("foo do\n  1 + 2\nend; 1")
+      node = parser.parse.as(Expressions).expressions[0].as(Call)
+      block = node.block.not_nil!
+      end_loc = block.end_location.not_nil!
+      end_loc.line_number.should eq(3)
+      end_loc.column_number.should eq(3)
+      node.end_location.should eq(end_loc)
+    end
 
-      it "gets correct location after macro with yield" do
-        parser = Parser.new(%(
-          macro foo
-            yield
-          end
+    it "gets correct location after macro with yield" do
+      parser = Parser.new(%(
+        macro foo
+          yield
+        end
 
-          1 + 'a'
-          ))
-        node = parser.parse.as(Expressions).expressions[1]
-        loc = node.location.not_nil!
-        loc.line_number.should eq(6)
-      end
+        1 + 'a'
+        ))
+      node = parser.parse.as(Expressions).expressions[1]
+      loc = node.location.not_nil!
+      loc.line_number.should eq(6)
+    end
 
-      it "gets correct location with \r\n (#1558)" do
-        nodes = Parser.parse("class Foo\r\nend\r\n\r\n1").as(Expressions)
-        loc = nodes.last.location.not_nil!
-        loc.line_number.should eq(4)
-        loc.column_number.should eq(1)
-      end
+    it "gets correct location with \r\n (#1558)" do
+      nodes = Parser.parse("class Foo\r\nend\r\n\r\n1").as(Expressions)
+      loc = nodes.last.location.not_nil!
+      loc.line_number.should eq(4)
+      loc.column_number.should eq(1)
+    end
 
-      it "sets location of enum method" do
-        parser = Parser.new("enum Foo; A; def bar; end; end")
-        node = parser.parse.as(EnumDef).members[1].as(Def)
-        loc = node.location.not_nil!
-        loc.line_number.should eq(1)
-        loc.column_number.should eq(14)
-      end
+    it "sets location of enum method" do
+      parser = Parser.new("enum Foo; A; def bar; end; end")
+      node = parser.parse.as(EnumDef).members[1].as(Def)
+      loc = node.location.not_nil!
+      loc.line_number.should eq(1)
+      loc.column_number.should eq(14)
+    end
 
-      it "gets correct location after macro with yield" do
-        parser = Parser.new(%(\n  1 ? 2 : 3))
-        node = parser.parse
-        loc = node.location.not_nil!
-        loc.line_number.should eq(2)
-        loc.column_number.should eq(3)
-      end
+    it "gets correct location after macro with yield" do
+      parser = Parser.new(%(\n  1 ? 2 : 3))
+      node = parser.parse
+      loc = node.location.not_nil!
+      loc.line_number.should eq(2)
+      loc.column_number.should eq(3)
+    end
 
-      it "gets correct location of empty exception handler inside def" do
-        parser = Parser.new("def foo\nensure\nend")
-        node = parser.parse.as(Def).body
-        loc = node.location.not_nil!
-        loc.line_number.should eq(2)
-      end
+    it "gets correct location of empty exception handler inside def" do
+      parser = Parser.new("def foo\nensure\nend")
+      node = parser.parse.as(Def).body
+      loc = node.location.not_nil!
+      loc.line_number.should eq(2)
+    end
 
-      it "sets location of +=" do
-        parser = Parser.new("a = 1; a += 2")
-        node = parser.parse.as(Expressions).expressions[1]
+    it "sets location of +=" do
+      parser = Parser.new("a = 1; a += 2")
+      node = parser.parse.as(Expressions).expressions[1]
 
-        node.name_location.should_not be_nil
-        name_location = node.name_location.not_nil!
+      node.name_location.should_not be_nil
+      name_location = node.name_location.not_nil!
 
-        name_location.line_number.should eq(1)
-        name_location.column_number.should eq(10)
-      end
+      name_location.line_number.should eq(1)
+      name_location.column_number.should eq(10)
+    end
 
-      it "sets location of obj.x += as call" do
-        parser = Parser.new("a = 1; a.x += 2")
-        node = parser.parse.as(Expressions).expressions[1]
+    it "sets location of obj.x += as call" do
+      parser = Parser.new("a = 1; a.x += 2")
+      node = parser.parse.as(Expressions).expressions[1]
 
-        node.name_location.should_not be_nil
-        name_location = node.name_location.not_nil!
+      node.name_location.should_not be_nil
+      name_location = node.name_location.not_nil!
 
-        name_location.line_number.should eq(1)
-        name_location.column_number.should eq(12)
-      end
+      name_location.line_number.should eq(1)
+      name_location.column_number.should eq(12)
+    end
 
-      it "sets location of top-level fun name" do
-        parser = Parser.new("fun foo; end")
-        node = parser.parse.as(FunDef)
+    it "sets location of top-level fun name" do
+      parser = Parser.new("fun foo; end")
+      node = parser.parse.as(FunDef)
 
-        name_location = node.name_location.should_not be_nil
-        name_location.line_number.should eq(1)
-        name_location.column_number.should eq(5)
-      end
+      name_location = node.name_location.should_not be_nil
+      name_location.line_number.should eq(1)
+      name_location.column_number.should eq(5)
+    end
 
-      it "sets location of lib fun name" do
-        parser = Parser.new("lib Foo; fun foo; end")
-        node = parser.parse.as(LibDef).body.as(FunDef)
+    it "sets location of lib fun name" do
+      parser = Parser.new("lib Foo; fun foo; end")
+      node = parser.parse.as(LibDef).body.as(FunDef)
 
-        name_location = node.name_location.should_not be_nil
-        name_location.line_number.should eq(1)
-        name_location.column_number.should eq(14)
-      end
+      name_location = node.name_location.should_not be_nil
+      name_location.line_number.should eq(1)
+      name_location.column_number.should eq(14)
+    end
 
-      it "sets correct location of proc literal" do
-        parser = Parser.new("->(\n  x : Int32,\n  y : String\n) { }")
-        node = parser.parse.as(ProcLiteral)
-        loc = node.location.not_nil!
-        loc.line_number.should eq(1)
-        loc.column_number.should eq(1)
-      end
+    it "sets correct location of proc literal" do
+      parser = Parser.new("->(\n  x : Int32,\n  y : String\n) { }")
+      node = parser.parse.as(ProcLiteral)
+      loc = node.location.not_nil!
+      loc.line_number.should eq(1)
+      loc.column_number.should eq(1)
+    end
 
-      it "sets correct location of `else` of if statement" do
-        parser = Parser.new("if foo\nelse\nend")
-        node = parser.parse.as(If)
-        node.location.not_nil!.line_number.should eq(1)
-        node.else_location.not_nil!.line_number.should eq(2)
-        node.end_location.not_nil!.line_number.should eq(3)
+    it "sets correct location of `else` of if statement" do
+      parser = Parser.new("if foo\nelse\nend")
+      node = parser.parse.as(If)
+      node.location.not_nil!.line_number.should eq(1)
+      node.else_location.not_nil!.line_number.should eq(2)
+      node.end_location.not_nil!.line_number.should eq(3)
 
-        parser = Parser.new("if foo\nend")
-        node = parser.parse.as(If)
-        node.location.not_nil!.line_number.should eq(1)
-        node.else_location.should be_nil
-        node.end_location.not_nil!.line_number.should eq(2)
-      end
+      parser = Parser.new("if foo\nend")
+      node = parser.parse.as(If)
+      node.location.not_nil!.line_number.should eq(1)
+      node.else_location.should be_nil
+      node.end_location.not_nil!.line_number.should eq(2)
+    end
 
-      it "sets correct location of `elsif` of if statement" do
-        parser = Parser.new("if foo\nelsif bar\nend")
-        node = parser.parse.as(If)
-        node.location.not_nil!.line_number.should eq(1)
-        node.else_location.not_nil!.line_number.should eq(2)
-        node.end_location.not_nil!.line_number.should eq(3)
-      end
+    it "sets correct location of `elsif` of if statement" do
+      parser = Parser.new("if foo\nelsif bar\nend")
+      node = parser.parse.as(If)
+      node.location.not_nil!.line_number.should eq(1)
+      node.else_location.not_nil!.line_number.should eq(2)
+      node.end_location.not_nil!.line_number.should eq(3)
+    end
 
-      it "sets correct location of `else` of unless statement" do
-        parser = Parser.new("unless foo\nelse\nend")
-        node = parser.parse.as(Unless)
-        node.location.not_nil!.line_number.should eq(1)
-        node.else_location.not_nil!.line_number.should eq(2)
-        node.end_location.not_nil!.line_number.should eq(3)
-      end
+    it "sets correct location of `else` of unless statement" do
+      parser = Parser.new("unless foo\nelse\nend")
+      node = parser.parse.as(Unless)
+      node.location.not_nil!.line_number.should eq(1)
+      node.else_location.not_nil!.line_number.should eq(2)
+      node.end_location.not_nil!.line_number.should eq(3)
+    end
 
-      it "sets correct location and end location of `begin` block" do
-        parser = Parser.new("begin\nfoo\nend")
-        node = parser.parse.as(Expressions)
-        node.location.not_nil!.line_number.should eq(1)
-        node.end_location.not_nil!.line_number.should eq(3)
-      end
+    it "sets correct location and end location of `begin` block" do
+      parser = Parser.new("begin\nfoo\nend")
+      node = parser.parse.as(Expressions)
+      node.location.not_nil!.line_number.should eq(1)
+      node.end_location.not_nil!.line_number.should eq(3)
+    end
 
-      it "sets correct location and end location of parenthesized empty block" do
-        parser = Parser.new("()")
-        node = parser.parse.as(Expressions)
-        node.location.not_nil!.column_number.should eq(1)
-        node.end_location.not_nil!.column_number.should eq(2)
-      end
+    it "sets correct location and end location of parenthesized empty block" do
+      parser = Parser.new("()")
+      node = parser.parse.as(Expressions)
+      node.location.not_nil!.column_number.should eq(1)
+      node.end_location.not_nil!.column_number.should eq(2)
+    end
 
-      it "sets correct location and end location of parenthesized block" do
-        parser = Parser.new("(foo; bar)")
-        node = parser.parse.as(Expressions)
-        node.location.not_nil!.column_number.should eq(1)
-        node.end_location.not_nil!.column_number.should eq(10)
-      end
+    it "sets correct location and end location of parenthesized block" do
+      parser = Parser.new("(foo; bar)")
+      node = parser.parse.as(Expressions)
+      node.location.not_nil!.column_number.should eq(1)
+      node.end_location.not_nil!.column_number.should eq(10)
+    end
 
-      it "sets correct locations of keywords of exception handler" do
-        parser = Parser.new("begin\nrescue\nelse\nensure\nend")
-        node = parser.parse.as(ExceptionHandler)
-        node.location.not_nil!.line_number.should eq(1)
-        node.rescues.not_nil!.first.location.not_nil!.line_number.should eq(2)
-        node.else_location.not_nil!.line_number.should eq(3)
-        node.ensure_location.not_nil!.line_number.should eq(4)
-        node.end_location.not_nil!.line_number.should eq(5)
-      end
+    it "sets correct locations of keywords of exception handler" do
+      parser = Parser.new("begin\nrescue\nelse\nensure\nend")
+      node = parser.parse.as(ExceptionHandler)
+      node.location.not_nil!.line_number.should eq(1)
+      node.rescues.not_nil!.first.location.not_nil!.line_number.should eq(2)
+      node.else_location.not_nil!.line_number.should eq(3)
+      node.ensure_location.not_nil!.line_number.should eq(4)
+      node.end_location.not_nil!.line_number.should eq(5)
+    end
 
-      it "sets correct locations of macro if / else" do
-        parser = Parser.new(<<-CR)
-          {% if 1 == val %}
-            "one!"
-            "bar"
-          {% else %}
-            "not one"
-            "bar"
-          {% end %}
-        CR
+    it "sets correct locations of macro if / else" do
+      parser = Parser.new(<<-CR)
+        {% if 1 == val %}
+          "one!"
+          "bar"
+        {% else %}
+          "not one"
+          "bar"
+        {% end %}
+      CR
 
-        node = parser.parse.as MacroIf
+      node = parser.parse.as MacroIf
 
-        location = node.cond.location.should_not be_nil
-        location.line_number.should eq 1
-        location = node.cond.end_location.should_not be_nil
-        location.line_number.should eq 1
+      location = node.cond.location.should_not be_nil
+      location.line_number.should eq 1
+      location = node.cond.end_location.should_not be_nil
+      location.line_number.should eq 1
 
-        location = node.then.location.should_not be_nil
-        location.line_number.should eq 1
-        location = node.then.end_location.should_not be_nil
-        location.line_number.should eq 4
+      location = node.then.location.should_not be_nil
+      location.line_number.should eq 1
+      location = node.then.end_location.should_not be_nil
+      location.line_number.should eq 4
 
-        location = node.else.location.should_not be_nil
-        location.line_number.should eq 4
-        location = node.else.end_location.should_not be_nil
-        location.line_number.should eq 7
-      end
+      location = node.else.location.should_not be_nil
+      location.line_number.should eq 4
+      location = node.else.end_location.should_not be_nil
+      location.line_number.should eq 7
+    end
 
-      it "sets correct locations of macro if / elsif" do
-        parser = Parser.new(<<-CR)
-          {% if 1 == val %}
-            "one!"
-            "bar"
-          {% elsif 2 == val %}
-            "not one"
-            "bar"
-          {% end %}
-        CR
+    it "sets correct locations of macro if / elsif" do
+      parser = Parser.new(<<-CR)
+        {% if 1 == val %}
+          "one!"
+          "bar"
+        {% elsif 2 == val %}
+          "not one"
+          "bar"
+        {% end %}
+      CR
 
-        node = parser.parse.as MacroIf
+      node = parser.parse.as MacroIf
 
-        location = node.cond.location.should_not be_nil
-        location.line_number.should eq 1
-        location = node.cond.end_location.should_not be_nil
-        location.line_number.should eq 1
+      location = node.cond.location.should_not be_nil
+      location.line_number.should eq 1
+      location = node.cond.end_location.should_not be_nil
+      location.line_number.should eq 1
 
-        location = node.then.location.should_not be_nil
-        location.line_number.should eq 1
-        location = node.then.end_location.should_not be_nil
-        location.line_number.should eq 4
+      location = node.then.location.should_not be_nil
+      location.line_number.should eq 1
+      location = node.then.end_location.should_not be_nil
+      location.line_number.should eq 4
 
-        location = node.else.location.should_not be_nil
-        location.line_number.should eq 4
-        location = node.else.end_location.should_not be_nil
-        location.line_number.should eq 7
-      end
+      location = node.else.location.should_not be_nil
+      location.line_number.should eq 4
+      location = node.else.end_location.should_not be_nil
+      location.line_number.should eq 7
+    end
 
-      it "sets correct locations of macro if / else / elsif" do
-        parser = Parser.new(<<-CR)
-          {% if 1 == val %}
-            "one!"
-            "bar"
-          {% elsif 2 == val %}
-            "not one"
-            "bar"
-          {% else %}
-            "biz"
-            "blah"
-          {% end %}
-        CR
+    it "sets correct locations of macro if / else / elsif" do
+      parser = Parser.new(<<-CR)
+        {% if 1 == val %}
+          "one!"
+          "bar"
+        {% elsif 2 == val %}
+          "not one"
+          "bar"
+        {% else %}
+          "biz"
+          "blah"
+        {% end %}
+      CR
 
-        node = parser.parse.as MacroIf
+      node = parser.parse.as MacroIf
 
-        location = node.cond.location.should_not be_nil
-        location.line_number.should eq 1
-        location = node.cond.end_location.should_not be_nil
-        location.line_number.should eq 1
+      location = node.cond.location.should_not be_nil
+      location.line_number.should eq 1
+      location = node.cond.end_location.should_not be_nil
+      location.line_number.should eq 1
 
-        location = node.then.location.should_not be_nil
-        location.line_number.should eq 1
-        location = node.then.end_location.should_not be_nil
-        location.line_number.should eq 4
+      location = node.then.location.should_not be_nil
+      location.line_number.should eq 1
+      location = node.then.end_location.should_not be_nil
+      location.line_number.should eq 4
 
-        location = node.else.location.should_not be_nil
-        location.line_number.should eq 4
-        location = node.else.end_location.should_not be_nil
-        location.line_number.should eq 10
-      end
+      location = node.else.location.should_not be_nil
+      location.line_number.should eq 4
+      location = node.else.end_location.should_not be_nil
+      location.line_number.should eq 10
+    end
 
-      it "sets the correct location for MacroExpressions in a MacroIf" do
-        parser = Parser.new(<<-CR)
-          {% if 1 == 2 %}
+    it "sets the correct location for MacroExpressions in a MacroIf" do
+      parser = Parser.new(<<-CR)
+        {% if 1 == 2 %}
+          {{2 * 2}}
+        {% else %}
+           {%
+             1 + 1
+             2 + 2
+           %}
+        {% end %}
+      CR
+
+      node = parser.parse.should be_a MacroIf
+      location = node.location.should_not be_nil
+      location.line_number.should eq 1
+      location.column_number.should eq 3
+
+      then_node = node.then.should be_a Expressions
+      then_node_location = then_node.location.should_not be_nil
+      then_node_location.line_number.should eq 1
+      then_node_location = then_node.end_location.should_not be_nil
+      then_node_location.line_number.should eq 3
+
+      then_node_location = then_node.expressions[1].location.should_not be_nil
+      then_node_location.line_number.should eq 2
+      then_node_location = then_node.expressions[1].end_location.should_not be_nil
+      then_node_location.line_number.should eq 2
+
+      else_node = node.else.should be_a Expressions
+      else_node_location = else_node.location.should_not be_nil
+      else_node_location.line_number.should eq 3
+      else_node_location = else_node.end_location.should_not be_nil
+      else_node_location.line_number.should eq 8
+
+      else_node = node.else.should be_a Expressions
+      else_node_location = else_node.expressions[1].location.should_not be_nil
+      else_node_location.line_number.should eq 4
+      else_node_location = else_node.expressions[1].end_location.should_not be_nil
+      else_node_location.line_number.should eq 7
+    end
+
+    it "sets correct location of Begin within another node" do
+      parser = Parser.new(<<-CR)
+        macro finished
+          {% begin %}
             {{2 * 2}}
-          {% else %}
              {%
                1 + 1
                2 + 2
              %}
           {% end %}
-        CR
-
-        node = parser.parse.should be_a MacroIf
-        location = node.location.should_not be_nil
-        location.line_number.should eq 1
-        location.column_number.should eq 3
-
-        then_node = node.then.should be_a Expressions
-        then_node_location = then_node.location.should_not be_nil
-        then_node_location.line_number.should eq 1
-        then_node_location = then_node.end_location.should_not be_nil
-        then_node_location.line_number.should eq 3
-
-        then_node_location = then_node.expressions[1].location.should_not be_nil
-        then_node_location.line_number.should eq 2
-        then_node_location = then_node.expressions[1].end_location.should_not be_nil
-        then_node_location.line_number.should eq 2
-
-        else_node = node.else.should be_a Expressions
-        else_node_location = else_node.location.should_not be_nil
-        else_node_location.line_number.should eq 3
-        else_node_location = else_node.end_location.should_not be_nil
-        else_node_location.line_number.should eq 8
-
-        else_node = node.else.should be_a Expressions
-        else_node_location = else_node.expressions[1].location.should_not be_nil
-        else_node_location.line_number.should eq 4
-        else_node_location = else_node.expressions[1].end_location.should_not be_nil
-        else_node_location.line_number.should eq 7
-      end
-
-      it "sets correct location of Begin within another node" do
-        parser = Parser.new(<<-CR)
-          macro finished
-            {% begin %}
-              {{2 * 2}}
-               {%
-                 1 + 1
-                 2 + 2
-               %}
-            {% end %}
-          end
-        CR
-
-        node = parser.parse.should be_a Macro
-        node = node.body.should be_a Expressions
-        node = node.expressions[1].should be_a MacroIf
-
-        location = node.location.should_not be_nil
-        location.line_number.should eq 2
-        location = node.end_location.should_not be_nil
-        location.line_number.should eq 8
-      end
-
-      it "sets correct location of MacroIf within another node" do
-        parser = Parser.new(<<-CR)
-          macro finished
-            {% if false %}
-              {{2 * 2}}
-               {%
-                 1 + 1
-                 2 + 2
-               %}
-            {% end %}
-          end
-        CR
-
-        node = parser.parse.should be_a Macro
-        node = node.body.should be_a Expressions
-        node = node.expressions[1].should be_a MacroIf
-
-        location = node.location.should_not be_nil
-        location.line_number.should eq 2
-        location = node.end_location.should_not be_nil
-        location.line_number.should eq 8
-      end
-
-      it "sets correct location of MacroIf (unless) within another node" do
-        parser = Parser.new(<<-CR)
-          macro finished
-            {% unless false %}
-              {{2 * 2}}
-               {%
-                 1 + 1
-                 2 + 2
-               %}
-            {% end %}
-          end
-        CR
-
-        node = parser.parse.should be_a Macro
-        node = node.body.should be_a Expressions
-        node = node.expressions[1].should be_a MacroIf
-
-        location = node.location.should_not be_nil
-        location.line_number.should eq 2
-        location = node.end_location.should_not be_nil
-        location.line_number.should eq 8
-      end
-
-      it "sets correct location of trailing ensure" do
-        parser = Parser.new("foo ensure bar")
-        node = parser.parse.as(ExceptionHandler)
-        ensure_location = node.ensure_location.not_nil!
-        ensure_location.line_number.should eq(1)
-        ensure_location.column_number.should eq(5)
-      end
-
-      it "sets correct location of trailing rescue" do
-        source = "foo rescue bar"
-        parser = Parser.new(source)
-        node = parser.parse.as(ExceptionHandler).rescues.not_nil![0]
-        node_source(source, node).should eq("rescue bar")
-      end
-
-      it "sets correct location of call name" do
-        source = "foo(bar)"
-        node = Parser.new(source).parse.as(Call)
-        source_between(source, node.name_location, node.name_end_location).should eq("foo")
-      end
-
-      it "sets correct location of call name in operator assignment" do
-        source = "@foo.bar += 1"
-        node = Parser.parse(source).as(OpAssign).target.as(Call)
-        source_between(source, node.name_location, node.name_end_location).should eq("bar")
-      end
-
-      it "sets correct location of element in array literal" do
-        source = "%i(foo bar)"
-        elements = Parser.new(source).parse.as(ArrayLiteral).elements
-        node_source(source, elements[0]).should eq("foo")
-        node_source(source, elements[1]).should eq("bar")
-      end
-
-      it "sets correct location of implicit tuple literal of multi-return" do
-        source = "def foo; return 1, 2; end"
-        node = Parser.new(source).parse.as(Def).body.as(Return).exp.not_nil!
-        node_source(source, node).should eq("1, 2")
-      end
-
-      it "sets correct location of var in type declaration" do
-        source = "foo : Int32"
-        node = Parser.new(source).parse.as(TypeDeclaration).var
-        node_source(source, node).should eq("foo")
-
-        source = "begin : Int32"
-        node = Parser.new(source).parse.as(TypeDeclaration).var
-        node_source(source, node).should eq("begin")
-      end
-
-      it "sets correct location of var in proc pointer" do
-        source = "foo : Foo; ->foo.bar"
-        expressions = Parser.new(source).parse.as(Expressions).expressions
-        node = expressions[1].as(ProcPointer).obj.not_nil!
-        node_source(source, node).should eq("foo")
-      end
-
-      it "sets correct location of var in macro for loop" do
-        source = "{% for foo, bar in baz %} {% end %}"
-        node = Parser.new(source).parse.as(MacroFor)
-        node_source(source, node.vars[0]).should eq("foo")
-        node_source(source, node.vars[1]).should eq("bar")
-      end
-
-      it "sets correct location of receiver var in method def" do
-        source = "def foo.bar; end"
-        node = Parser.new(source).parse.as(Def).receiver.not_nil!
-        node_source(source, node).should eq("foo")
-      end
-
-      it "sets correct location of vars in C struct" do
-        source = "lib Foo; struct Bar; fizz, buzz : Int32; end; end"
-        expressions = Parser.new(source).parse.as(LibDef).body.as(CStructOrUnionDef).body.as(Expressions).expressions
-        node_source(source, expressions[0].as(TypeDeclaration).var).should eq("fizz")
-        node_source(source, expressions[1].as(TypeDeclaration).var).should eq("buzz")
-      end
-
-      it "doesn't override yield with macro yield" do
-        parser = Parser.new("def foo; yield 1; {% begin %} yield 1 {% end %}; end")
-        a_def = parser.parse.as(Def)
-        a_def.block_arity.should eq(1)
-      end
-
-      it "correctly computes line number after `\\{%\n` (#9857)" do
-        code = <<-CRYSTAL
-        macro foo
-          \\{%
-            1
-          %}
         end
+      CR
 
-        1
-        CRYSTAL
+      node = parser.parse.should be_a Macro
+      node = node.body.should be_a Expressions
+      node = node.expressions[1].should be_a MacroIf
 
-        exps = Parser.parse(code).as(Expressions)
-        exps.expressions[1].location.not_nil!.line_number.should eq(7)
+      location = node.location.should_not be_nil
+      location.line_number.should eq 2
+      location = node.end_location.should_not be_nil
+      location.line_number.should eq 8
+    end
+
+    it "sets correct location of MacroIf within another node" do
+      parser = Parser.new(<<-CR)
+        macro finished
+          {% if false %}
+            {{2 * 2}}
+             {%
+               1 + 1
+               2 + 2
+             %}
+          {% end %}
+        end
+      CR
+
+      node = parser.parse.should be_a Macro
+      node = node.body.should be_a Expressions
+      node = node.expressions[1].should be_a MacroIf
+
+      location = node.location.should_not be_nil
+      location.line_number.should eq 2
+      location = node.end_location.should_not be_nil
+      location.line_number.should eq 8
+    end
+
+    it "sets correct location of MacroIf (unless) within another node" do
+      parser = Parser.new(<<-CR)
+        macro finished
+          {% unless false %}
+            {{2 * 2}}
+             {%
+               1 + 1
+               2 + 2
+             %}
+          {% end %}
+        end
+      CR
+
+      node = parser.parse.should be_a Macro
+      node = node.body.should be_a Expressions
+      node = node.expressions[1].should be_a MacroIf
+
+      location = node.location.should_not be_nil
+      location.line_number.should eq 2
+      location = node.end_location.should_not be_nil
+      location.line_number.should eq 8
+    end
+
+    it "sets correct location of trailing ensure" do
+      parser = Parser.new("foo ensure bar")
+      node = parser.parse.as(ExceptionHandler)
+      ensure_location = node.ensure_location.not_nil!
+      ensure_location.line_number.should eq(1)
+      ensure_location.column_number.should eq(5)
+    end
+
+    it "sets correct location of trailing rescue" do
+      source = "foo rescue bar"
+      parser = Parser.new(source)
+      node = parser.parse.as(ExceptionHandler).rescues.not_nil![0]
+      node_source(source, node).should eq("rescue bar")
+    end
+
+    it "sets correct location of call name" do
+      source = "foo(bar)"
+      node = Parser.new(source).parse.as(Call)
+      source_between(source, node.name_location, node.name_end_location).should eq("foo")
+    end
+
+    it "sets correct location of call name in operator assignment" do
+      source = "@foo.bar += 1"
+      node = Parser.parse(source).as(OpAssign).target.as(Call)
+      source_between(source, node.name_location, node.name_end_location).should eq("bar")
+    end
+
+    it "sets correct location of element in array literal" do
+      source = "%i(foo bar)"
+      elements = Parser.new(source).parse.as(ArrayLiteral).elements
+      node_source(source, elements[0]).should eq("foo")
+      node_source(source, elements[1]).should eq("bar")
+    end
+
+    it "sets correct location of implicit tuple literal of multi-return" do
+      source = "def foo; return 1, 2; end"
+      node = Parser.new(source).parse.as(Def).body.as(Return).exp.not_nil!
+      node_source(source, node).should eq("1, 2")
+    end
+
+    it "sets correct location of var in type declaration" do
+      source = "foo : Int32"
+      node = Parser.new(source).parse.as(TypeDeclaration).var
+      node_source(source, node).should eq("foo")
+
+      source = "begin : Int32"
+      node = Parser.new(source).parse.as(TypeDeclaration).var
+      node_source(source, node).should eq("begin")
+    end
+
+    it "sets correct location of var in proc pointer" do
+      source = "foo : Foo; ->foo.bar"
+      expressions = Parser.new(source).parse.as(Expressions).expressions
+      node = expressions[1].as(ProcPointer).obj.not_nil!
+      node_source(source, node).should eq("foo")
+    end
+
+    it "sets correct location of var in macro for loop" do
+      source = "{% for foo, bar in baz %} {% end %}"
+      node = Parser.new(source).parse.as(MacroFor)
+      node_source(source, node.vars[0]).should eq("foo")
+      node_source(source, node.vars[1]).should eq("bar")
+    end
+
+    it "sets correct location of receiver var in method def" do
+      source = "def foo.bar; end"
+      node = Parser.new(source).parse.as(Def).receiver.not_nil!
+      node_source(source, node).should eq("foo")
+    end
+
+    it "sets correct location of vars in C struct" do
+      source = "lib Foo; struct Bar; fizz, buzz : Int32; end; end"
+      expressions = Parser.new(source).parse.as(LibDef).body.as(CStructOrUnionDef).body.as(Expressions).expressions
+      node_source(source, expressions[0].as(TypeDeclaration).var).should eq("fizz")
+      node_source(source, expressions[1].as(TypeDeclaration).var).should eq("buzz")
+    end
+
+    it "doesn't override yield with macro yield" do
+      parser = Parser.new("def foo; yield 1; {% begin %} yield 1 {% end %}; end")
+      a_def = parser.parse.as(Def)
+      a_def.block_arity.should eq(1)
+    end
+
+    it "correctly computes line number after `\\{%\n` (#9857)" do
+      code = <<-CRYSTAL
+      macro foo
+        \\{%
+          1
+        %}
       end
 
-      it "sets correct location for fun def" do
-        source = "lib LibFoo; fun foo(x : Int32); end"
-        node = Parser.new(source).parse.as(LibDef).body
+      1
+      CRYSTAL
 
-        node_source(source, node).should eq("fun foo(x : Int32)")
-      end
+      exps = Parser.parse(code).as(Expressions)
+      exps.expressions[1].location.not_nil!.line_number.should eq(7)
+    end
 
-      it "sets correct location for fun def with return type" do
-        source = "lib LibFoo; fun foo(x : Int32) : Void; end"
-        node = Parser.new(source).parse.as(LibDef).body
+    it "sets correct location for fun def" do
+      source = "lib LibFoo; fun foo(x : Int32); end"
+      node = Parser.new(source).parse.as(LibDef).body
 
-        node_source(source, node).should eq("fun foo(x : Int32) : Void")
-      end
+      node_source(source, node).should eq("fun foo(x : Int32)")
+    end
 
-      it "sets correct location for fun def on multiple lines" do
-        source = "lib LibFoo\nfun foo(\n    x : Int32\n  )\nend"
-        node = Parser.new(source).parse.as(LibDef).body
+    it "sets correct location for fun def with return type" do
+      source = "lib LibFoo; fun foo(x : Int32) : Void; end"
+      node = Parser.new(source).parse.as(LibDef).body
 
-        node_source(source, node).should eq("fun foo(\n    x : Int32\n  )")
-      end
+      node_source(source, node).should eq("fun foo(x : Int32) : Void")
+    end
 
-      it "sets correct location for fun def with body" do
-        source = "fun foo(x : Int32) : Void\nend"
-        node = Parser.new(source).parse.as(FunDef)
+    it "sets correct location for fun def on multiple lines" do
+      source = "lib LibFoo\nfun foo(\n    x : Int32\n  )\nend"
+      node = Parser.new(source).parse.as(LibDef).body
 
-        node_source(source, node).should eq("fun foo(x : Int32) : Void\nend")
-      end
+      node_source(source, node).should eq("fun foo(\n    x : Int32\n  )")
+    end
+
+    it "sets correct location for fun def with body" do
+      source = "fun foo(x : Int32) : Void\nend"
+      node = Parser.new(source).parse.as(FunDef)
+
+      node_source(source, node).should eq("fun foo(x : Int32) : Void\nend")
     end
 
     it "sets correct location of parameter in proc literal" do
