@@ -626,6 +626,101 @@ struct Range(B, E)
       end
     end
   end
+
+  # Clamps `self` within the boundaries of `range`.
+  #
+  # The result is the intersection of both ranges.
+  #
+  # ```
+  # (-5..5).clamp(0..100) # => 0..5
+  # (-5..5).clamp(-10..2) # => -5..2
+  # (-5..5).clamp(0..nil) # => 0..5
+  # ```
+  #
+  # If either range is exclusive, the result is exclusive, too.
+  # If both ranges are disparate, or have different `#direction` the result is
+  # an empty range expressed as `begin...begin` (or `end...end` if `begin` is
+  # `nil`).
+  #
+  # ```
+  # (-5...5).clamp(0..100) # => 0...5
+  # (-5..5).clamp(0...100) # => 0...5
+  # (-5..5).clamp(10..20)  # => -5...-5
+  # (-5..5).clamp(5..-5)   # => -5...-5
+  # (nil..0).clamp(1..nil) # => 0...0
+  # ```
+  def clamp(range : Range) : Range
+    range_direction = range.direction
+    direction = self.direction
+
+    if direction != range_direction && !direction.zero? && !range_direction.zero?
+      # result is an empty range and gets normalized
+      v = (self.begin || self.end).not_nil!
+      return v...v
+    end
+
+    if range_direction < 0
+      # if both ranges are descending, reverse range in order to work for `Number#clamp` calls
+      range = range.reverse
+    end
+
+    clamped_begin = self.begin.try &.clamp(range.begin, range.end) || range.begin
+    clamped_end = self.end.try &.clamp(range.begin, range.end) || range.end
+
+    exclusive = exclusive? || range.exclusive?
+
+    if (clamped_begin == clamped_end) && (clamped_begin != self.begin) && (clamped_end != self.end) && !range_direction.zero?
+      # result is an empty range and gets normalized
+      v = (self.begin || self.end).not_nil!
+      return v...v
+    end
+
+    case {clamped_begin, clamped_end}
+    when {Nil, Nil}
+      Range.new(nil, nil, exclusive)
+    when {Nil, _}
+      Range.new(nil, clamped_end.not_nil!, exclusive)
+    when {_, Nil}
+      Range.new(clamped_begin.not_nil!, nil, exclusive)
+    else
+      Range.new(clamped_begin, clamped_end, exclusive)
+    end
+  end
+
+  # :ditto:
+  def clamp(min, max) : Range
+    clamp(min..max)
+  end
+
+  # Returns the relation between `begin` and `end`.
+  #
+  # * `1` if the range is ascending (`begin > end`)
+  # * `-1` if the range is descending (`begin < end`)
+  # * `0` if the range has only a single elemtent (inclusive) or is empty (exclusive) (`begin == end`)
+  #
+  # An open range (either `begin` or `end` or both are `nil`) is considered to
+  # be ascending.
+  def direction
+    start = self.begin
+    stop = self.end
+    if start && stop
+      (stop <=> start).sign
+    else
+      1
+    end
+  end
+
+  # Returns the reverse of `self`.
+  #
+  # `begin` and `end` are switched and `exclusive` is retained.
+  #
+  # ```
+  # a..b.reverse  # => b..a
+  # a...b.reverse # => b...a
+  # ```
+  def reverse
+    Range.new(@end, @begin, @exclusive)
+  end
 end
 
 require "./range/*"

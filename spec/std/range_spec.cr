@@ -739,4 +739,93 @@ describe "Range" do
       ((nil..nil) === 1).should be_true
     end
   end
+
+  describe "#clamp" do
+    it "ascending" do
+      (-5..5).clamp(-10..100).should eq(-5..5)
+      (-5..5).clamp(0..100).should eq(0..5)
+      (-5..5).clamp(2..100).should eq(2..5)
+      (-5..5).clamp(nil..100).should eq(-5..5)
+
+      (-5..5).clamp(-100..10).should eq(-5..5)
+      (-5..5).clamp(-100..0).should eq(-5..0)
+      (-5..5).clamp(-100..-2).should eq(-5..-2)
+      (-5..5).clamp(-100..nil).should eq(-5..5)
+
+      (-5..5).clamp(nil..nil).should eq(-5..5)
+
+      (-5..5).clamp(-100..-90).should eq(-5...-5)
+      (-5..5).clamp(90..100).should eq(-5...-5)
+
+      (-5..5).clamp(5..-5).should eq(-5...-5)
+
+      (1..1).clamp(-5..5).should eq(1..1)
+      (1..1).clamp(-5..nil).should eq(1..1)
+      (1..1).clamp(nil..5).should eq(1..1)
+
+      (1...2).clamp(-5..5).should eq(1...2)
+      (1...2).clamp(-5..nil).should eq(1...2)
+      (1...2).clamp(nil..5).should eq(1...2)
+
+      (-5..5).clamp(1..1).should eq(1..1)
+      (5..-5).clamp(1..1).should eq(1..1)
+      (-5..nil).clamp(1..1).should eq(1..1)
+      (nil..5).clamp(1..1).should eq(1..1)
+
+      (-5..5).clamp(1...2).should eq(1...2)
+      (5..-5).clamp(1...2).should eq(5...5)
+      (-5..nil).clamp(1...2).should eq(1...2)
+      (nil..5).clamp(1...2).should eq(1...2)
+    end
+
+    it "descending" do
+      (5..-5).clamp(100..-10).should eq(5..-5)
+      (5..-5).clamp(100..0).should eq(5..0)
+      (5..-5).clamp(100..2).should eq(5..2)
+      (5..-5).clamp(100..nil).should eq(5...5)
+
+      (5..-5).clamp(10..-100).should eq(5..-5)
+      (5..-5).clamp(0..-100).should eq(0..-5)
+      (5..-5).clamp(-2..-100).should eq(-2..-5)
+      (5..-5).clamp(nil..-100).should eq(5...5)
+
+      (5..-5).clamp(nil..nil).should eq(5...5)
+
+      (5..-5).clamp(-90..-100).should eq(5...5)
+      (5..-5).clamp(100..90).should eq(5...5)
+
+      (5..-5).clamp(-5..5).should eq(5...5)
+
+      (1..1).clamp(5..-5).should eq(1..1)
+      (1...2).clamp(-5..5).should eq(1...2)
+
+      (2...1).clamp(-5..5).should eq(2...2)
+      (2...1).clamp(5..-5).should eq(2...1)
+
+      (5..-5).clamp(1..1).should eq(1..1)
+      (5..-5).clamp(1...2).should eq(5...5)
+    end
+
+    it "endless range" do
+      (nil..5).clamp(-10..100).should eq(-10..5)
+      (nil..5).clamp(-10..0).should eq(-10..0)
+      (nil..5).clamp(-10..nil).should eq(-10..5)
+      (nil..5).clamp(nil..100).should eq(nil..5)
+      (nil..5).clamp(nil..0).should eq(nil..0)
+
+      (-5..nil).clamp(-100..10).should eq(-5..10)
+      (-5..nil).clamp(0..10).should eq(0..10)
+      (-5..nil).clamp(nil..10).should eq(-5..10)
+      (-5..nil).clamp(100..nil).should eq(100..nil)
+      (-5..nil).clamp(0..nil).should eq(0..nil)
+
+      (-5..nil).clamp(-100..-90).should eq(-5...-5)
+      (nil..5).clamp(90..100).should eq(5...5)
+
+      (nil..5).clamp(5..-5).should eq(5...5)
+      (-5..nil).clamp(5..-5).should eq(-5...-5)
+
+      (nil..0).clamp(0..nil).should eq 0..0
+    end
+  end
 end
