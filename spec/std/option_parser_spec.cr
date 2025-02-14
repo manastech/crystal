@@ -789,3 +789,117 @@ describe "OptionParser" do
     args.should eq(%w(file --bar))
   end
 end
+
+describe "OptionParser with summary_width and summary_indent" do
+  it "formats flags and descriptions with default summary_width and summary_indent" do
+    parser = OptionParser.new
+
+    parser.on("-f", "--flag", "A short description") { }
+    parser.on("-l", "--long-flag", "A long description for testing purposes") { }
+
+    output = parser.to_s
+
+    expected_output = <<-USAGE
+        -f, --flag                       A short description
+        -l, --long-flag                  A long description for testing purposes
+    USAGE
+
+    output.should eq(expected_output)
+  end
+
+  it "formats flags and descriptions with custom summary_width and summary_indent" do
+    parser = OptionParser.new
+    parser.summary_width = 40
+    parser.summary_indent = "|" * 6
+
+    parser.on("-f", "--flag", "A short description") { }
+    parser.on("-l", "--long-flag", "A long description for testing purposes") { }
+
+    output = parser.to_s
+
+    expected_output = <<-USAGE
+    ||||||-f, --flag                               A short description
+    ||||||-l, --long-flag                          A long description for testing purposes
+    USAGE
+
+    output.should eq(expected_output)
+  end
+
+  it "handles multiline descriptions correctly with summary_width" do
+    parser = OptionParser.new
+    parser.summary_width = 20
+    parser.summary_indent = " " * 4
+
+    parser.on("--complex-option", "This is a detailed description\nspanning multiple lines for testing") { }
+
+    output = parser.to_s
+
+    expected_output = <<-USAGE
+        --complex-option     This is a detailed description
+                             spanning multiple lines for testing
+    USAGE
+
+    output.should eq(expected_output)
+  end
+
+  it "adjusts formatting when flag length exceeds summary_width" do
+    parser = OptionParser.new
+    parser.summary_width = 20
+    parser.summary_indent = " " * 4
+
+    parser.on("--very-very-long-option", "Description that follows a very\nlong flag") { }
+
+    output = parser.to_s
+
+    expected_output = <<-USAGE
+        --very-very-long-option
+                             Description that follows a very
+                             long flag
+    USAGE
+
+    output.should eq(expected_output)
+  end
+
+  it "handles extreme summary_width values (e.g., 0)" do
+    parser = OptionParser.new
+    parser.summary_width = 0
+    parser.summary_indent = " " * 4
+
+    parser.on("--short", "No space for flags!") { }
+
+    output = parser.to_s
+
+    expected_output = <<-USAGE
+        --short
+         No space for flags!
+    USAGE
+
+    output.should eq(expected_output)
+  end
+
+  it "handles extreme summary_indent values (e.g., empty string)" do
+    parser = OptionParser.new
+    parser.summary_width = 20
+    parser.summary_indent = ""
+
+    parser.on("--test", "Indentation removed") { }
+
+    output = parser.to_s
+
+    expected_output = <<-USAGE
+    --test               Indentation removed
+    USAGE
+
+    output.should eq(expected_output)
+  end
+
+  # it "raises an error for invalid summary_width or summary_indent" do
+  #   parser = OptionParser.new
+  #   expect_raises ArgumentError, "Invalid summary width: -10" do
+  #     parser.summary_width = -10
+  #   end
+  #   expect_raises ArgumentError, "Invalid summary indent: -5" do
+  #     parser.summary_indent = -5
+  #   end
+  # end
+end
