@@ -10,6 +10,8 @@ describe "Crystal::Command" do
           puts ENV["CRYSTAL"]?
           puts PROGRAM_NAME
           puts ARGV
+
+          exit 123
           CRYSTAL
 
         Process.run(ENV["CRYSTAL_SPEC_COMPILER_BIN"]? || "bin/crystal", ["build", source_file, "-o", path])
@@ -24,7 +26,9 @@ describe "Crystal::Command" do
       )
       output = process.output.gets_to_end
       status = process.wait
-      status.success?.should be_true
+      status.normal_exit?.should be_true
+      status.exit_code.should eq 123
+
       lines = output.lines
       lines[0].should match /crystal/
       lines[1].should match /crystal-external/
