@@ -1,4 +1,5 @@
 require "spec"
+require "../spec_helper"
 require "spec/helpers/iterate"
 
 module SomeInterface; end
@@ -1364,6 +1365,19 @@ describe "Enumerable" do
     it { [1, 2, 3].sum(4.5).should eq(10.5) }
     it { (1..3).sum { |x| x * 2 }.should eq(12) }
     it { (1..3).sum(1.5) { |x| x * 2 }.should eq(13.5) }
+    it { [1, 3_u64].sum(0_i32).should eq(4_u32) }
+    it { [1, 3].sum(0_u64).should eq(4_u64) }
+    it { [1, 10000000000_u64].sum(0_u64).should eq(10000000001) }
+    it "raises if union types are summed", tags: %w[slow] do
+      exc = assert_error <<-CRYSTAL,
+        require "prelude"
+        [1, 10000000000_u64].sum
+        CRYSTAL
+        "`Enumerable#sum()` and `#product()` do not support Union " +
+        "types. Instead, use `Enumerable#sum(initial)` and " +
+        "`#product(initial)`, respectively, with an initial value " +
+        "of the intended type of the call."
+    end
 
     it "uses additive_identity from type" do
       typeof([1, 2, 3].sum).should eq(Int32)
@@ -1404,6 +1418,20 @@ describe "Enumerable" do
       typeof([1, 2, 3].product).should eq(Int32)
       typeof([1.5, 2.5, 3.5].product).should eq(Float64)
       typeof([1, 2, 3].product(&.to_f)).should eq(Float64)
+    end
+
+    it { [1, 3_u64].product(3_i32).should eq(9_u32) }
+    it { [1, 3].product(3_u64).should eq(9_u64) }
+    it { [1, 10000000000_u64].product(3_u64).should eq(30000000000_u64) }
+    it "raises if union types are multiplied", tags: %w[slow] do
+      exc = assert_error <<-CRYSTAL,
+        require "prelude"
+        [1, 10000000000_u64].product
+        CRYSTAL
+        "`Enumerable#sum()` and `#product()` do not support Union " +
+        "types. Instead, use `Enumerable#sum(initial)` and " +
+        "`#product(initial)`, respectively, with an initial value " +
+        "of the intended type of the call."
     end
   end
 
