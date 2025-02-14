@@ -266,6 +266,8 @@ struct Crystal::System::Process
     new_handle
   end
 
+  private CMD_EXE = System.to_wstr(ENV["COMSPEC"])
+
   def self.spawn(command_args, env, clear_env, input, output, error, chdir)
     startup_info = LibC::STARTUPINFOW.new
     startup_info.cb = sizeof(LibC::STARTUPINFOW)
@@ -277,13 +279,23 @@ struct Crystal::System::Process
 
     process_info = LibC::PROCESS_INFORMATION.new
 
-    command_args = ::Process.quote_windows(command_args) unless command_args.is_a?(String)
+    if command_args.is_a?(String)
+      raise ArgumentError.new("Command line contains newline") if command_args.includes?('\n')
+      result = LibC.CreateProcessW(
+        CMD_EXE, System.to_wstr(%(/s /c "#{command_args}")), nil, nil, true, LibC::CREATE_UNICODE_ENVIRONMENT,
+        make_env_block(env, clear_env), chdir.try { |str| System.to_wstr(str) } || Pointer(UInt16).null,
+        pointerof(startup_info), pointerof(process_info)
+      )
+    else
+      command_args = ::Process.quote_windows(command_args)
+      result = LibC.CreateProcessW(
+        nil, System.to_wstr(command_args), nil, nil, true, LibC::CREATE_UNICODE_ENVIRONMENT,
+        make_env_block(env, clear_env), chdir.try { |str| System.to_wstr(str) } || Pointer(UInt16).null,
+        pointerof(startup_info), pointerof(process_info)
+      )
+    end
 
-    if LibC.CreateProcessW(
-         nil, System.to_wstr(command_args), nil, nil, true, LibC::CREATE_UNICODE_ENVIRONMENT,
-         make_env_block(env, clear_env), chdir.try { |str| System.to_wstr(str) } || Pointer(UInt16).null,
-         pointerof(startup_info), pointerof(process_info)
-       ) == 0
+    if result == 0
       error = WinError.value
       case error.to_errno
       when Errno::EACCES, Errno::ENOENT, Errno::ENOEXEC

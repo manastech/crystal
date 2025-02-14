@@ -265,8 +265,10 @@ class Process
   # * On POSIX this uses `/bin/sh` to process the command string. *args* are
   #   also passed to the shell, and you need to include the string `"${@}"` in
   #   the *command* to safely insert them there.
-  # * On Windows this is implemented by passing the string as-is to the
-  #   process, and passing *args* is not supported.
+  # * On Windows this is implemented by passing the string as-is to `%COMSPEC%`,
+  #   and passing *args* is not supported. The user is responsible for correctly
+  #   quoting the command string, as `Process.quote_windows` does not handle
+  #   this. Additionally, *command* cannot contain the newline character (`\n`).
   #
   # Raises `IO::Error` if executing the command fails (for example if the executable doesn't exist).
   def initialize(command : String, args = nil, env : Env = nil, clear_env : Bool = false, shell : Bool = false,
