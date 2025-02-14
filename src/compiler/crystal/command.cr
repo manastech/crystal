@@ -305,40 +305,12 @@ class Crystal::Command
       exit exit_code
     end
 
-    if message = exit_message(status)
-      STDERR.puts message
+    unless status.exit_reason.normal?
+      STDERR.puts status.description
       STDERR.flush
     end
 
     exit 1
-  end
-
-  private def exit_message(status)
-    case status.exit_reason
-    when .aborted?, .session_ended?, .terminal_disconnected?
-      if signal = status.exit_signal?
-        if signal.kill?
-          "Program was killed"
-        else
-          "Program received and didn't handle signal #{signal} (#{signal.value})"
-        end
-      else
-        "Program exited abnormally"
-      end
-    when .breakpoint?
-      "Program hit a breakpoint and no debugger was attached"
-    when .access_violation?, .bad_memory_access?
-      # NOTE: this only happens with the empty prelude, because the stdlib
-      # runtime catches those exceptions and then exits _normally_ with exit
-      # code 11 or 1
-      "Program exited because of an invalid memory access"
-    when .bad_instruction?
-      "Program exited because of an invalid instruction"
-    when .float_exception?
-      "Program exited because of a floating-point system exception"
-    when .unknown?
-      "Program exited abnormally, the cause is unknown"
-    end
   end
 
   record CompilerConfig,

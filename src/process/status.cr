@@ -98,6 +98,37 @@ enum Process::ExitReason
   def abnormal?
     !normal?
   end
+
+  # Returns a textual description of this exit reason.
+  #
+  # ```
+  # Process::ExitReason::Normal.description  # => "Process exited normally"
+  # Process::ExitReason::Aborted.description # => "Process terminated abnormally"
+  # ```
+  #
+  # `Status#description` provides more detail for a specific process status.
+  def description
+    case self
+    in .normal?
+      "Process exited normally"
+    in .aborted?, .session_ended?, .terminal_disconnected?
+      "Process terminated abnormally"
+    in .interrupted?
+      "Process was interrupted"
+    in .breakpoint?
+      "Process hit a breakpoint and no debugger was attached"
+    in .access_violation?, .bad_memory_access?
+      "Process terminated because of an invalid memory access"
+    in .bad_instruction?
+      "Process terminated because of an invalid instruction"
+    in .float_exception?
+      "Process terminated because of a floating-point system exception"
+    in .signal?
+      Status::SIGNAL_REASON_DESCRIPTION
+    in .unknown?
+      "Process terminated abnormally, the cause is unknown"
+    end
+  end
 end
 
 # The status of a terminated process. Returned by `Process#wait`.
@@ -370,6 +401,31 @@ class Process::Status
       end
     {% end %}
   end
+
+  # Returns a textual description of this process status.
+  #
+  # ```
+  # Process::Status.new(0).description                             # => "Process exited normally"
+  # Process.new("sleep", ["10"]).tap(&.terminate).wait.description # => "Process received and didn't handle signal TERM (15)"
+  # ```
+  #
+  # `ExitReason#description` provides the specific messages for non-signal exits.
+  def description
+    description = exit_reason.description
+
+    if description.same?(SIGNAL_REASON_DESCRIPTION) && (signal = exit_signal?)
+      if signal.kill?
+        "Process was killed"
+      else
+        "Process received and didn't handle signal #{signal}"
+      end
+    else
+      description
+    end
+  end
+
+  # :nodoc:
+  SIGNAL_REASON_DESCRIPTION = "Process terminated because of an unhandled signal"
 
   private def stringify_exit_status_windows(io)
     # On Windows large status codes are typically expressed in hexadecimal

@@ -329,4 +329,27 @@ describe Process::Status do
       end
     {% end %}
   end
+
+  describe "#description" do
+    it "with exit status" do
+      Process::Status.new(exit_status(0)).description.should eq "Process exited normally"
+      Process::Status.new(exit_status(255)).description.should eq "Process exited normally"
+    end
+
+    it "on interrupt" do
+      status_for(:interrupted).description.should eq "Process was interrupted"
+    end
+
+    {% if flag?(:unix) && !flag?(:wasi) %}
+      it "with exit signal" do
+        Process::Status.new(Signal::HUP.value).description.should eq "Process terminated abnormally"
+        Process::Status.new(Signal::STOP.value).description.should eq "Process received and didn't handle signal STOP"
+        last_signal = Signal.values[-1]
+        Process::Status.new(last_signal.value).description.should eq "Process received and didn't handle signal #{last_signal}"
+
+        unknown_signal = Signal.new(126)
+        Process::Status.new(unknown_signal.value).description.should eq "Process received and didn't handle signal 126"
+      end
+    {% end %}
+  end
 end
