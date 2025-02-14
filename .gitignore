@@ -1,12 +1,19 @@
+# Environment configuration
 /Makefile.local
+/Makefile.win.local
 
 # Build artifacts
+*.o
+*.ll
+*.s
+*.obj
+*.dwo
+*.dwarf
+*.pdb
+*.exe
 /.build/
 /samples/.build/
 /docs/
-/src/llvm/ext/llvm_ext.o
-/src/llvm/ext/llvm_ext.obj
-/src/llvm/ext/llvm_ext.dwo
 /man/*.gz
 
 # CI
