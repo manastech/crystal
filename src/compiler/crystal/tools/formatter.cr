@@ -1524,10 +1524,10 @@ module Crystal
 
     def format_def_args(node : Def | Macro)
       yields = node.is_a?(Def) && !node.block_arity.nil?
-      format_def_args node.args, node.block_arg, node.splat_index, false, node.double_splat, yields
+      format_def_args node, node.args, node.block_arg, node.splat_index, false, node.double_splat, yields
     end
 
-    def format_def_args(args : Array, block_arg, splat_index, variadic, double_splat, yields)
+    def format_def_args(node, args : Array, block_arg, splat_index, variadic, double_splat, yields)
       # If there are no args, remove extra "()"
       if args.empty? && !block_arg && !double_splat && !variadic
         if @token.type.op_lparen?
@@ -1594,6 +1594,10 @@ module Crystal
 
           to_skip += 1 if at_skip?
           block_arg.accept self
+
+          if block_arg.restriction.nil? && abstract_def?(node)
+            write " : -> _"
+          end
         end
       elsif yields
         wrote_newline = format_def_arg(wrote_newline, false) do
@@ -1718,7 +1722,7 @@ module Crystal
         end
       end
 
-      format_def_args node.args, nil, nil, node.varargs?, nil, false
+      format_def_args node, node.args, nil, nil, node.varargs?, nil, false
 
       if return_type = node.return_type
         skip_space

@@ -18,13 +18,13 @@ abstract class Crystal::SyntaxHighlighter
   abstract def render(type : TokenType, value : String)
 
   # Renders a delimiter sequence.
-  abstract def render_delimiter(&)
+  abstract def render_delimiter(& : -> _)
 
   # Renders an interpolation sequence.
-  abstract def render_interpolation(&)
+  abstract def render_interpolation(& : -> _)
 
   # Renders a string array sequence.
-  abstract def render_string_array(&)
+  abstract def render_string_array(& : -> _)
 
   # Describes the type of a highlighter token.
   enum TokenType

@@ -2886,4 +2886,11 @@ describe Crystal::Formatter do
       assert_format %(<<-'EOS'\n#{char}\nEOS)
     end
   end
+
+  describe "abstract def block type" do
+    assert_format "abstract def foo(& : Foo -> Bar)"
+    assert_format "abstract def foo(&block : Foo -> Bar)"
+    assert_format "abstract def foo(&)", "abstract def foo(& : -> _)"
+    assert_format "abstract def foo(&block)", "abstract def foo(&block : -> _)"
+  end
 end

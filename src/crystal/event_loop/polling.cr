@@ -550,7 +550,7 @@ abstract class Crystal::EventLoop::Polling < Crystal::EventLoop
   protected abstract def system_del(fd : Int32, closing = true) : Nil
 
   # Identical to `#system_del` but yields on error.
-  protected abstract def system_del(fd : Int32, closing = true, &) : Nil
+  protected abstract def system_del(fd : Int32, closing = true, & : -> _) : Nil
 
   # Arm a timer to interrupt a run at *time*. Set to `nil` to disarm the timer.
   private abstract def system_set_timer(time : Time::Span?) : Nil
