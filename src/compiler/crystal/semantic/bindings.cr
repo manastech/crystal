@@ -357,6 +357,13 @@ module Crystal
         type
       end
     end
+
+    def set_type(type : Type)
+      super
+
+      raise "returns a large value type: #{type}" if type.large_value_type?
+      type
+    end
   end
 
   class PointerOf

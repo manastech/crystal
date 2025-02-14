@@ -741,6 +741,10 @@ module Crystal
       end
     end
 
+    def large_value_type? : Bool
+      struct? && program.size_of(sizeof_type) > 10_000
+    end
+
     def get_instance_var_initializer(name)
       nil
     end
@@ -3095,6 +3099,14 @@ module Crystal
     def union_types
       union_types = program.type_merge_union_of(concrete_types)
       union_types || base_type
+    end
+
+    def large_value_type? : Bool
+      each_concrete_type do |subtype|
+        return true if subtype.large_value_type?
+      end
+
+      false
     end
   end
 

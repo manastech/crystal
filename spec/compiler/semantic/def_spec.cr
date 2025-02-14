@@ -566,4 +566,70 @@ describe "Semantic: def" do
     ex.column_number.should eq(3)
     ex.size.should eq(6)
   end
+
+  describe "disallow large value return type" do
+    it "single return type" do
+      assert_error <<-CR, "returns a large value type: StaticArray(UInt8, 30000)"
+        def foo
+          ary = uninitialized StaticArray(UInt8, 30_000)
+        end
+
+        foo
+        CR
+    end
+
+    it "in union with value" do
+      assert_error <<-CR, "returns a large value type: (Int32 | StaticArray(UInt8, 30000))"
+        def foo
+          ary = uninitialized StaticArray(UInt8, 30_000)
+          ary || 1
+        end
+
+        foo
+        CR
+    end
+
+    it "in union with reference" do
+      assert_error <<-CR, "returns a large value type: (StaticArray(UInt8, 30000) | String)"
+        def foo
+          ary = uninitialized StaticArray(UInt8, 30_000)
+          ary || ""
+        end
+
+        foo
+        CR
+    end
+
+    it "tuple type" do
+      assert_error <<-CR, "returns a large value type: Tuple(StaticArray(UInt8, 4000), StaticArray(UInt8, 4000), StaticArray(UInt8, 4000))"
+        def foo
+          ary1 = uninitialized StaticArray(UInt8, 4_000)
+          ary2 = uninitialized StaticArray(UInt8, 4_000)
+          ary3 = uninitialized StaticArray(UInt8, 4_000)
+
+          {ary1, ary2, ary3}
+        end
+
+        foo
+        CR
+    end
+
+    it "struct type" do
+      assert_error <<-CR, "returns a large value type: Foo"
+        struct Foo
+          def initialize
+            @ary1 = uninitialized StaticArray(UInt8, 4_000)
+            @ary2 = uninitialized StaticArray(UInt8, 4_000)
+            @ary3 = uninitialized StaticArray(UInt8, 4_000)
+          end
+        end
+
+        def foo
+          Foo.new
+        end
+
+        foo
+        CR
+    end
+  end
 end
