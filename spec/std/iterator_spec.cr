@@ -1173,4 +1173,36 @@ describe Iterator do
       iter.next.should be_a(Iterator::Stop)
     end
   end
+
+  describe "reference semantics (#12975)" do
+    it "#cycle" do
+      ary = [1, 2, 3]
+      iter1 = ary.each.cycle
+      iter2 = iter1
+      iter1.next
+      iter1.next
+      iter1.next
+      iter2.next.should eq(1)
+      iter1.next.should eq(2)
+      iter2.next.should eq(3)
+    end
+
+    it "#cons_pair" do
+      ary = [1, 2, 3]
+      iter1 = ary.each.cons_pair
+      iter2 = iter1
+      iter1.next
+      iter2.next.should eq({2, 3})
+      iter1.next.should be_a(Iterator::Stop)
+    end
+
+    it "#flatten" do
+      ary = [(1..2).each, ('a'..'b').each]
+      iter1 = ary.each.flatten
+      iter2 = iter1
+      iter1.next
+      iter2.next.should eq(2)
+      iter1.next.should eq('a')
+    end
+  end
 end

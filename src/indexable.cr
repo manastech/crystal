@@ -401,7 +401,7 @@ module Indexable(T)
     CartesianProductIteratorN(typeof(indexables), typeof(Enumerable.element_type Enumerable.element_type indexables)).new(indexables, reuse)
   end
 
-  private class CartesianProductIteratorT(Is, Ts)
+  private struct CartesianProductIteratorT(Is, Ts)
     include Iterator(Ts)
 
     @indices : Array(Int32)
@@ -432,7 +432,7 @@ module Indexable(T)
     end
   end
 
-  private class CartesianProductIteratorN(Is, T)
+  private struct CartesianProductIteratorN(Is, T)
     include Iterator(Array(T))
 
     @indices : Array(Int32)

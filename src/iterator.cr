@@ -111,6 +111,44 @@ require "./enumerable"
 # Usually to get an iterator you invoke a method that would usually yield elements to a block,
 # but without passing a block: `Array#each`, `Array#each_index`, `Hash#each`, `String#each_char`,
 # `IO#each_line`, etc.
+#
+# ### Built-in iterator semantics
+#
+# All iterators in the standard library have reference semantics, regardless of
+# whether they are defined as classes or structs. That means if an iterator is
+# assigned to multiple variables, calling `#next` on any variable will affect
+# the internal state of the other variables simultaneously:
+#
+# ```
+# iter1 = (1..5).each.cons_pair
+# iter2 = iter1
+# iter1.next             # => {1, 2}
+# iter2.next             # => {2, 3}
+# iter1.is_a?(Reference) # => true
+#
+# iter1 = (1..5).each.step(2)
+# iter2 = iter1
+# iter1.next             # => 1
+# iter2.next             # => 3
+# iter1.is_a?(Reference) # => false
+# ```
+#
+# For this reason, when chaining iterators, the standard library assumes that
+# all input iterators also have reference semantics. One common cause of
+# exhibiting value semantics is reassigning to an instance variable in `#next`'s
+# body when an iterator is defined as a struct. Those iterators are not
+# guaranteed to behave properly when chained:
+#
+# ```
+# struct Zeros
+#   # same definition as above
+# end
+#
+# iter1 = Zeros.new(1)
+# iter2 = iter1
+# iter1.next # => 0
+# iter2.next # returns 0, but should be Iterator::Stop::INSTANCE
+# ```
 module Iterator(T)
   include Enumerable(T)
 
@@ -490,7 +528,7 @@ module Iterator(T)
     ConsTupleIterator(typeof(self), T).new(self)
   end
 
-  private struct ConsTupleIterator(I, T)
+  private class ConsTupleIterator(I, T)
     include Iterator({T, T})
     include IteratorWrapper
 
@@ -532,7 +570,7 @@ module Iterator(T)
     CycleIterator(typeof(self), T).new(self)
   end
 
-  private struct CycleIterator(I, T)
+  private class CycleIterator(I, T)
     include Iterator(T)
     include IteratorWrapper
 
@@ -690,7 +728,7 @@ module Iterator(T)
     FlattenIterator(typeof(FlattenIterator.iterator_type(self)), typeof(FlattenIterator.element_type(self))).new(self)
   end
 
-  private struct FlattenIterator(I, T)
+  private class FlattenIterator(I, T)
     include Iterator(T)
 
     @iterator : I
