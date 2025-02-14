@@ -61,6 +61,49 @@ describe "Base64" do
     assert_prints base64_strict_encode(array), "AQEBAQE="
   end
 
+  context "encoding an IO" do
+    encode_buffer = IO::Memory.new
+    decode_buffer = IO::Memory.new
+
+    before_each do
+      # Clear out each buffer before each spec
+      encode_buffer = IO::Memory.new
+      decode_buffer = IO::Memory.new
+    end
+
+    # Base64 operates on 3-byte segments at a time.
+    {
+      0, # Testing an empty buffer
+      1, # incomplete segment
+      2, # still an incomplete segment
+      3, # 1 complete segment
+      4, # 1 byte over the segment size
+      5, # 2 bytes over the segment size
+      6, # 2 segments
+      7,
+      8190,          # 1 segment below the buffer size
+      8191,          # 2 bytes below the buffer size
+      8192,          # 1 byte belowbuffer size
+      8193,          # encoding buffer size
+      8194,          # 1 byte over the buffer size
+      8195,          # 2 bytes over the buffer size
+      8196,          # 1 segment over the buffer size
+      (1 << 20) - 1, # Just under 1MB
+      (1 << 20),     # 1MB
+      (1 << 20) + 1, # just over 1MB
+      2 << 20,       # 2MB
+    }.each do |bytesize|
+      it "encodes #{bytesize.format} bytes from an IO to another IO" do
+        string = " " * bytesize
+        decode_buffer << string
+
+        Base64.encode decode_buffer.rewind, encode_buffer.rewind
+
+        encode_buffer.to_s.should eq Base64.encode(string)
+      end
+    end
+  end
+
   describe "base" do
     eqs = {"Send reinforcements"                                                    => "U2VuZCByZWluZm9yY2VtZW50cw==\n",
            "Now is the time for all good coders\nto learn Crystal"                  => "Tm93IGlzIHRoZSB0aW1lIGZvciBhbGwgZ29vZCBjb2RlcnMKdG8gbGVhcm4g\nQ3J5c3RhbA==\n",
