@@ -2204,6 +2204,66 @@ describe "Array" do
     end
   end
 
+  describe "#ensure_capacity" do
+    it "does nothing if it fits" do
+      ary = [1, 2, 3]
+      capacity1 = ary.remaining_capacity
+      ary.ensure_capacity(3)
+      ary.should eq([1, 2, 3])
+      ary.remaining_capacity.should eq(capacity1)
+    end
+
+    it "grows the array if it doesn't fit" do
+      ary = [1, 2, 3]
+      ary.ensure_capacity(4).should eq([1, 2, 3])
+      ary.remaining_capacity.should eq(4)
+    end
+
+    it "doesn't rewinds the array" do
+      ary = [1, 2, 3]
+      ary.shift
+      ary.ensure_capacity(3).should eq([2, 3])
+      ary.remaining_capacity.should eq(2)
+    end
+
+    it "does nothing if there's not enough capacity" do
+      ary = [1, 2, 3]
+      ary.ensure_capacity(2).should eq([1, 2, 3])
+      ary.remaining_capacity.should eq(3)
+    end
+  end
+
+  describe "trim_to_size" do
+    it "trims" do
+      a = Array(Int32).new(10)
+      a << 1 << 2 << 3
+      a.trim_to_size.should eq([1, 2, 3])
+      a.remaining_capacity.should eq(3)
+    end
+
+    it "trims with extra capacity" do
+      a = Array(Int32).new(10)
+      a << 1 << 2 << 3
+      a.trim_to_size(extra: 2).should eq([1, 2, 3])
+      a.remaining_capacity.should eq(5)
+    end
+
+    it "rewinds the array" do
+      a = Array(Int32).new(10)
+      a << 1 << 2 << 3
+      a.shift
+      a.trim_to_size.should eq([2, 3])
+      a.remaining_capacity.should eq(2)
+    end
+
+    it "raises on negative extra capacity" do
+      expect_raises(ArgumentError, "Negative extra capacity: -1") do
+        a = [1, 2, 3]
+        a.trim_to_size(extra: -1)
+      end
+    end
+  end
+
   describe "capacity re-sizing" do
     it "initializes an array capacity to INITIAL_CAPACITY" do
       a = [] of Int32

@@ -2115,6 +2115,27 @@ class Array(T)
     @capacity - @offset_to_buffer
   end
 
+  private def rewind
+    root_buffer.copy_from(@buffer, @size)
+    shift_buffer_by -@offset_to_buffer
+  end
+
+  # Ensures that the internal buffer has at least `capacity` elements.
+  def ensure_capacity(capacity : Int32) : self
+    resize_to_capacity capacity if capacity >= @size
+    self
+  end
+
+  # Reduces the internal buffer to exactly fit the number of elements in the
+  # array, plus `extra` elements.
+  def trim_to_size(*, extra : Int32 = 0) : self
+    raise ArgumentError.new("Negative extra capacity: #{extra}") if extra < 0
+
+    rewind
+    resize_to_capacity(@size + extra)
+    self
+  end
+
   # behaves like `calculate_new_capacity(@capacity + 1)`
   private def calculate_new_capacity
     return INITIAL_CAPACITY if @capacity == 0
