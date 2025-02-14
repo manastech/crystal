@@ -24,7 +24,7 @@ set +x
 
 WORK_DIR=$(mktemp -d)
 function cleanup {
-  rm -rf $WORK_DIR
+  rm -rf "$WORK_DIR"
 }
 trap cleanup EXIT
 
@@ -39,8 +39,8 @@ echo
 
 for spec in $(find "spec/std" -type f -iname "*_spec.cr" | LC_ALL=C sort); do
   require="require \"./${spec##spec/}\""
-  target=$WORK_DIR"/"$spec".wasm"
-  mkdir -p $(dirname "$target")
+  target="$WORK_DIR/$spec.wasm"
+  mkdir -p "$(dirname "$target")"
 
   if ! output=$(bin/crystal build "$spec" -o "$target" --target wasm32-wasi 2>&1); then
     if [[ "$output" =~ "execution of command failed" ]]; then

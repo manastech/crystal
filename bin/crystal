@@ -175,7 +175,7 @@ fi
 # CRYSTAL_PATH has all symlinks resolved. In order to avoid issues with duplicate file
 # paths when the working directory is a symlink, we cd into the current directory
 # with symlinks resolved as well (see https://github.com/crystal-lang/crystal/issues/12969).
-cd "$(realpath "$(pwd)")"
+cd "$(realpath "$(pwd)")" || exit
 
 case "$(uname -s)" in
   CYGWIN*|MSYS_NT*|MINGW32_NT*|MINGW64_NT*)

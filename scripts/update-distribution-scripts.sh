@@ -35,14 +35,14 @@ branch="${2:-"ci/update-distribution-scripts"}"
 git switch -C "$branch" master
 
 old_reference=$(sed -n "/distribution-scripts-version:/{n;n;n;p}" .circleci/config.yml | grep -o -P '(?<=default: ")[^"]+')
-echo $old_reference..$reference
+echo "$old_reference".."$reference"
 
 sed -i -E "/distribution-scripts-version:/{n;n;n;s/default: \".*\"/default: \"$reference\"/}" .circleci/config.yml
 
 git add .circleci/config.yml
 
 message="Updates \`distribution-scripts\` dependency to https://github.com/crystal-lang/distribution-scripts/commit/$reference"
-log=$($GIT_DS log $old_reference..$reference --format="%s" | sed "s/.*(/crystal-lang\/distribution-scripts/;s/^/* /;s/)$//")
+log=$($GIT_DS log "$old_reference".."$reference" --format="%s" | sed "s/.*(/crystal-lang\/distribution-scripts/;s/^/* /;s/)$//")
 message=$(printf "%s\n\nThis includes the following changes:\n\n%s" "$message" "$log")
 
 git commit -m "Update distribution-scripts" -m "$message"

@@ -133,6 +133,12 @@ interpreter_spec: $(O)/interpreter_spec$(EXE) ## Run interpreter specs
 smoke_test: ## Build specs as a smoke test
 smoke_test: $(O)/std_spec$(EXE) $(O)/compiler_spec$(EXE) $(O)/$(CRYSTAL_BIN)
 
+SHELLCHECK_SOURCES := $(wildcard **/*.sh) bin/crystal bin/ci bin/check-compiler-flag scripts/git/pre-commit src/llvm/ext/find-llvm-config
+
+.PHONY: lint-shellcheck
+lint-shellcheck:
+	shellcheck --severity=warning $(SHELLCHECK_SOURCES)
+
 .PHONY: all_spec
 all_spec: $(O)/all_spec$(EXE) ## Run all specs (note: this builds a huge program; `test` recipe builds individual binaries and is recommended for reduced resource usage)
 	$(O)/all_spec$(EXE) $(SPEC_FLAGS)

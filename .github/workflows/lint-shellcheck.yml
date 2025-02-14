@@ -1,0 +1,27 @@
+on:
+  push:
+    paths:
+      - '**/*.{sh,bash,fish}'
+      - './bin/*'
+      - './scripts/git/pre-commit'
+      - './src/llvm/ext/find-llvm-config'
+      - '.github/workflows/lint-shellcheck.yml'
+  pull_request:
+    paths:
+      - '**/*.{sh,bash,fish}'
+      - './bin/*'
+      - './scripts/git/pre-commit'
+      - './src/llvm/ext/find-llvm-config'
+      - '.github/workflows/lint-shellcheck.yml'
+
+name: "Lint Shellcheck"
+permissions: {}
+
+jobs:
+  shellcheck:
+    name: Shellcheck
+    runs-on: ubuntu:24.04
+    steps:
+      - run: shellcheck --version
+      - uses: actions/checkout@v4
+      - run: make lint-shellcheck

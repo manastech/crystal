@@ -36,11 +36,11 @@ BUILD_DIR=$SCRIPT_ROOT/../../.build
 crystal=${CRYSTAL_SPEC_COMPILER_BIN:-$SCRIPT_ROOT/../../bin/crystal}
 debugger=${1:-lldb}
 driver=$BUILD_DIR/debug_driver
-mkdir -p $BUILD_DIR
-"$crystal" build $SCRIPT_ROOT/driver.cr -o $driver
+mkdir -p "$BUILD_DIR"
+"$crystal" build "$SCRIPT_ROOT"/driver.cr -o "$driver"
 
-$driver $SCRIPT_ROOT/top_level.cr $debugger
-$driver $SCRIPT_ROOT/strings.cr $debugger
-$driver $SCRIPT_ROOT/arrays.cr $debugger
-$driver $SCRIPT_ROOT/blocks.cr $debugger
-$driver $SCRIPT_ROOT/large_enums.cr $debugger
+$driver "$SCRIPT_ROOT"/top_level.cr "$debugger"
+$driver "$SCRIPT_ROOT"/strings.cr "$debugger"
+$driver "$SCRIPT_ROOT"/arrays.cr "$debugger"
+$driver "$SCRIPT_ROOT"/blocks.cr "$debugger"
+$driver "$SCRIPT_ROOT"/large_enums.cr "$debugger"

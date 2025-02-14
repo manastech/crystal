@@ -44,13 +44,13 @@ sed -i -E "s|crystal: \"[0-9.]+\"|crystal: \"$CRYSTAL_VERSION\"|g" .github/workf
 
 # Edit shell.nix latestCrystalBinary using nix-prefetch-url --unpack <url>
 darwin_url="https://github.com/crystal-lang/crystal/releases/download/$CRYSTAL_VERSION/crystal-$CRYSTAL_VERSION-1-darwin-universal.tar.gz"
-darwin_sha=$(nix-prefetch-url --unpack $darwin_url)
+darwin_sha=$(nix-prefetch-url --unpack "$darwin_url")
 
 sed -i -E "s|https://github.com/crystal-lang/crystal/releases/download/[0-9.]+/crystal-[0-9.]+-[0-9]-darwin-universal.tar.gz|$darwin_url|" shell.nix
 sed -i -E "/darwin-universal\.tar\.gz/ {n;s|sha256:[^\"]+|sha256:$darwin_sha|}" shell.nix
 
 linux_url="https://github.com/crystal-lang/crystal/releases/download/$CRYSTAL_VERSION/crystal-$CRYSTAL_VERSION-1-linux-x86_64.tar.gz"
-linux_sha=$(nix-prefetch-url --unpack $linux_url)
+linux_sha=$(nix-prefetch-url --unpack "$linux_url")
 
 sed -i -E "s|https://github.com/crystal-lang/crystal/releases/download/[0-9.]+/crystal-[0-9.]+-[0-9]-linux-x86_64.tar.gz|$linux_url|" shell.nix
 sed -i -E "/linux-x86_64\.tar\.gz/ {n;s|sha256:[^\"]+|sha256:$linux_sha|}" shell.nix

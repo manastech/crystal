@@ -22,7 +22,9 @@ changed_cr_files=$(git diff --cached --name-only --diff-filter=ACM | grep '\.cr$
 
 if [ -x bin/crystal ]; then
   # use bin/crystal wrapper when available to run local compiler build
+  # shellcheck disable=SC2086
   exec bin/crystal tool format --check $changed_cr_files >&2
 else
+  # shellcheck disable=SC2086
   exec crystal tool format --check $changed_cr_files >&2
 fi
