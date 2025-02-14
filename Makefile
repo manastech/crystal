@@ -80,9 +80,9 @@ CRYSTAL_BIN := crystal$(EXE)
 DESTDIR ?=
 PREFIX ?= /usr/local
 BINDIR ?= $(PREFIX)/bin
-MANDIR ?= $(PREFIX)/share/man
+MANDIR ?= $(DATADIR)/man
 LIBDIR ?= $(PREFIX)/lib
-DATADIR ?= $(PREFIX)/share/crystal
+DATADIR ?= $(PREFIX)/share
 INSTALL ?= /usr/bin/install
 
 ifeq ($(or $(TERM),$(TERM),dumb),dumb)
@@ -167,21 +167,21 @@ install: $(O)/$(CRYSTAL_BIN) man/crystal.1.gz ## Install the compiler at DESTDIR
 	$(INSTALL) -d -m 0755 "$(DESTDIR)$(BINDIR)/"
 	$(INSTALL) -m 0755 "$(O)/$(CRYSTAL_BIN)" "$(DESTDIR)$(BINDIR)/$(CRYSTAL_BIN)"
 
-	$(INSTALL) -d -m 0755 $(DESTDIR)$(DATADIR)
-	cp -R -p $(if $(deref_symlinks),-L,-P) src "$(DESTDIR)$(DATADIR)/src"
-	rm -rf "$(DESTDIR)$(DATADIR)/$(LLVM_EXT_OBJ)" # Don't install llvm_ext.o
+	$(INSTALL) -d -m 0755 $(DESTDIR)$(DATADIR)/crystal
+	cp -R -p $(if $(deref_symlinks),-L,-P) src "$(DESTDIR)$(DATADIR)/crystal/src"
+	rm -rf "$(DESTDIR)$(DATADIR)/crystal/$(LLVM_EXT_OBJ)" # Don't install llvm_ext.o
 
 	$(INSTALL) -d -m 0755 "$(DESTDIR)$(MANDIR)/man1/"
 	$(INSTALL) -m 644 man/crystal.1.gz "$(DESTDIR)$(MANDIR)/man1/crystal.1.gz"
-	$(INSTALL) -d -m 0755 "$(DESTDIR)$(PREFIX)/share/licenses/crystal/"
-	$(INSTALL) -m 644 LICENSE "$(DESTDIR)$(PREFIX)/share/licenses/crystal/LICENSE"
+	$(INSTALL) -d -m 0755 "$(DESTDIR)$(DATADIR)/licenses/crystal/"
+	$(INSTALL) -m 644 LICENSE "$(DESTDIR)$(DATADIR)/licenses/crystal/LICENSE"
 
-	$(INSTALL) -d -m 0755 "$(DESTDIR)$(PREFIX)/share/bash-completion/completions/"
-	$(INSTALL) -m 644 etc/completion.bash "$(DESTDIR)$(PREFIX)/share/bash-completion/completions/crystal"
-	$(INSTALL) -d -m 0755 "$(DESTDIR)$(PREFIX)/share/zsh/site-functions/"
-	$(INSTALL) -m 644 etc/completion.zsh "$(DESTDIR)$(PREFIX)/share/zsh/site-functions/_crystal"
-	$(INSTALL) -d -m 0755 "$(DESTDIR)$(PREFIX)/share/fish/vendor_completions.d/"
-	$(INSTALL) -m 644 etc/completion.fish "$(DESTDIR)$(PREFIX)/share/fish/vendor_completions.d/crystal.fish"
+	$(INSTALL) -d -m 0755 "$(DESTDIR)$(DATADIR)/bash-completion/completions/"
+	$(INSTALL) -m 644 etc/completion.bash "$(DESTDIR)$(DATADIR)/bash-completion/completions/crystal"
+	$(INSTALL) -d -m 0755 "$(DESTDIR)$(DATADIR)/zsh/site-functions/"
+	$(INSTALL) -m 644 etc/completion.zsh "$(DESTDIR)$(DATADIR)/zsh/site-functions/_crystal"
+	$(INSTALL) -d -m 0755 "$(DESTDIR)$(DATADIR)/fish/vendor_completions.d/"
+	$(INSTALL) -m 644 etc/completion.fish "$(DESTDIR)$(DATADIR)/fish/vendor_completions.d/crystal.fish"
 
 ifeq ($(WINDOWS),1)
 .PHONY: install_dlls
@@ -194,14 +194,14 @@ endif
 uninstall: ## Uninstall the compiler from DESTDIR
 	rm -f "$(DESTDIR)$(BINDIR)/$(CRYSTAL_BIN)"
 
-	rm -rf "$(DESTDIR)$(DATADIR)/src"
+	rm -rf "$(DESTDIR)$(DATADIR)/crystal/src"
 
 	rm -f "$(DESTDIR)$(MANDIR)/man1/crystal.1.gz"
-	rm -f "$(DESTDIR)$(PREFIX)/share/licenses/crystal/LICENSE"
+	rm -f "$(DESTDIR)$(DATADIR)/licenses/crystal/LICENSE"
 
-	rm -f "$(DESTDIR)$(PREFIX)/share/bash-completion/completions/crystal"
-	rm -f "$(DESTDIR)$(PREFIX)/share/zsh/site-functions/_crystal"
-	rm -f "$(DESTDIR)$(PREFIX)/share/fish/vendor_completions.d/crystal.fish"
+	rm -f "$(DESTDIR)$(DATADIR)/bash-completion/completions/crystal"
+	rm -f "$(DESTDIR)$(DATADIR)/zsh/site-functions/_crystal"
+	rm -f "$(DESTDIR)$(DATADIR)/fish/vendor_completions.d/crystal.fish"
 
 .PHONY: install_docs
 install_docs: docs ## Install docs at DESTDIR
