@@ -99,7 +99,9 @@ class URI
   getter host : String?
 
   # Sets the host component of the URI.
-  setter host : String?
+  def host=(@host : String?)
+    validate_path
+  end
 
   # Returns the port component of the URI.
   #
@@ -111,7 +113,9 @@ class URI
   getter port : Int32?
 
   # Sets the port component of the URI.
-  setter port : Int32?
+  def port=(@port : Int32?)
+    validate_path
+  end
 
   # Returns the path component of the URI.
   #
@@ -123,7 +127,9 @@ class URI
   getter path : String
 
   # Sets the path component of the URI.
-  setter path : String
+  def path=(@path : String)
+    validate_path
+  end
 
   # Returns the query component of the URI.
   #
@@ -177,6 +183,23 @@ class URI
 
   def initialize(@scheme = nil, @host = nil, @port = nil, @path = "", query : String | Params | Nil = nil, @user = nil, @password = nil, @fragment = nil)
     @query = query.try(&.to_s)
+    validate_path
+  end
+
+  private def validate_path
+    if has_authority?
+      unless path.empty? || path.starts_with?("/")
+        raise ArgumentError.new("Invalid URI component: when there is an authority component, path must start with a slash (`/`) or be empty")
+      end
+    else
+      if path.starts_with?("//")
+        raise ArgumentError.new("Invalid URI component: when there is no authority component, path may not start with a double slash (`//`)")
+      end
+    end
+  end
+
+  private def has_authority?
+    @host || @user || @port
   end
 
   # Returns the host part of the URI and unwrap brackets for IPv6 addresses.
@@ -353,17 +376,9 @@ class URI
       io << ':'
     end
 
-    has_authority = @host || @user || @port
-    io << "//" if has_authority
+    io << "//" if has_authority?
     authority(io)
 
-    if has_authority
-      if !@path.empty? && !@path.starts_with?('/')
-        io << '/'
-      end
-    elsif @path.starts_with?("//")
-      io << "/."
-    end
     io << @path
 
     if query
@@ -435,10 +450,6 @@ class URI
     target.scheme = scheme
 
     unless target.host || target.user
-      target.host = host
-      target.port = port
-      target.user = user
-      target.password = password
       if target.path.empty?
         target.path = remove_dot_segments(path)
         target.query ||= query
@@ -449,6 +460,10 @@ class URI
         end
         target.path = resolve_path(target.path, base: base)
       end
+      target.host = host
+      target.port = port
+      target.user = user
+      target.password = password
     end
 
     target

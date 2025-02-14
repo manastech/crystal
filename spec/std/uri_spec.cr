@@ -168,7 +168,7 @@ describe "URI" do
 
   describe "#hostname" do
     it { URI.new("http", "www.example.com", path: "/foo").hostname.should eq("www.example.com") }
-    it { URI.new("http", "[::1]", path: "foo").hostname.should eq("::1") }
+    it { URI.new("http", "[::1]", path: "/foo").hostname.should eq("::1") }
     it { URI.new(path: "/foo").hostname.should be_nil }
   end
 
@@ -196,7 +196,7 @@ describe "URI" do
     it { URI.new(scheme: "scheme", path: "opaque").request_target.should eq "opaque" }
     it { URI.new(scheme: "scheme", query: "foo=bar&foo=baz").request_target.should eq "?foo=bar&foo=baz" }
 
-    it { URI.new(path: "//foo").request_target.should eq("//foo") }
+    it { URI.new(path: "/.//foo").request_target.should eq("/.//foo") }
     it { URI.new(path: "/foo", query: "q=1").request_target.should eq("/foo?q=1") }
     it { URI.new(path: "/", query: "q=1").request_target.should eq("/?q=1") }
     it { URI.new(query: "q=1").request_target.should eq("/?q=1") }
@@ -308,8 +308,8 @@ describe "URI" do
     it { assert_prints URI.new("mailto", path: "foo@example.com").to_s, "mailto:foo@example.com" }
     it { assert_prints URI.new("file", path: "/foo.html").to_s, "file:/foo.html" }
     it { assert_prints URI.new("file", path: "foo.html").to_s, "file:foo.html" }
-    it { assert_prints URI.new("file", host: "host", path: "foo.html").to_s, "file://host/foo.html" }
-    it { assert_prints URI.new(path: "//foo").to_s, "/.//foo" }
+    it { assert_prints URI.new("file", host: "host", path: "/foo.html").to_s, "file://host/foo.html" }
+    it { assert_prints URI.new(path: "/.//foo").to_s, "/.//foo" }
     it { assert_prints URI.new(host: "host", path: "//foo").to_s, "//host//foo" }
 
     it "preserves non-default port" do
