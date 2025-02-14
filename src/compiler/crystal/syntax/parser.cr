@@ -2084,7 +2084,7 @@ module Crystal
       pieces = [] of Piece
       has_interpolation = false
 
-      delimiter_state, has_interpolation, options, token_end_location = consume_delimiter pieces, delimiter_state, has_interpolation
+      delimiter_state, has_interpolation, options, end_location = consume_delimiter pieces, delimiter_state, has_interpolation
 
       if want_skip_space && delimiter_state.kind.string?
         while true
@@ -2094,7 +2094,7 @@ module Crystal
           if passed_backslash_newline && @token.type.delimiter_start? && @token.delimiter_state.kind.string?
             next_string_token(delimiter_state)
             delimiter_state = @token.delimiter_state
-            delimiter_state, has_interpolation, options, token_end_location = consume_delimiter pieces, delimiter_state, has_interpolation
+            delimiter_state, has_interpolation, options, end_location = consume_delimiter pieces, delimiter_state, has_interpolation
           else
             break
           end
@@ -2122,7 +2122,7 @@ module Crystal
         # no special treatment
       end
 
-      result.end_location = token_end_location
+      result.end_location = end_location
 
       result
     end
@@ -2149,7 +2149,7 @@ module Crystal
 
     def consume_delimiter(pieces, delimiter_state, has_interpolation)
       options = Regex::CompileOptions::None
-      token_end_location = nil
+      end_location = nil
       while true
         case @token.type
         when .string?
@@ -2161,7 +2161,7 @@ module Crystal
           if delimiter_state.kind.regex?
             options = consume_regex_options
           end
-          token_end_location = token_end_location()
+          end_location = token_end_location
           next_token
           break
         when .eof?
@@ -2204,7 +2204,7 @@ module Crystal
         end
       end
 
-      {delimiter_state, has_interpolation, options, token_end_location}
+      {delimiter_state, has_interpolation, options, end_location}
     end
 
     def consume_regex_options
@@ -2246,19 +2246,19 @@ module Crystal
       pieces = [] of Piece
       has_interpolation = false
 
-      delimiter_state, has_interpolation, options, token_end_location = consume_delimiter pieces, delimiter_state, has_interpolation
+      delimiter_state, has_interpolation, options, end_location = consume_delimiter pieces, delimiter_state, has_interpolation
 
       if has_interpolation
         pieces = combine_interpolation_pieces(pieces, delimiter_state)
         node.expressions.concat(pieces)
       else
         string = combine_pieces(pieces, delimiter_state)
-        node.expressions.push(StringLiteral.new(string).at(node).at_end(token_end_location))
+        node.expressions.push(StringLiteral.new(string).at(node).at_end(end_location))
       end
 
       node.heredoc_indent = delimiter_state.heredoc_indent
 
-      node.end_location = token_end_location
+      node.end_location = end_location
     end
 
     def needs_heredoc_indent_removed?(delimiter_state)
@@ -2844,9 +2844,11 @@ module Crystal
           a_else = parse_expressions
           skip_statement_end
           check_ident :end
+          end_location = token_end_location
           next_token
           break
         when Keyword::END
+          end_location = token_end_location
           next_token
           break
         else
@@ -2854,7 +2856,7 @@ module Crystal
         end
       end
 
-      Case.new(cond, whens, a_else, exhaustive.nil? ? false : exhaustive)
+      Case.new(cond, whens, a_else, exhaustive.nil? ? false : exhaustive).at_end(end_location)
     end
 
     def check_valid_exhaustive_expression(exp)
@@ -2999,12 +3001,14 @@ module Crystal
           a_else = parse_expressions
           skip_statement_end
           check_ident :end
+          end_location = token_end_location
           next_token
           break
         when Keyword::END
           if whens.empty?
             unexpected_token "expecting when, else or end"
           end
+          end_location = token_end_location
           next_token
           break
         else
@@ -3012,7 +3016,7 @@ module Crystal
         end
       end
 
-      Select.new(whens, a_else)
+      Select.new(whens, a_else).at_end(end_location)
     end
 
     def valid_select_when?(node)
@@ -5498,9 +5502,11 @@ module Crystal
 
       check :OP_RPAREN
 
+      end_location = token_end_location
+
       next_token_skip_space
 
-      Asm.new(text, outputs, inputs, clobbers, volatile, alignstack, intel, can_throw)
+      Asm.new(text, outputs, inputs, clobbers, volatile, alignstack, intel, can_throw).at_end(end_location)
     end
 
     def parse_asm_operands

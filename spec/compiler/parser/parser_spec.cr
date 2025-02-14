@@ -40,8 +40,8 @@ private def node_source(string, node)
   source_between(string, node.location, node.end_location)
 end
 
-private def assert_end_location(source, line_number = 1, column_number = source.size, file = __FILE__, line = __LINE__)
-  it "gets corrects end location for #{source.inspect}", file, line do
+private def assert_end_location(source, line_number = 1, column_number = source.size, file = __FILE__, line = __LINE__, *, focus : Bool = false)
+  it "gets corrects end location for #{source.inspect}", file, line, focus: focus do
     string = "#{source}; 1"
     parser = Parser.new(string)
     node = parser.parse.as(Expressions).expressions[0]
@@ -2371,6 +2371,9 @@ module Crystal
       assert_end_location "1 rescue 2"
       assert_end_location "1 ensure 2"
       assert_end_location "foo.bar= *baz"
+      assert_end_location "case :foo; when :bar; 2; end"
+      assert_end_location %(asm("nop" ::))
+      assert_end_location "select; when foo; 2; end"
 
       assert_syntax_error %({"a" : 1}), "space not allowed between named argument name and ':'"
       assert_syntax_error %({"a": 1, "b" : 2}), "space not allowed between named argument name and ':'"
