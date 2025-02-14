@@ -4,6 +4,10 @@
 struct SemanticVersion
   include Comparable(self)
 
+  VERSION_PATTERN = /^(0|[1-9]\d*)\.(0|[1-9]\d*)\.(0|[1-9]\d*)
+                      (?:-((?:0|[1-9]\d*|\d*[a-zA-Z-][0-9a-zA-Z-]*)(?:\.(?:0|[1-9]\d*|\d*[a-zA-Z-][0-9a-zA-Z-]*))*))?
+                      (?:\+([0-9a-zA-Z-]+(?:\.[0-9a-zA-Z-]+)*))?$/x
+
   # The major version of this semantic version
   getter major : Int32
 
@@ -19,7 +23,18 @@ struct SemanticVersion
   # The pre-release version of this semantic version
   getter prerelease : Prerelease
 
-  # Parses a `SemanticVersion` from the given semantic version string
+  # Checks if *str* is a valid semantic version.
+  #
+  # ```
+  # require "semantic_version"
+  #
+  # SemanticVersion.valid?("1.15.0") # => true
+  # SemanticVersion.valid?("1.2")    # => false
+  def self.valid?(str : String) : Bool
+    VERSION_PATTERN.matches?(str)
+  end
+
+  # Parses a `SemanticVersion` from the given semantic version string.
   #
   # ```
   # require "semantic_version"
@@ -30,18 +45,23 @@ struct SemanticVersion
   #
   # Raises `ArgumentError` if *str* is not a semantic version.
   def self.parse(str : String) : self
-    if m = str.match /^(0|[1-9]\d*)\.(0|[1-9]\d*)\.(0|[1-9]\d*)
-                      (?:-((?:0|[1-9]\d*|\d*[a-zA-Z-][0-9a-zA-Z-]*)(?:\.(?:0|[1-9]\d*|\d*[a-zA-Z-][0-9a-zA-Z-]*))*))?
-                      (?:\+([0-9a-zA-Z-]+(?:\.[0-9a-zA-Z-]+)*))?$/x
-      major = m[1].to_i
-      minor = m[2].to_i
-      patch = m[3].to_i
-      prerelease = m[4]?
-      build = m[5]?
-      new major, minor, patch, prerelease, build
-    else
-      raise ArgumentError.new("Not a semantic version: #{str.inspect}")
-    end
+    parse?(str) || raise ArgumentError.new("Not a semantic version: #{str.inspect}")
+  end
+
+  # Parses a `SemanticVersion` from the given semantic version string.
+  #
+  # ```
+  # require "semantic_version"
+  #
+  # semver = SemanticVersion.parse?("2.61.4")
+  # semver # => #<SemanticVersion:0x55b3667c9e70 @major=2, @minor=61, @patch=4, ... >
+  # ```
+  #
+  # Returns `nil` if *str* is not a semantic version.
+  def self.parse?(str : String) : self?
+    return unless m = str.match VERSION_PATTERN
+
+    new m[1].to_i, m[2].to_i, m[3].to_i, m[4]?, m[5]?
   end
 
   # Creates a new `SemanticVersion` instance with the given major, minor, and patch versions
