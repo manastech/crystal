@@ -2841,6 +2841,146 @@ module Crystal
         location.line_number.should eq 8
       end
 
+      it "sets correct location for output macro expression in for loop" do
+        parser = Parser.new(<<-CR)
+          {% for foo in bar %}
+            {{ if true
+                 foo
+                 bar
+               end }}
+          {% end %}
+        CR
+
+        node = parser.parse.should be_a MacroFor
+        node = node.body.should be_a Expressions
+
+        node = node.expressions[1].should be_a MacroExpression
+
+        location = node.location.should_not be_nil
+        location.line_number.should eq 2
+        location = node.end_location.should_not be_nil
+        location.line_number.should eq 5
+
+        node = node.exp.should be_a If
+
+        location = node.location.should_not be_nil
+        location.line_number.should eq 2
+        location = node.end_location.should_not be_nil
+        location.line_number.should eq 5
+      end
+
+      it "sets correct location for single node within another node" do
+        parser = Parser.new(<<-CR)
+          macro finished
+            {% verbatim do %}
+              {%
+
+                a = 1 %}
+            {% end %}
+          end
+        CR
+
+        node = parser.parse.should be_a Macro
+        node = node.body.should be_a Expressions
+        node = node.expressions[1].should be_a MacroVerbatim
+        node = node.exp.should be_a Expressions
+        node = node.expressions[1].should be_a MacroExpression
+
+        location = node.location.should_not be_nil
+        location.line_number.should eq 3
+        location = node.end_location.should_not be_nil
+        location.line_number.should eq 5
+
+        assign = node.exp.should be_a Assign
+
+        location = assign.location.should_not be_nil
+        location.line_number.should eq 5
+        location = assign.end_location.should_not be_nil
+        location.line_number.should eq 5
+
+        target = assign.target.should be_a Var
+
+        location = target.location.should_not be_nil
+        location.line_number.should eq 5
+        location = target.end_location.should_not be_nil
+        location.line_number.should eq 5
+
+        value = assign.value.should be_a NumberLiteral
+
+        location = value.location.should_not be_nil
+        location.line_number.should eq 5
+        location = value.end_location.should_not be_nil
+        location.line_number.should eq 5
+      end
+
+      it "sets correct location for multiple nodes within another node" do
+        parser = Parser.new(<<-CR)
+          macro finished
+            {% verbatim do %}
+              {%
+
+
+                a = 1
+                b = 2 %}
+            {% end %}
+          end
+        CR
+
+        node = parser.parse.should be_a Macro
+        node = node.body.should be_a Expressions
+        node = node.expressions[1].should be_a MacroVerbatim
+        node = node.exp.should be_a Expressions
+        node = node.expressions[1].should be_a MacroExpression
+
+        location = node.location.should_not be_nil
+        location.line_number.should eq 3
+        location = node.end_location.should_not be_nil
+        location.line_number.should eq 7
+
+        node = node.exp.should be_a Expressions
+        assign = node.expressions[0].should be_a Assign
+
+        location = assign.location.should_not be_nil
+        location.line_number.should eq 6
+        location = assign.end_location.should_not be_nil
+        location.line_number.should eq 6
+
+        target = assign.target.should be_a Var
+
+        location = target.location.should_not be_nil
+        location.line_number.should eq 6
+        location = target.end_location.should_not be_nil
+        location.line_number.should eq 6
+
+        value = assign.value.should be_a NumberLiteral
+
+        location = value.location.should_not be_nil
+        location.line_number.should eq 6
+        location = value.end_location.should_not be_nil
+        location.line_number.should eq 6
+
+        assign = node.expressions[1].should be_a Assign
+
+        location = assign.location.should_not be_nil
+        location.line_number.should eq 7
+        location = assign.end_location.should_not be_nil
+        location.line_number.should eq 7
+
+        target = assign.target.should be_a Var
+
+        location = target.location.should_not be_nil
+        location.line_number.should eq 7
+        location = target.end_location.should_not be_nil
+        location.line_number.should eq 7
+
+        value = assign.value.should be_a NumberLiteral
+
+        location = value.location.should_not be_nil
+        location.line_number.should eq 7
+        location = value.end_location.should_not be_nil
+        location.line_number.should eq 7
+      end
+
       it "sets correct location of trailing ensure" do
         parser = Parser.new("foo ensure bar")
         node = parser.parse.as(ExceptionHandler)

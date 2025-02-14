@@ -17,6 +17,7 @@ module Crystal
     @str : IO
     @macro_expansion_pragmas : Hash(Int32, Array(Lexer::LocPragma))?
     @current_arg_type : DefArgType = :none
+    @write_trailing_newline : Bool = true
 
     # Inside a comma-separated list of parameters or args, this becomes true and
     # the outermost pair of parentheses are removed from type restrictions that
@@ -53,6 +54,21 @@ module Crystal
       end
 
       true
+    end
+
+    private def write_extra_newlines(first_node_location : Location?, second_node_location : Location?, &) : Nil
+      # If any location information is missing, don't add any extra newlines.
+      if !first_node_location || !second_node_location
+        yield
+        return
+      end
+
+      # Only write the "extra" newlines. I.e. If there are more than one. The first newline is handled directly via the Expressions visitor.
+      ((second_node_location.line_number - 1) - first_node_location.line_number).times do
+        newline
+      end
+
+      yield
     end
 
     def visit(node : Nop)
@@ -221,11 +237,22 @@ module Crystal
       if @inside_macro > 0
         node.expressions.each &.accept self
       else
+        last_node = nil
+
         node.expressions.each_with_index do |exp, i|
           unless exp.nop?
-            append_indent unless node.keyword.paren? && i == 0
-            exp.accept self
-            newline unless node.keyword.paren? && i == node.expressions.size - 1
+            self.write_extra_newlines((last_node || exp).end_location, exp.location) do
+              append_indent unless node.keyword.paren? && i == 0
+              exp.accept self
+
+              if !@write_trailing_newline && i == node.expressions.size - 1
+                # no-op
+              else
+                newline unless node.keyword.paren? && i == node.expressions.size - 1
+              end
+            end
+
+            last_node = exp
           end
         end
       end
@@ -717,8 +744,10 @@ module Crystal
       end
       newline
 
-      inside_macro do
-        accept node.body
+      with_indent do
+        inside_macro do
+          accept node.body
+        end
       end
 
       # newline
@@ -728,13 +757,47 @@ module Crystal
     end
 
     def visit(node : MacroExpression)
-      @str << (node.output? ? "{{" : "{% ")
-      @str << ' ' if node.output?
-      outside_macro do
-        node.exp.accept self
+      # A node starts multiline when its starting location (`{{` or `{%`) is on a different line than the start of its expression
+      start_multiline = (start_loc = node.location) && (end_loc = node.exp.location) && end_loc.line_number > start_loc.line_number
+
+      # and similarly ends multiline if its expression end location is on a different line than its end location (`}}` or `%}`)
+      end_multiline = (body_end_loc = node.exp.end_location) && (end_loc = node.end_location) && end_loc.line_number > body_end_loc.line_number
+
+      @str << (node.output? ? "{{ " : start_multiline ? "{%" : "{% ")
+
+      if start_multiline
+        newline
+        @indent += 1
       end
-      @str << ' ' if node.output?
-      @str << (node.output? ? "}}" : " %}")
+
+      outside_macro do
+        self.write_extra_newlines(node.location, node.exp.location) do
+          # If the MacroExpression consists of a single node we need to manually handle appending indent and trailing newline if *start_multiline*
+          # Otherwise, the Expressions logic handles that for us
+          if start_multiline && !node.exp.is_a?(Expressions)
+            append_indent
+          end
+
+          # Only skip writing trailing newlines when the macro expressions' expression is not an Expressions.
+          # This allow Expressions that may be nested deeper in the AST to include trailing newlines.
+          @write_trailing_newline = !node.exp.is_a?(Expressions)
+          node.exp.accept self
+          @write_trailing_newline = true
+        end
+      end
+
+      self.write_extra_newlines(node.exp.end_location, node.end_location) { }
+
+      # After writing the expression body, de-indent if things were originally multiline.
+      # This ensures the ending control has the proper indent relative to the start.
+      @indent -= 1 if start_multiline
+
+      if end_multiline
+        newline
+        append_indent
+      end
+
+      @str << (node.output? ? " }}" : end_multiline ? "%}" : " %}")
       false
     end
 
@@ -790,9 +853,13 @@ module Crystal
 
     def visit(node : MacroVerbatim)
       @str << "{% verbatim do %}"
-      inside_macro do
-        node.exp.accept self
+
+      with_indent do
+        inside_macro do
+          node.exp.accept self
+        end
       end
+
       @str << "{% end %}"
       false
     end

@@ -78,7 +78,9 @@ describe "Semantic: restrictions augmenter" do
           class Baz
           end
         end
+
         @x : Bar::Baz
+
         def initialize(value : ::Foo::Bar::Baz)
           @x = value
         end
@@ -110,7 +112,9 @@ describe "Semantic: restrictions augmenter" do
           class Baz
           end
         end
+
         @x : Bar::Baz
+
         def initialize(value : Bar::Baz)
           @x = value
         end
@@ -400,8 +404,10 @@ describe "Semantic: restrictions augmenter" do
       macro foo
         {{ yield }}
       end
+
       class Foo
       end
+
       class Bar
         @x : Foo
         def initialize(value : ::Foo)

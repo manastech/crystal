@@ -1,7 +1,7 @@
 require "../../support/syntax"
 
-private def expect_to_s(original, expected = original, emit_doc = false, file = __FILE__, line = __LINE__)
-  it "does to_s of #{original.inspect}", file, line do
+private def expect_to_s(original, expected = original, emit_doc = false, file = __FILE__, line = __LINE__, focus = false)
+  it "does to_s of #{original.inspect}", file, line, focus: focus do
     str = IO::Memory.new expected.bytesize
 
     source = original
@@ -246,8 +246,194 @@ describe "ASTNode#to_s" do
   expect_to_s "1.+(&block)"
   expect_to_s "1.//(2, a: 3)"
   expect_to_s "1.//(2, &block)"
-  expect_to_s %({% verbatim do %}\n  1{{ 2 }}\n  3{{ 4 }}\n{% end %})
-  expect_to_s %({% for foo in bar %}\n  {{ if true\n  foo\n  bar\nend }}\n{% end %})
+  expect_to_s <<-'CR'
+    {% verbatim do %}
+      1{{ 2 }}
+      3{{ 4 }}
+    {% end %}
+    CR
+
+  expect_to_s <<-'CR', <<-'CR'
+    {% for foo in bar %}
+      {{ if true
+           foo
+           bar
+         end }}
+    {% end %}
+    CR
+    {% for foo in bar %}
+      {{ if true
+      foo
+      bar
+    end }}
+    {% end %}
+    CR
+
+  expect_to_s "{% a = 1 %}"
+  expect_to_s "{{ a = 1 }}"
+  expect_to_s "{%\n  1\n  2\n  3\n%}"
+  expect_to_s "{%\n  1\n%}"
+  expect_to_s "{%\n  2 + 2\n%}"
+  expect_to_s "{%\n  a = 1 %}"
+  expect_to_s "{% a = 1\n%}"
+
+  expect_to_s <<-'CR', <<-'CR'
+    macro finished
+      {% verbatim do %}
+        {%
+          10
+
+          # Foo
+
+          20
+        %}
+      {% end %}
+    end
+    CR
+    macro finished
+      {% verbatim do %}
+        {%
+          10
+
+
+
+          20
+        %}
+      {% end %}
+    end
+    CR
+
+  expect_to_s <<-'CR', <<-'CR'
+    macro finished
+      {% verbatim do %}
+        {%
+          10
+
+          # Foo
+          20
+        %}
+      {% end %}
+    end
+    CR
+    macro finished
+      {% verbatim do %}
+        {%
+          10
+
+
+          20
+        %}
+      {% end %}
+    end
+    CR
+
+  expect_to_s <<-'CR', <<-'CR'
+    macro finished
+      {% verbatim do %}
+        {%
+          10
+
+          # Foo
+
+          20
+          30
+
+          # Bar
+
+          40
+        %}
+        {%
+          50
+          60
+        %}
+      {% end %}
+    end
+    CR
+    macro finished
+      {% verbatim do %}
+        {%
+          10
+
+
+
+          20
+          30
+
+
+
+          40
+        %}
+        {%
+          50
+          60
+        %}
+      {% end %}
+    end
+    CR
+
+  expect_to_s <<-'CR'
+    macro finished
+      {% verbatim do %}
+        {%
+          10
+          20
+        %}
+      {% end %}
+    end
+    CR
+
+  expect_to_s <<-'CR'
+    macro finished
+      {% verbatim do %}
+        {%
+          10
+        %}
+      {% end %}
+    end
+    CR
+
+  expect_to_s <<-'CR'
+    macro finished
+      {% verbatim do %}
+        {%
+
+          a = 1 %}
+      {% end %}
+    end
+    CR
+
+  expect_to_s <<-'CR'
+    macro finished
+      {% verbatim do %}
+        {%
+
+
+          a = 1
+          b = 2 %}
+      {% end %}
+    end
+    CR
+
+  expect_to_s <<-'CR', <<-'CR'
+    macro finished
+      {% verbatim do %}
+        {% a = 1
+           b = 2
+
+        %}
+      {% end %}
+    end
+    CR
+    macro finished
+      {% verbatim do %}
+        {%     a = 1
+        b = 2
+
+        %}
+      {% end %}
+    end
+    CR
+
   expect_to_s %(asm("nop" ::::))
   expect_to_s %(asm("nop" : "a"(1), "b"(2) : "c"(3), "d"(4) : "e", "f" : "volatile", "alignstack", "intel"))
   expect_to_s %(asm("nop" :: "c"(3), "d"(4) ::))

@@ -157,7 +157,7 @@ describe "expand" do
     {% end %}
     CRYSTAL
 
-    assert_expand_simple code, "1\n2\n3\n"
+    assert_expand_simple code, "1\n\n2\n\n3\n"
   end
 
   it "expands macro control {% for %} with cursor inside it" do
@@ -167,7 +167,7 @@ describe "expand" do
     {% end %}
     CRYSTAL
 
-    assert_expand_simple code, "1\n2\n3\n"
+    assert_expand_simple code, "1\n\n2\n\n3\n"
   end
 
   it "expands macro control {% for %} with cursor at end of it" do
@@ -177,7 +177,7 @@ describe "expand" do
     ‸{% end %}
     CRYSTAL
 
-    assert_expand_simple code, "1\n2\n3\n"
+    assert_expand_simple code, "1\n\n2\n\n3\n"
   end
 
   it "expands macro control {% for %} with indent" do
@@ -195,7 +195,7 @@ describe "expand" do
     {% end %}
     CRYSTAL
 
-    assert_expand_simple code, original: original, expanded: "1\n2\n3\n"
+    assert_expand_simple code, original: original, expanded: "1\n\n2\n\n3\n"
   end
 
   it "expands simple macro" do
@@ -258,7 +258,7 @@ describe "expand" do
     ‸foo
     CRYSTAL
 
-    assert_expand_simple code, original: "foo", expanded: %("if true"\n"1"\n"2"\n"3"\n)
+    assert_expand_simple code, original: "foo", expanded: %("if true"\n\n\n"1"\n\n"2"\n\n"3"\n)
   end
 
   it "expands macros with 2 level" do
@@ -615,6 +615,7 @@ describe "expand" do
     def hello_str
       "hello"
     end
+
     # symbol of hello
     def hello_sym
       :hello
