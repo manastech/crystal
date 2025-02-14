@@ -788,4 +788,55 @@ describe "OptionParser" do
     bar.should be_false
     args.should eq(%w(file --bar))
   end
+
+  describe "boolean args" do
+    describe "only-negative options" do
+      context "when chosen" do
+        it "should accept a negative option as a value of 'false'" do
+          flag = true
+          args = %w(--no-verbose)
+          OptionParser.parse(args) do |opts|
+            opts.on("--no-verbose", "Turn off verbose") do
+              flag = false
+            end
+          end
+          flag.should eq(false)
+        end
+      end
+      context "when not chosen" do
+        it "should produce a value of 'true' (the default)" do
+          flag = true
+          args = [] of String
+          OptionParser.parse(args) do |opts|
+            opts.on("--no-verbose", "Turn off verbose") do
+              flag = false
+            end
+          end
+          flag.should eq(true)
+        end
+      end
+    end
+    describe "both-forms boolean" do
+      it "should be true when chosen" do
+        flag = nil
+        args = %w(--verbose)
+        OptionParser.parse(args) do |opts|
+          opts.bool("--[no-]verbose", "Run verbosely") do |v|
+            flag = v
+          end
+        end
+        flag.should eq(true)
+      end
+      it "should be true when chosen" do
+        flag = nil
+        args = %w(--no-verbose)
+        OptionParser.parse(args) do |opts|
+          opts.bool("--[no-]verbose", "Run verbosely") do |v|
+            flag = v
+          end
+        end
+        flag.should eq(false)
+      end
+    end
+  end
 end

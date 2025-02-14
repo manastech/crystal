@@ -101,12 +101,17 @@ class OptionParser
     Required
     Optional
     None
+    Boolean
   end
 
   # :nodoc:
   record Handler,
     value_type : FlagValue,
     block : String ->
+
+  record BoolHandler,
+    value_type : FlagValue,
+    block : Bool ->
 
   # Creates a new parser, with its configuration specified in the block,
   # and uses it to parse the passed *args* (defaults to `ARGV`).
@@ -124,7 +129,7 @@ class OptionParser
   # Refer to `#gnu_optional_args?` for the behaviour of the named parameter.
   def initialize(*, @gnu_optional_args : Bool = false)
     @flags = [] of String
-    @handlers = Hash(String, Handler).new
+    @handlers = Hash(String, (Handler | BoolHandler)).new
     @stop = false
     @missing_option = ->(option : String) { raise MissingOption.new(option) }
     @invalid_option = ->(option : String) { raise InvalidOption.new(option) }
@@ -203,6 +208,7 @@ class OptionParser
   # * `-a`, `-B`
   # * `--something-longer`
   # * `-f FILE`, `--file FILE`, `--file=FILE` (these will yield the passed value to the block as a string)
+  # * --no-verbose
   #
   # Examples of valid subcommands:
   #
@@ -212,6 +218,21 @@ class OptionParser
 
     flag, value_type = parse_flag_definition(flag)
     @handlers[flag] = Handler.new(value_type, block)
+  end
+
+  # Establishes a handler for boolean flags, e.g.
+  # # Choose on or off
+  # OptionParser.parse(args) do |opts|
+  #   opts.bool("--[no-]verbose", "Run verbosely") do |v|
+  #     flag = v
+  #   end
+  # end
+  def bool(flag : String, description : String, &block : Bool ->)
+    append_flag flag, description
+
+    flag, value_type = parse_flag_definition(flag)
+    @handlers["--#{flag}"] = BoolHandler.new(value_type, block)
+    @handlers["--no-#{flag}"] = BoolHandler.new(value_type, block)
   end
 
   # Establishes a handler for a pair of short and long flags.
@@ -240,13 +261,23 @@ class OptionParser
     @handlers[short_flag] = @handlers[long_flag] = handler
   end
 
+  # --no-option
+  # --[no-]option
+  # --option
+  # -o
+  # --option=value
+  # --option value
   private def parse_flag_definition(flag : String)
     case flag
-    when /\A--(\S+)\s+\[\S+\]\z/
+    when /\A--no-    ([^\[\]=\s]*)(.+)?\z/x # e.g. --no-option
+      {"--no-#{$1}", FlagValue::Optional}
+    when /\A--\[no-\]([^\[\]=\s]*)(.+)?\z/x # e.g. --[no-]option # t|f
+      {"#{$1}", FlagValue::Boolean}
+    when /\A--       (\S+)\s+\[\S+\]\z/x # e.g. --b [x]
       {"--#{$1}", FlagValue::Optional}
-    when /\A--(\S+)(\s+|\=)(\S+)?\z/
+    when /\A--       (\S+)(\s+|\=)(\S+)?\z/x # e.g. --file FILE or --file=FILE
       {"--#{$1}", FlagValue::Required}
-    when /\A--\S+\z/
+    when /\A--       \S+\z/x
       # This can't be merged with `else` otherwise /-(.)/ matches
       {flag, FlagValue::None}
     when /\A-(.)\s*\[\S+\]\z/
@@ -434,6 +465,11 @@ class OptionParser
               end
             in FlagValue::None
               # do nothing
+            in FlagValue::Boolean
+              # call the block here and ignore booleans later
+              if handler.is_a?(BoolHandler)
+                handler.block.call !flag.starts_with?("--no-")
+              end
             end
           end
 
@@ -444,7 +480,9 @@ class OptionParser
             @flags.select!(&.starts_with?("    -"))
           end
 
-          handler.block.call(value || "")
+          if handler.is_a?(Handler)
+            handler.block.call(value || "")
+          end
         end
 
         arg_index += 1
