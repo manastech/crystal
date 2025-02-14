@@ -453,10 +453,38 @@ module Crystal
 
     def visit(node : SymbolLiteral)
       check :SYMBOL
-      write @token.raw
+      write normalize_symbols()
       next_token
 
       false
+    end
+
+    def normalize_symbols
+      valid_escape_sequences = ['\\', '"', '\'', '#', 'a', 'b', 'e', 'f', 'n', 'r', 't', 'v', '0']
+      str = @token.raw
+      escape = false
+      index = 0
+
+      while index < str.size
+        if escape && !valid_escape_sequences.includes?(str.char_at(index))
+          str = str.delete_at(index - 1)
+          escape = false
+        elsif escape
+          escape = false
+          index += 1
+        elsif str.char_at(index) == '\\'
+          escape = true
+          index += 1
+        else
+          index += 1
+        end
+      end
+
+      unless Symbol.needs_quotes?(@token.to_s)
+        str.inspect.gsub(/["\\]/, "")
+      else
+        str
+      end
     end
 
     def visit(node : NumberLiteral)
@@ -3661,7 +3689,7 @@ module Crystal
       skip_space_or_newline
       write_token " ", :OP_EQ, " "
       skip_space_or_newline
-      write_keyword :"uninitialized", " "
+      write_keyword :uninitialized, " "
       skip_space_or_newline
       accept node.declared_type
       false
