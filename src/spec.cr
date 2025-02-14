@@ -132,10 +132,15 @@ module Spec
         # TODO(wasm): Enable this once `Process.on_terminate` is implemented
         Process.on_terminate { abort! }
       {% end %}
-
-      run
     end
   end
 end
 
 Spec.cli.main(ARGV)
+
+# The spec suite should run as last thing in the program. This enables other
+# top-level code (for example library configuration) to run before the spec
+# suite starts.
+macro finished
+  Spec.cli.run
+end

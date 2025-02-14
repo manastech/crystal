@@ -209,24 +209,19 @@ module Spec
     def run
       @start_time = Time.monotonic
 
-      at_exit do |status|
-        # Do not run specs if the process is exiting on an error
-        next unless status == 0
-
-        begin
-          if list_tags?
-            execute_list_tags
-          else
-            execute_examples
-          end
-        rescue ex
-          STDERR.print "Unhandled exception: "
-          ex.inspect_with_backtrace(STDERR)
-          STDERR.flush
-          @aborted = true
-        ensure
-          finish_run unless list_tags?
+      begin
+        if list_tags?
+          execute_list_tags
+        else
+          execute_examples
         end
+      rescue ex
+        STDERR.print "Unhandled exception: "
+        ex.inspect_with_backtrace(STDERR)
+        STDERR.flush
+        @aborted = true
+      ensure
+        finish_run unless list_tags?
       end
     end
 
