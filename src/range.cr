@@ -252,6 +252,54 @@ struct Range(B, E)
     {% end %}
   end
 
+  # Returns the union of this range, and another.
+  # Returns `self.begin...self.begin` if there is no overlap.
+  #
+  # ```
+  # (1..5).union(5..10)   # => 1..10
+  # (1...10).union(1..10) # => 1..10
+  # ```
+  def union(other : Range)
+    e_s : E = self.end
+    e_o : E = other.end
+
+    return Range.new(self.begin, self.begin, exclusive: true) if self.end < other.begin && (!e_s.responds_to?(:succ) || e_s.succ != other.begin)
+    return Range.new(self.begin, self.begin, exclusive: true) if other.end < self.begin && (!e_o.responds_to?(:succ) || e_o.succ != self.begin)
+
+    Range.new(
+      Math.min(self.begin, other.begin),
+      Math.max(self.end, other.end),
+      {self, other}.max_by(&.end).excludes_end?
+    )
+  end
+
+  # Returns the intersection of this range, and another.
+  # Returns `self.begin...self.begin` if there is no overlap.
+  #
+  # ```
+  # (2..10).intersection(0..8)   # => 2..8
+  # (1...10).intersection(7..12) # => 7...10
+  # ```
+  def intersection(other : Range)
+    return Range.new(self.begin, self.begin, exclusive: true) if self.end < other.begin || other.end < self.begin
+
+    Range.new(
+      Math.max(self.begin, other.begin),
+      Math.min(self.end, other.end),
+      exclusive: self.excludes_end? || other.excludes_end?,
+    )
+  end
+
+  # Returns `true` if this range overlaps with another range.
+  #
+  # ```
+  # (1..10).overlaps?(5..9)    # => true
+  # (1...10).overlaps?(10..11) # => false
+  # ```
+  def overlaps?(other : Range) : Bool
+    !(self.end <= other.begin || other.end <= self.begin)
+  end
+
   # Returns `true` if this range excludes the *end* element.
   #
   # ```
