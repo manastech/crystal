@@ -608,7 +608,11 @@ end
   Exception::CallStack.load_debug_info if ENV["CRYSTAL_LOAD_DEBUG_INFO"]? == "1"
   Exception::CallStack.setup_crash_handler
 
-  Crystal::Scheduler.init
+  {% if flag?(:execution_context) %}
+    Fiber::ExecutionContext.init_default_context
+  {% else %}
+    Crystal::Scheduler.init
+  {% end %}
 
   {% if flag?(:win32) %}
     Crystal::System::Process.start_interrupt_loop

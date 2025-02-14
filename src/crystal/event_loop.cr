@@ -27,12 +27,20 @@ abstract class Crystal::EventLoop
 
   @[AlwaysInline]
   def self.current : self
-    Crystal::Scheduler.event_loop
+    {% if flag?(:execution_context) %}
+      Fiber::ExecutionContext.current.event_loop
+    {% else %}
+      Crystal::Scheduler.event_loop
+    {% end %}
   end
 
   @[AlwaysInline]
-  def self.current? : self?
-    Crystal::Scheduler.event_loop?
+  def self.current? : self | Nil
+    {% if flag?(:execution_context) %}
+      Fiber::ExecutionContext.current.event_loop
+    {% else %}
+      Crystal::Scheduler.event_loop?
+    {% end %}
   end
 
   # Runs the loop.
@@ -45,6 +53,13 @@ abstract class Crystal::EventLoop
   # events but blocking was false) and `false` when there are no registered
   # events.
   abstract def run(blocking : Bool) : Bool
+
+  {% if flag?(:execution_context) %}
+    # Same as `#run` but collects runnable fibers into *queue* instead of
+    # enqueueing in parallel, so the caller is responsible and in control for
+    # when and how the fibers will be enqueued.
+    abstract def run(queue : Fiber::List*, blocking : Bool) : Nil
+  {% end %}
 
   # Tells a blocking run loop to no longer wait for events to activate. It may
   # for example enqueue a NOOP event with an immediate (or past) timeout. Having
