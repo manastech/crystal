@@ -8,7 +8,7 @@ struct LLVM::Target
   end
 
   def self.first : self
-    first? || raise "No LLVM targets available (did you forget to invoke LLVM.init_x86?)"
+    first? || raise "No LLVM targets available (did you forget to invoke LLVM.init_native_target?)"
   end
 
   def self.first? : self?

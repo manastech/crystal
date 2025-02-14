@@ -100,6 +100,30 @@ module LLVM
     {% end %}
   end
 
+  def self.init_native_target : Nil
+    {% if flag?(:i386) || flag?(:x86_64) %}
+      init_x86
+    {% elsif flag?(:aarch64) %}
+      init_aarch64
+    {% elsif flag?(:arm) %}
+      init_arm
+    {% elsif flag?(:wasm32) %}
+      init_webassembly
+    {% elsif flag?(:avr) %}
+      init_avr
+    {% else %}
+      {% raise "Unsupported platform" %}
+    {% end %}
+  end
+
+  def self.init_all_targets : Nil
+    {% for target in %i(x86 aarch64 arm avr webassembly) %}
+      {% if LibLLVM::BUILT_TARGETS.includes?(target) %}
+        init_{{ target.id }}
+      {% end %}
+    {% end %}
+  end
+
   @[Deprecated("This method has no effect")]
   def self.start_multithreaded : Bool
     if multithreaded?
