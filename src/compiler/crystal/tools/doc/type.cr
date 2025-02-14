@@ -20,6 +20,8 @@ class Crystal::Doc::Type
     case @type
     when Const
       "const"
+    when .extern_union?
+      "union"
     when .struct?
       "struct"
     when .class?, .metaclass?
@@ -35,7 +37,9 @@ class Crystal::Doc::Type
     when AnnotationType
       "annotation"
     when LibType
-      "module"
+      "lib"
+    when TypeDefType
+      "type"
     else
       raise "Unhandled type in `kind`: #{@type}"
     end
@@ -159,6 +163,18 @@ class Crystal::Doc::Type
     @type.is_a?(Const)
   end
 
+  def type_def?
+    @type.is_a?(TypeDefType)
+  end
+
+  def lib?
+    @type.is_a?(LibType)
+  end
+
+  def fun_def?
+    @type.is_a?(FunDef)
+  end
+
   def alias_definition
     alias_def = @type.as?(AliasType).try(&.aliased_type)
     alias_def
@@ -166,6 +182,14 @@ class Crystal::Doc::Type
 
   def formatted_alias_definition
     type_to_html alias_definition.as(Crystal::Type)
+  end
+
+  def type_definition
+    @type.as?(TypeDefType).try(&.typedef)
+  end
+
+  def formatted_type_definition
+    type_to_html type_definition.as(Crystal::Type)
   end
 
   @types : Array(Type)?
@@ -192,6 +216,52 @@ class Crystal::Doc::Type
           end
         end
         defs.sort_by! { |x| sort_order(x) }
+      end
+    end
+  end
+
+  @external_vars : Array(Method)?
+
+  def external_vars
+    @external_vars ||= begin
+      case @type
+      when LibType
+        defs = [] of Method
+        @type.defs.try &.each do |def_name, defs_with_metadata|
+          defs_with_metadata.each do |def_with_metadata|
+            next unless (ext = def_with_metadata.def).is_a?(External)
+            next if !ext.external_var? || ext.name.ends_with?("=")
+            next unless @generator.must_include? ext
+
+            defs << method(ext, false)
+          end
+        end
+        defs.sort_by! { |x| sort_order(x) }
+      else
+        [] of Method
+      end
+    end
+  end
+
+  @functions : Array(Method)?
+
+  def functions
+    @functions ||= begin
+      case @type
+      when LibType
+        defs = [] of Method
+        @type.defs.try &.each do |def_name, defs_with_metadata|
+          defs_with_metadata.each do |def_with_metadata|
+            next unless (ext = def_with_metadata.def).is_a?(External)
+            next if ext.external_var?
+            next unless @generator.must_include? def_with_metadata.def
+
+            defs << method(def_with_metadata.def, false)
+          end
+        end
+        defs.sort_by! { |x| sort_order(x) }
+      else
+        [] of Method
       end
     end
   end

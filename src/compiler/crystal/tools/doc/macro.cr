@@ -58,6 +58,9 @@ class Crystal::Doc::Macro
     @type.visibility
   end
 
+  def real_name
+  end
+
   def kind
     "macro "
   end

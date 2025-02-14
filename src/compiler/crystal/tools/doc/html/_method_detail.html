@@ -7,7 +7,7 @@
     <div class="entry-detail" id="<%= method.html_id %>">
       <div class="signature">
         <%= method.abstract? ? "abstract " : "" %><%= method.visibility.try(&.+(" ")) %>
-        <%= method.kind %><strong><%= method.name %></strong><%= method.args_to_html %>
+        <%= method.kind %><strong><%= method.name %></strong><%= method.real_name %><%= method.args_to_html %>
 
         <a class="method-permalink" href="<%= method.anchor %>">#</a>
       </div>

@@ -47,6 +47,14 @@
   <code><%= type.formatted_alias_definition %></code>
 <% end %>
 
+<% if type.type_def? %>
+  <h2>
+    <%= Crystal::Doc.anchor_link("type-definition") %>
+    Type Definition
+  </h2>
+  <code><%= type.formatted_type_definition %></code>
+<% end %>
+
 <%= OtherTypesTemplate.new("Included Modules", type, type.included_modules) %>
 <%= OtherTypesTemplate.new("Extended Modules", type, type.extended_modules) %>
 <%= OtherTypesTemplate.new("Direct Known Subclasses", type, type.subclasses) %>
@@ -95,24 +103,31 @@
   </dl>
 <% end %>
 
-<%= MethodSummaryTemplate.new("Constructors", type.constructors) %>
-<%= MethodSummaryTemplate.new(type.program? ? "Method Summary" : "Class Method Summary", type.class_methods) %>
-<%= MethodSummaryTemplate.new("Macro Summary", type.macros) %>
-<%= MethodSummaryTemplate.new("Instance Method Summary", type.instance_methods) %>
+<% if type.lib? %>
+  <%= MethodSummaryTemplate.new("External Variable Summary", type.external_vars) %>
+  <%= MethodSummaryTemplate.new("Function Summary", type.functions) %>
+  <%= MethodDetailTemplate.new("External Variable Detail", type.external_vars) %>
+  <%= MethodDetailTemplate.new("Function Detail", type.functions) %>
+<% elsif !type.type_def? %>
+  <%= MethodSummaryTemplate.new("Constructors", type.constructors) %>
+  <%= MethodSummaryTemplate.new(type.program? ? "Method Summary" : "Class Method Summary", type.class_methods) %>
+  <%= MethodSummaryTemplate.new("Macro Summary", type.macros) %>
+  <%= MethodSummaryTemplate.new("Instance Method Summary", type.instance_methods) %>
 
-<div class="methods-inherited">
-  <% type.ancestors.each do |ancestor| %>
-    <%= MethodsInheritedTemplate.new(type, ancestor, ancestor.instance_methods, "Instance") %>
-    <%= MethodsInheritedTemplate.new(type, ancestor, ancestor.constructors, "Constructor") %>
-    <%= MethodsInheritedTemplate.new(type, ancestor, ancestor.class_methods, "Class") %>
-    <%= MacrosInheritedTemplate.new(type, ancestor, ancestor.macros) %>
-  <% end %>
-</div>
+  <div class="methods-inherited">
+    <% type.ancestors.each do |ancestor| %>
+      <%= MethodsInheritedTemplate.new(type, ancestor, ancestor.instance_methods, "Instance") %>
+      <%= MethodsInheritedTemplate.new(type, ancestor, ancestor.constructors, "Constructor") %>
+      <%= MethodsInheritedTemplate.new(type, ancestor, ancestor.class_methods, "Class") %>
+      <%= MacrosInheritedTemplate.new(type, ancestor, ancestor.macros) %>
+    <% end %>
+  </div>
 
-<%= MethodDetailTemplate.new("Constructor Detail", type.constructors) %>
-<%= MethodDetailTemplate.new(type.program? ? "Method Detail" : "Class Method Detail", type.class_methods) %>
-<%= MethodDetailTemplate.new("Macro Detail", type.macros) %>
-<%= MethodDetailTemplate.new("Instance Method Detail", type.instance_methods) %>
+  <%= MethodDetailTemplate.new("Constructor Detail", type.constructors) %>
+  <%= MethodDetailTemplate.new(type.program? ? "Method Detail" : "Class Method Detail", type.class_methods) %>
+  <%= MethodDetailTemplate.new("Macro Detail", type.macros) %>
+  <%= MethodDetailTemplate.new("Instance Method Detail", type.instance_methods) %>
+<% end %>
 </div>
 
 </body>

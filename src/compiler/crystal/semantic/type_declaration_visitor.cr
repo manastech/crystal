@@ -99,7 +99,27 @@ class Crystal::TypeDeclarationVisitor < Crystal::SemanticVisitor
     var_type = check_allowed_in_lib node.type_spec, var_type
 
     type = current_type.as(LibType)
-    type.add_var node.name, var_type, (node.real_name || node.name), thread_local
+
+    setter = External.new(
+      "#{node.name}=", [Arg.new("value", type: var_type)],
+      Primitive.new("external_var_set", var_type), node.real_name || node.name
+    ).at(node.location)
+    setter.set_type(var_type)
+    setter.external_var = true
+    setter.thread_local = thread_local
+    setter.doc = node.doc || @annotations.try(&.first?).try(&.doc)
+
+    getter = External.new(
+      "#{node.name}", [] of Arg,
+      Primitive.new("external_var_get", var_type), node.real_name || node.name
+    ).at(node.location)
+    getter.set_type(var_type)
+    getter.external_var = true
+    getter.thread_local = thread_local
+    getter.doc = node.doc || @annotations.try(&.first?).try(&.doc)
+
+    type.add_def setter
+    type.add_def getter
 
     false
   end
@@ -186,15 +206,25 @@ class Crystal::TypeDeclarationVisitor < Crystal::SemanticVisitor
     if type.lookup_instance_var?(var_name)
       node.raise "#{type.type_desc} #{type} already defines a field named '#{field_name}'"
     end
+
     ivar = MetaTypeVar.new(var_name, field_type)
+    ivar.doc = node.var.as(Var).doc
     ivar.owner = type
+
     declare_c_struct_or_union_field(type, field_name, ivar, node.location)
   end
 
   def declare_c_struct_or_union_field(type, field_name, var, location)
     type.instance_vars[var.name] = var
-    type.add_def Def.new("#{field_name}=", [Arg.new("value")], Primitive.new("struct_or_union_set").at(location))
-    type.add_def Def.new(field_name, body: InstanceVar.new(var.name))
+
+    setter = Def.new("#{field_name}=", [Arg.new("value")], Primitive.new("struct_or_union_set").at(location)).at(location)
+    setter.doc = var.doc
+
+    getter = Def.new(field_name, body: InstanceVar.new(var.name)).at(location)
+    getter.doc = var.doc
+
+    type.add_def setter
+    type.add_def getter
   end
 
   def declare_instance_var(node, var)

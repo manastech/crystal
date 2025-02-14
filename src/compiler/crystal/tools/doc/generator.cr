@@ -143,8 +143,10 @@ class Crystal::Doc::Generator
       return false if nodoc? ns
     end
 
-    # Don't include lib types or types inside a lib type
-    return false if type.is_a?(Crystal::LibType) || type.namespace.is_a?(LibType)
+    # Don't include lib types or types inside a lib type unless specified with `:showdoc:`
+    if (type.is_a?(LibType) || type.namespace.is_a?(LibType)) && !showdoc?(type)
+      return false
+    end
 
     !!type.locations.try &.any? do |type_location|
       must_include? type_location
@@ -262,7 +264,7 @@ class Crystal::Doc::Generator
 
     parent.types?.try &.each_value do |type|
       case type
-      when Const, LibType
+      when Const
         next
       else
         types << type(type) if must_include? type

@@ -686,6 +686,7 @@ module Crystal
   end
 
   class External < Def
+    property? external_var : Bool = false
     property real_name : String
     property! fun_def : FunDef
     property call_convention : LLVM::CallConvention?

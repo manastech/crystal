@@ -6,7 +6,7 @@
   <ul class="list-summary">
     <% methods.each do |method| %>
       <li class="entry-summary">
-        <a href="<%= method.anchor %>" class="signature"><strong><%= method.prefix %><%= method.name %></strong><%= method.args_to_html(:highlight) %></a>
+        <a href="<%= method.anchor %>" class="signature"><strong><%= method.prefix %><%= method.name %></strong><%= method.real_name %><%= method.args_to_html(:highlight) %></a>
         <% if summary = method.formatted_summary %>
           <div class="summary"><%= summary %></div>
         <% end %>

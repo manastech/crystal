@@ -124,11 +124,17 @@ class Crystal::Doc::Method
     @generator.relative_location(@def)
   end
 
+  def external_var?
+    !!@def.as?(External).try(&.external_var?)
+  end
+
   def prefix
     case
     when @type.program?
       ""
-    when @class_method
+    when external_var?
+      "$"
+    when @class_method, @type.lib?
       "."
     else
       "#"
@@ -142,6 +148,13 @@ class Crystal::Doc::Method
       "protected"
     in .private?
       "private"
+    end
+  end
+
+  def real_name
+    a_def = @def.as?(External)
+    if a_def && (real_name = (a_def.real_name)) && (real_name != a_def.name)
+      " = #{real_name}"
     end
   end
 
@@ -184,6 +197,10 @@ class Crystal::Doc::Method
 
   def kind
     case
+    when external_var?
+      "$"
+    when @type.lib?
+      "fun "
     when @type.program?
       "def "
     when @class_method
@@ -196,7 +213,11 @@ class Crystal::Doc::Method
   def id
     String.build do |io|
       io << to_s.delete(' ')
-      if @class_method
+      if external_var?
+        io << "-external-var"
+      elsif @type.lib?
+        io << "-function"
+      elsif @class_method
         io << "-class-method"
       else
         io << "-instance-method"
@@ -330,6 +351,7 @@ class Crystal::Doc::Method
     builder.object do
       builder.field "html_id", id
       builder.field "name", name
+      builder.field "real_name", real_name if real_name
       builder.field "doc", doc unless doc.nil?
       builder.field "summary", formatted_summary unless formatted_summary.nil?
       builder.field "abstract", abstract?
@@ -338,7 +360,8 @@ class Crystal::Doc::Method
       builder.field "args_string", args_to_s unless args.empty?
       builder.field "args_html", args_to_html unless args.empty?
       builder.field "location", location unless location.nil?
-      builder.field "def", self.def
+      builder.field @type.lib? ? "fun" : "def", self.def
+      builder.field "external_var", external_var?
     end
   end
 
