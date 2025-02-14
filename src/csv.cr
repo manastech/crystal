@@ -78,6 +78,24 @@ class CSV
     Parser.new(string_or_io, separator, quote_char).parse
   end
 
+  # Parses a CSV or `IO` into an array of hashes using the first row as headers.
+  #
+  # Takes optional *separator* and *quote_char* arguments for defining
+  # non-standard csv cell separators and quote characters.
+  #
+  # ```
+  # require "csv"
+  #
+  # CSV.parse_to_hashes("name,age,city\nJohn,30,New York\nJane,25,San Francisco")
+  # # => [
+  # #   {"name" => "John", "age" => "30", "city" => "New York"},
+  # #   {"name" => "Jane", "age" => "25", "city" => "San Francisco"}
+  # # ]
+  # ```
+  def self.parse_to_h(string_or_io : String | IO, separator : Char = DEFAULT_SEPARATOR, quote_char : Char = DEFAULT_QUOTE_CHAR) : Array(Hash(String, String))
+    Parser.new(string_or_io, separator, quote_char).parse_to_h
+  end
+
   # Yields each of a CSV's rows as an `Array(String)`.
   #
   # See `CSV.parse` about the *separator* and *quote_char* arguments.

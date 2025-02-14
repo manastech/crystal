@@ -49,6 +49,37 @@ describe CSV do
       CSV.parse(%("","")).should eq([["", ""]])
     end
 
+    it "parses to hashes" do
+      csv_text = "Index,Customer Id,First Name,Last Name\n\n1,DD37Cf93aecA6Dc,Sheryl,Baxter\n2,1Ef7b82A4CAAD10,Preston,Lozano\n3,6F94879bDAfE5a6,,Berry, Jerry, \n"
+
+      CSV.parse_to_h(csv_text).should eq([{"Index" => "1", "Customer Id" => "DD37Cf93aecA6Dc", "First Name" => "Sheryl", "Last Name" => "Baxter"},
+                                          {"Index" => "2", "Customer Id" => "1Ef7b82A4CAAD10", "First Name" => "Preston", "Last Name" => "Lozano"},
+                                          {"Index" => "3", "Customer Id" => "6F94879bDAfE5a6", "First Name" => "", "Last Name" => "Berry"}])
+    end
+
+    it "parses to hashes with no headers" do
+      csv_text = "\n1,DD37Cf93aecA6Dc,Sheryl,Baxter\n2,1Ef7b82A4CAAD10,Preston,Lozano\n3,6F94879bDAfE5a6,,Berry"
+
+      actual = [{} of String => String, {} of String => String, {} of String => String]
+
+      CSV.parse_to_h(csv_text).should eq(actual)
+    end
+
+    it "parses to hashes with only headers" do
+      csv_text = "Index,Customer Id,First Name,Last Name"
+
+      CSV.parse_to_h(csv_text).should eq([] of Hash(String, String))
+    end
+
+    it "parses to hashes remaining rows" do
+      csv_text = "Index,Customer Id,First Name,Last Name\n1,DD37Cf93aecA6Dc,Sheryl,Baxter\n2,1Ef7b82A4CAAD10,Preston,Lozano"
+      parser = CSV::Parser.new(csv_text)
+
+      parser.next_row
+
+      parser.parse_to_h.should eq([{"1" => "2", "DD37Cf93aecA6Dc" => "1Ef7b82A4CAAD10", "Sheryl" => "Preston", "Baxter" => "Lozano"}])
+    end
+
     it "raises if single quote in the middle" do
       expect_raises CSV::MalformedCSVError, "Unexpected quote at line 1, column 4" do
         CSV.parse(%(hel"lo))

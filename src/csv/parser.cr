@@ -19,6 +19,18 @@ class CSV::Parser
     rows
   end
 
+  def parse_to_h : Array(Hash(String, String))
+    rows = [] of Hash(String, String)
+    if headers = next_row
+      while row = next_row
+        if parsed_row = parse_row_to_h_internal(headers, row)
+          rows << parsed_row
+        end
+      end
+    end
+    rows
+  end
+
   # Yields each of the remaining rows as an `Array(String)`.
   def each_row(&) : Nil
     while row = next_row
@@ -69,6 +81,12 @@ class CSV::Parser
         return row
       end
     end
+  end
+
+  private def parse_row_to_h_internal(headers : Array(String), row : Array(String)) : Hash(String, String) | Nil
+    h = {} of String => String
+    row.empty? ? return nil : headers.each_with_index { |header, i| h[header] = row[i] }
+    return h
   end
 
   private struct RowIterator
