@@ -1111,6 +1111,11 @@ class Array(T)
     @size = size.to_i
   end
 
+  # :inherit:
+  def each_slice(count : Int, &)
+    to_unsafe_slice.each_slice(count) { |elems| yield elems }
+  end
+
   # Optimized version of `Enumerable#map`.
   def map(& : T -> U) : Array(U) forall U
     Array(U).new(size) { |i| yield @buffer[i] }

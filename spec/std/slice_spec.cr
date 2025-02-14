@@ -461,6 +461,10 @@ describe "Slice" do
   it_iterates "#each", [1, 2, 3], Slice[1, 2, 3].each
   it_iterates "#reverse_each", [3, 2, 1], Slice[1, 2, 3].reverse_each
   it_iterates "#each_index", [0, 1, 2], Slice[1, 2, 3].each_index
+  it_iterates "#each_slice", [[0, 1], [2, 3], [4, 5], [6]], Slice[0, 1, 2, 3, 4, 5, 6].each_slice(2)
+  it_iterates "#each_slice", [[0, 1, 2], [3, 4, 5], [6, 7, 8]], Slice[0, 1, 2, 3, 4, 5, 6, 7, 8].each_slice(3)
+  it_iterates "#each_slice", [(0..15).to_a, (16..31).to_a, (32..47).to_a], Slice.new(48, &.itself).each_slice(16)
+  it_iterates "#each_slice", [(0..18).to_a, (19..37).to_a, (38..47).to_a], Slice.new(48, &.itself).each_slice(19)
 
   it "does to_a" do
     slice = Slice.new(3) { |i| i }

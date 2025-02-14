@@ -201,6 +201,18 @@ describe Indexable do
     is.should eq([0, 1, 2])
   end
 
+  it "does each_slice" do
+    indexable = SafeIndexable.new(7)
+    is = [] of Array(Int32)
+    indexable.each_slice(2) { |i| is << i }.should be_nil
+    is.should eq([[0, 1], [2, 3], [4, 5], [6]])
+
+    indexable = SafeIndexable.new(9)
+    is = [] of Array(Int32)
+    indexable.each_slice(3) { |i| is << i }.should be_nil
+    is.should eq([[0, 1, 2], [3, 4, 5], [6, 7, 8]])
+  end
+
   it "iterates through a subset of its elements (#3386)" do
     indexable = SafeIndexable.new(5)
     elems = [] of Int32

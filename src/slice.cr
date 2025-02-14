@@ -406,6 +406,25 @@ struct Slice(T)
   private SMALL_SLICE_SIZE = 16 # same as Array::SMALL_ARRAY_SIZE
 
   # :inherit:
+  def each_slice(count : Int, &) : Nil
+    if count >= SMALL_SLICE_SIZE
+      ptr = @pointer
+      ptr_last = ptr + count * ((size - 1) // count)
+      ptr_end = ptr + size
+      while ptr <= ptr_last
+        n = {count, ptr_end - ptr}.min
+        yield Array(T).build(n) do |buf|
+          ptr.copy_to(buf, n)
+          n
+        end
+        ptr += count
+      end
+    else
+      super { |elems| yield elems }
+    end
+  end
+
+  # :inherit:
   #
   # Raises if this slice is read-only.
   def map!(& : T -> _) : self

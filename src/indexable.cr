@@ -630,6 +630,19 @@ module Indexable(T)
     self
   end
 
+  # :inherit:
+  def each_slice(count : Int, &) : Nil
+    i = 0
+    while i + count <= size
+      yield Array.new(count) { |j| unsafe_fetch(i + j) }
+      i += count
+    end
+    if i < size
+      yield Array.new(size - i) { |j| unsafe_fetch(i + j) }
+    end
+    nil
+  end
+
   # Optimized version of `Enumerable#join` that performs better when
   # all of the elements in this indexable are strings: the total string
   # bytesize to return can be computed before creating the final string,

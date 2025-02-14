@@ -158,6 +158,11 @@ struct StaticArray(T, N)
     self
   end
 
+  # :inherit:
+  def each_slice(count : Int, &)
+    to_slice.each_slice(count) { |elems| yield elems }
+  end
+
   # Returns a new static array where elements are mapped by the given block.
   #
   # ```

@@ -1959,6 +1959,11 @@ describe "Array" do
 
   it_iterates "#each_index", [0, 1, 2], [1, 2, 3].each_index
 
+  it_iterates "#each_slice", [[0, 1], [2, 3], [4, 5], [6]], [0, 1, 2, 3, 4, 5, 6].each_slice(2)
+  it_iterates "#each_slice", [[0, 1, 2], [3, 4, 5], [6, 7, 8]], [0, 1, 2, 3, 4, 5, 6, 7, 8].each_slice(3)
+  it_iterates "#each_slice", [(0..15).to_a, (16..31).to_a, (32..47).to_a], Array.new(48, &.itself).each_slice(16)
+  it_iterates "#each_slice", [(0..18).to_a, (19..37).to_a, (38..47).to_a], Array.new(48, &.itself).each_slice(19)
+
   describe "transpose" do
     it "transposes elements" do
       [['a', 'b'], ['c', 'd'], ['e', 'f']].transpose.should eq([['a', 'c', 'e'], ['b', 'd', 'f']])
