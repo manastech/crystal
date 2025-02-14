@@ -132,7 +132,19 @@ class Crystal::Command
         error "file '#{command}' does not exist"
       elsif external_command = Process.find_executable("crystal-#{command}")
         options.shift
-        Process.exec(external_command, options, env: {"CRYSTAL" => Process.executable_path})
+
+        crystal_exec_path = ENV["CRYSTAL_EXEC_PATH"]?
+        unless crystal_exec_path
+          if executable_path = Process.executable_path
+            crystal_exec_path = File.dirname(executable_path)
+          end
+        end
+        path = [crystal_exec_path, ENV["PATH"]?].compact!.join(Process::PATH_DELIMITER)
+
+        Process.exec(external_command, options, env: {
+          "PATH"              => path,
+          "CRYSTAL_EXEC_PATH" => crystal_exec_path,
+        })
       else
         error "unknown command: #{command}"
       end

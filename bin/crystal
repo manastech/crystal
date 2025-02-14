@@ -186,6 +186,11 @@ case "$(uname -s)" in
     ;;
 esac
 
+# CRYSTAL_EXEC_PATH determines the location of the `crystal` program for external
+# compiler commands.
+CRYSTAL_EXEC_PATH="$SCRIPT_ROOT"
+export CRYSTAL_EXEC_PATH
+
 if [ -x "$CRYSTAL_DIR/${CRYSTAL_BIN}" ]; then
   __warning_msg "Using compiled compiler at ${CRYSTAL_DIR#"$PWD/"}/${CRYSTAL_BIN}"
   exec "$CRYSTAL_DIR/${CRYSTAL_BIN}" "$@"
