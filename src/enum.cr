@@ -165,6 +165,51 @@ abstract struct Enum
     {% end %}
   end
 
+  def downcase_name(io : IO) : Nil
+    io << downcase_name
+  end
+
+  def downcase_name : String
+    {% begin %}
+      case self
+      {% for member in @type.constants %}
+        in .{{ member.id.underscore }}?
+          "{{ member.id.downcase }}"
+      {% end %}
+      end
+    {% end %}
+  end
+
+  def snakecase_name(io : IO) : Nil
+    io << snakecase_name
+  end
+
+  def snakecase_name : String
+    {% begin %}
+      case self
+      {% for member in @type.constants %}
+        in .{{ member.id.underscore }}?
+          "{{ member.id.underscore }}"
+      {% end %}
+      end
+    {% end %}
+  end
+
+  def kebabcase_name(io : IO) : Nil
+    io << kebabcase_name
+  end
+
+  def kebabcase_name : String
+    {% begin %}
+      case self
+      {% for member in @type.constants %}
+        in .{{ member.id.underscore }}?
+          "{{ member.id.underscore.tr("_", "-") }}"
+      {% end %}
+      end
+    {% end %}
+  end
+
   # Returns an unambiguous `String` representation of this enum member.
   # In the case of a single member value, this is the fully qualified name of
   # the member (equivalent to `#to_s` with the enum name as prefix).

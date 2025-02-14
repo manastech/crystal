@@ -107,6 +107,30 @@ describe Enum do
     end
   end
 
+  describe "#downcase_name" do
+    it "for simple enum" do
+      assert_prints SpecEnum::One.downcase_name, "one"
+      assert_prints SpecEnum::Two.downcase_name, "two"
+      assert_prints SpecEnum2::FortyTwo.downcase_name, "fortytwo"
+    end
+  end
+
+  describe "#snakecase_name" do
+    it "for simple enum" do
+      assert_prints SpecEnum::One.snakecase_name, "one"
+      assert_prints SpecEnum2::FortyTwo.snakecase_name, "forty_two"
+      assert_prints SpecEnum2::FORTY_FOUR.snakecase_name, "forty_four"
+    end
+  end
+
+  describe "#kebabcase_name" do
+    it "for simple enum" do
+      assert_prints SpecEnum::One.kebabcase_name, "one"
+      assert_prints SpecEnum2::FortyTwo.kebabcase_name, "forty-two"
+      assert_prints SpecEnum2::FORTY_FOUR.kebabcase_name, "forty-four"
+    end
+  end
+
   it "creates an enum instance from an auto-casted symbol (#8573)" do
     enum_value = SpecEnum.new(:two)
     enum_value.should eq SpecEnum::Two
