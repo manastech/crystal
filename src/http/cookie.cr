@@ -416,6 +416,8 @@ module HTTP
       @cookies = {} of String => Cookie
     end
 
+    def_equals_and_hash @cookies
+
     # Sets a new cookie in the collection with a string value.
     # This creates a never expiring, insecure, not HTTP-only cookie with
     # no explicit domain restriction and no path.

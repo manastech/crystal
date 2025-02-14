@@ -570,41 +570,41 @@ module HTTP
     describe ".from_client_headers" do
       it "parses Cookie header" do
         cookies = Cookies.from_client_headers Headers{"Cookie" => "a=b"}
-        cookies.to_h.should eq({"a" => Cookie.new("a", "b")})
+        cookies.should eq HTTP::Cookies{Cookie.new("a", "b")}
       end
       it "does not accept Set-Cookie header" do
         cookies = Cookies.from_client_headers Headers{"Cookie" => "a=b", "Set-Cookie" => "x=y"}
-        cookies.to_h.should eq({"a" => Cookie.new("a", "b")})
+        cookies.should eq HTTP::Cookies{Cookie.new("a", "b")}
       end
 
       it "chops value at the first invalid byte" do
         HTTP::Cookies.from_client_headers(
           HTTP::Headers{"Cookie" => "ginger=snap; cookie=hm🍪delicious; snicker=doodle"}
-        ).to_h.should eq({
-          "ginger"  => HTTP::Cookie.new("ginger", "snap"),
-          "cookie"  => HTTP::Cookie.new("cookie", "hm"),
-          "snicker" => HTTP::Cookie.new("snicker", "doodle"),
-        })
+        ).should eq HTTP::Cookies{
+          HTTP::Cookie.new("ginger", "snap"),
+          HTTP::Cookie.new("cookie", "hm"),
+          HTTP::Cookie.new("snicker", "doodle"),
+        }
       end
     end
 
     describe ".from_server_headers" do
       it "parses Set-Cookie header" do
         cookies = Cookies.from_server_headers Headers{"Set-Cookie" => "a=b; path=/foo"}
-        cookies.to_h.should eq({"a" => Cookie.new("a", "b", path: "/foo")})
+        cookies.should eq HTTP::Cookies{Cookie.new("a", "b", path: "/foo")}
       end
       it "does not accept Cookie header" do
         cookies = Cookies.from_server_headers Headers{"Set-Cookie" => "a=b", "Cookie" => "x=y"}
-        cookies.to_h.should eq({"a" => Cookie.new("a", "b")})
+        cookies.should eq HTTP::Cookies{Cookie.new("a", "b")}
       end
 
       it "drops cookies with invalid byte in value" do
         HTTP::Cookies.from_server_headers(
           HTTP::Headers{"Set-Cookie" => ["ginger=snap", "cookie=hm🍪delicious", "snicker=doodle"]}
-        ).to_h.should eq({
-          "ginger"  => HTTP::Cookie.new("ginger", "snap"),
-          "snicker" => HTTP::Cookie.new("snicker", "doodle"),
-        })
+        ).should eq HTTP::Cookies{
+          HTTP::Cookie.new("ginger", "snap"),
+          HTTP::Cookie.new("snicker", "doodle"),
+        }
       end
     end
 
@@ -782,6 +782,26 @@ module HTTP
       cookies_hash.should eq(compare_hash)
       cookies["x"] = "y"
       cookies.to_h.should_not eq(cookies_hash)
+    end
+
+    describe "#==" do
+      it "equal" do
+        Cookies.new.should eq Cookies.new
+        Cookies{Cookie.new("foo", "bar")}.should eq Cookies{Cookie.new("foo", "bar")}
+        cookies = Cookies{Cookie.new("foo", "bar"), Cookie.new("baz", "qux")}
+        cookies.should eq cookies.dup
+      end
+
+      it "order doesn't matter" do
+        Cookies{Cookie.new("foo", "bar"), Cookie.new("baz", "qux")}.should eq Cookies{Cookie.new("baz", "qux"), Cookie.new("foo", "bar")}
+      end
+
+      it "unequal" do
+        Cookies.new.should_not eq Cookies{Cookie.new("foo", "bar")}
+        Cookies{Cookie.new("foo", "bar")}.should_not eq Cookies.new
+
+        Cookies{Cookie.new("foo", "bar")}.should_not eq Cookies{Cookie.new("foo", "baz")}
+      end
     end
   end
 
