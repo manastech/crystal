@@ -23,7 +23,7 @@ class Crystal::Repl::Compiler
     upcast_distinct node, from.typedef, to
   end
 
-  private def upcast_distinct(node : ASTNode, from : NilableType, to : MixedUnionType)
+  private def upcast_distinct(node : ASTNode, from : NilableReferenceType, to : MixedUnionType)
     put_nilable_type_in_union(aligned_sizeof_type(to), node: nil)
   end
 
@@ -161,18 +161,18 @@ class Crystal::Repl::Compiler
     # Nothing to do: both are represented as pointers which already carry the type ID
   end
 
-  private def upcast_distinct(node : ASTNode, from : NilableType | NilableReferenceUnionType, to : NilType)
+  private def upcast_distinct(node : ASTNode, from : NilableReferenceType | NilableReferenceUnionType, to : NilType)
     # TODO: not tested
     # TODO: this is actually a downcast so it's not right, but this is also present
     # in the main compiler so something should be fixed there first
     pop aligned_sizeof_type(from), node: nil
   end
 
-  private def upcast_distinct(node : ASTNode, from : NilType, to : NilableType)
+  private def upcast_distinct(node : ASTNode, from : NilType, to : NilableReferenceType)
     put_i64 0_i64, node: nil
   end
 
-  private def upcast_distinct(node : ASTNode, from : Type, to : NilableType)
+  private def upcast_distinct(node : ASTNode, from : Type, to : NilableReferenceType)
     # Nothing: both are represented as pointers
   end
 
@@ -407,19 +407,19 @@ class Crystal::Repl::Compiler
     end
   end
 
-  private def downcast_distinct(node : ASTNode, from : MixedUnionType, to : PrimitiveType | EnumType | NonGenericClassType | GenericClassInstanceType | GenericClassInstanceMetaclassType | NilableType | NilableProcType | NilableReferenceUnionType | ReferenceUnionType | MetaclassType | VirtualType | VirtualMetaclassType)
+  private def downcast_distinct(node : ASTNode, from : MixedUnionType, to : PrimitiveType | EnumType | NonGenericClassType | GenericClassInstanceType | GenericClassInstanceMetaclassType | NilableReferenceType | NilableProcType | NilableReferenceUnionType | ReferenceUnionType | MetaclassType | VirtualType | VirtualMetaclassType)
     remove_from_union(aligned_sizeof_type(from), aligned_sizeof_type(to), node: nil)
   end
 
-  private def downcast_distinct(node : ASTNode, from : NilableType, to : NonGenericClassType | GenericClassInstanceType)
+  private def downcast_distinct(node : ASTNode, from : NilableReferenceType, to : NonGenericClassType | GenericClassInstanceType)
     # Nothing to do
   end
 
-  private def downcast_distinct(node : ASTNode, from : NilableType, to : NilType)
+  private def downcast_distinct(node : ASTNode, from : NilableReferenceType, to : NilType)
     pop sizeof(Pointer(Void)), node: nil
   end
 
-  private def downcast_distinct(node : ASTNode, from : NilableReferenceUnionType, to : VirtualType | NonGenericClassType | GenericClassInstanceType | NilableType)
+  private def downcast_distinct(node : ASTNode, from : NilableReferenceUnionType, to : VirtualType | NonGenericClassType | GenericClassInstanceType | NilableReferenceType)
     # Nothing to do
   end
 

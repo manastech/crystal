@@ -65,7 +65,7 @@ describe "Semantic: struct" do
       Foo.new || nil
       ") do
       type = nilable types["Foo"]
-      type.should_not be_a(NilableType)
+      type.should_not be_a(NilableReferenceType)
       type
     end
   end

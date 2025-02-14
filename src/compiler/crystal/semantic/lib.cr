@@ -279,7 +279,7 @@ class Crystal::Type
       self.tuple_types.all? &.allowed_in_lib?
     when NamedTupleInstanceType
       self.entries.all? &.type.allowed_in_lib?
-    when NilableType
+    when NilableReferenceType
       self.not_nil_type.allowed_in_lib?
     when NilableProcType
       self.proc_type.allowed_in_lib?

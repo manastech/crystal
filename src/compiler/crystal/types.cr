@@ -92,7 +92,7 @@ module Crystal
     # In this case this type can be represented with a single pointer.
     def reference_like?
       case self
-      when NilType, NilableType, NilableReferenceUnionType, ReferenceUnionType
+      when NilType, NilableReferenceType, NilableReferenceUnionType, ReferenceUnionType
         true
       when NonGenericClassType
         !self.struct?
@@ -3263,7 +3263,7 @@ module Crystal
   # A union type that has two types: Nil and another Reference type.
   # Can be represented as a maybe-null pointer where the type id
   # of the type that is not nil is known at compile time.
-  class NilableType < UnionType
+  class NilableReferenceType < UnionType
     def initialize(program, not_nil_type)
       super(program, [program.nil, not_nil_type] of Type)
     end

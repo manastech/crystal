@@ -431,7 +431,7 @@ module Crystal
         if types.size == 2
           other_type = types[1]
           if other_type.reference_like? && !other_type.virtual?
-            return NilableType.new(self, other_type)
+            return NilableReferenceType.new(self, other_type)
           else
             untyped_type = other_type.remove_typedef
             if untyped_type.proc?

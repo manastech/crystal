@@ -1766,7 +1766,7 @@ class Crystal::Repl::Compiler < Crystal::Visitor
       reference_is_a(type_id(filtered_type), node: node)
     when MixedUnionType
       union_is_a(aligned_sizeof_type(type), type_id(filtered_type), node: node)
-    when NilableType
+    when NilableReferenceType
       if filtered_type.nil_type?
         pointer_is_null(node: node)
       else

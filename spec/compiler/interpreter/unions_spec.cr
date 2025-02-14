@@ -87,7 +87,7 @@ describe Crystal::Repl::Interpreter do
         CRYSTAL
     end
 
-    it "converts from NilableType to NonGenericClassType" do
+    it "converts from NilableReferenceType to NonGenericClassType" do
       interpret(<<-CRYSTAL).should eq("a")
         a = 1 == 1 ? "a" : nil
         a || "b"

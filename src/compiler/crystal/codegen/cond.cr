@@ -17,7 +17,7 @@ class Crystal::CodeGenVisitor
     codegen_cond type.typedef
   end
 
-  private def codegen_cond_impl(type : NilableType | NilableReferenceUnionType | PointerInstanceType)
+  private def codegen_cond_impl(type : NilableReferenceType | NilableReferenceUnionType | PointerInstanceType)
     not_null_pointer? @last
   end
 

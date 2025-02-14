@@ -3,7 +3,7 @@ require "./spec_helper"
 
 describe Crystal::Repl::Interpreter do
   context "is_a?" do
-    it "does is_a? from NilableType to NonGenericClassType (true)" do
+    it "does is_a? from NilableReferenceType to NonGenericClassType (true)" do
       interpret(<<-CRYSTAL).should eq("hello")
         a = "hello" || nil
         if a.is_a?(String)
@@ -14,7 +14,7 @@ describe Crystal::Repl::Interpreter do
         CRYSTAL
     end
 
-    it "does is_a? from NilableType to NonGenericClassType (false)" do
+    it "does is_a? from NilableReferenceType to NonGenericClassType (false)" do
       interpret(<<-CRYSTAL).should eq("bar")
         a = 1 == 1 ? nil : "hello"
         if a.is_a?(String)
@@ -26,7 +26,7 @@ describe Crystal::Repl::Interpreter do
         CRYSTAL
     end
 
-    it "does is_a? from NilableType to GenericClassInstanceType (true)" do
+    it "does is_a? from NilableReferenceType to GenericClassInstanceType (true)" do
       interpret(<<-CRYSTAL).should eq(1)
         class Foo(T)
           def initialize(@x : T)
@@ -46,7 +46,7 @@ describe Crystal::Repl::Interpreter do
         CRYSTAL
     end
 
-    it "does is_a? from NilableType to GenericClassInstanceType (false)" do
+    it "does is_a? from NilableReferenceType to GenericClassInstanceType (false)" do
       interpret(<<-CRYSTAL).should eq(2)
         class Foo(T)
           def initialize(@x : T)

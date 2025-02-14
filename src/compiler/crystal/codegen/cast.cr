@@ -86,7 +86,7 @@ class Crystal::CodeGenVisitor
     end
   end
 
-  def assign_distinct(target_pointer, target_type : NilableType, value_type : Type, value)
+  def assign_distinct(target_pointer, target_type : NilableReferenceType, value_type : Type, value)
     store upcast(value, target_type, value_type), target_pointer
   end
 
@@ -163,7 +163,7 @@ class Crystal::CodeGenVisitor
       union_type.union_types.any? { |ut| value_type.implements?(ut) || ut.implements?(value_type) }
   end
 
-  def assign_distinct(target_pointer, target_type : MixedUnionType, value_type : NilableType, value)
+  def assign_distinct(target_pointer, target_type : MixedUnionType, value_type : NilableReferenceType, value)
     store_in_union target_type, target_pointer, value_type, value
   end
 
@@ -321,11 +321,11 @@ class Crystal::CodeGenVisitor
     cast_to value, to_type
   end
 
-  def downcast_distinct(value, to_type : VirtualType, from_type : NilableType)
+  def downcast_distinct(value, to_type : VirtualType, from_type : NilableReferenceType)
     cast_to value, to_type
   end
 
-  def downcast_distinct(value, to_type : Type, from_type : NilableType)
+  def downcast_distinct(value, to_type : Type, from_type : NilableReferenceType)
     value
   end
 
@@ -362,7 +362,7 @@ class Crystal::CodeGenVisitor
     value
   end
 
-  def downcast_distinct(value, to_type : NilableType, from_type : NilableReferenceUnionType)
+  def downcast_distinct(value, to_type : NilableReferenceType, from_type : NilableReferenceUnionType)
     cast_to value, to_type
   end
 
@@ -414,7 +414,7 @@ class Crystal::CodeGenVisitor
     end
   end
 
-  def downcast_distinct(value, to_type : NilableType, from_type : MixedUnionType)
+  def downcast_distinct(value, to_type : NilableReferenceType, from_type : MixedUnionType)
     _, value_ptr = union_type_and_value_pointer(value, from_type)
     load(llvm_type(to_type), cast_to_pointer(value_ptr, to_type))
   end
@@ -541,11 +541,11 @@ class Crystal::CodeGenVisitor
     cast_to value, to_type
   end
 
-  def upcast_distinct(value, to_type : NilableType, from_type : NilType?)
+  def upcast_distinct(value, to_type : NilableReferenceType, from_type : NilType?)
     llvm_type(to_type).null
   end
 
-  def upcast_distinct(value, to_type : NilableType, from_type : Type)
+  def upcast_distinct(value, to_type : NilableReferenceType, from_type : Type)
     value
   end
 

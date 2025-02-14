@@ -217,7 +217,7 @@ module Crystal
       end
     end
 
-    private def create_llvm_type(type : NilableType, wants_size)
+    private def create_llvm_type(type : NilableReferenceType, wants_size)
       llvm_type(type.not_nil_type, wants_size)
     end
 

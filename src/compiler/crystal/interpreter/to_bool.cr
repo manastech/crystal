@@ -21,7 +21,7 @@ class Crystal::Repl::Compiler
     pointer_is_not_null node: nil
   end
 
-  private def value_to_bool(node : ASTNode, type : NilableType)
+  private def value_to_bool(node : ASTNode, type : NilableReferenceType)
     pointer_is_not_null node: nil
   end
 

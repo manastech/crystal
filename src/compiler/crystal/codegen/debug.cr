@@ -238,7 +238,7 @@ module Crystal
       debug_type
     end
 
-    def create_debug_type(type : NilableType, original_type : Type)
+    def create_debug_type(type : NilableReferenceType, original_type : Type)
       get_debug_type(type.not_nil_type, original_type)
     end
 
