@@ -20,21 +20,35 @@ end
 
 # Errno wraps and gives access to libc's errno. This is mostly useful when
 # dealing with C libraries.
+#
+# The integer values of these errors are platform-specific and should not be directly relied on.
+# If an error code is not applicable on the current platform, its value will be `INVALID`.
+#
+# Intended usages are of the form `if exc.os_error == Errno::ENOATTR`: with this we are checking
+# whether the OS-specific error is of the `ENOATTR` kind, even if the actual value of
+# `Errno::ENOATTR` might vary across platforms or be equal to `Errno::INVALID` if that platform has
+# no such error (so the equality can never be true on that platform, but the code still compiles).
 enum Errno
-  NONE = 0
+  NONE    =  0
+  INVALID = -1
 
-  {% for value in %w(E2BIG EPERM ENOENT ESRCH EINTR EIO ENXIO ENOEXEC EBADF ECHILD EDEADLK ENOMEM
-                    EACCES EFAULT ENOTBLK EBUSY EEXIST EXDEV ENODEV ENOTDIR EISDIR EINVAL ENFILE
-                    EMFILE ENOTTY ETXTBSY EFBIG ENOSPC ESPIPE EROFS EMLINK EPIPE EDOM ERANGE EAGAIN
-                    EWOULDBLOCK EINPROGRESS EALREADY ENOTSOCK EDESTADDRREQ EMSGSIZE EPROTOTYPE ENOPROTOOPT
-                    EPROTONOSUPPORT ESOCKTNOSUPPORT EPFNOSUPPORT EAFNOSUPPORT EADDRINUSE EADDRNOTAVAIL
-                    ENETDOWN ENETUNREACH ENETRESET ECONNABORTED ECONNRESET ENOBUFS EISCONN ENOTCONN
-                    ESHUTDOWN ETOOMANYREFS ETIMEDOUT ECONNREFUSED ELOOP ENAMETOOLONG EHOSTDOWN
-                    EHOSTUNREACH ENOTEMPTY EUSERS EDQUOT ESTALE EREMOTE ENOLCK ENOSYS EOVERFLOW
-                    ECANCELED EIDRM ENOMSG EILSEQ EBADMSG EMULTIHOP ENODATA ENOLINK ENOSR ENOSTR
-                    EPROTO ETIME EOPNOTSUPP ENOTRECOVERABLE EOWNERDEAD) %}
+  # grep -hE '^ *\w+ *=' src/lib_c/*/c/errno.cr | awk '{print $1}' | sort -u | xargs | fold -s -w81
+
+  {% for value in %w(
+                    E2BIG EACCES EADDRINUSE EADDRNOTAVAIL EAFNOSUPPORT EAGAIN EALREADY EBADF EBADMSG
+                    EBUSY ECANCELED ECHILD ECONNABORTED ECONNREFUSED ECONNRESET EDEADLK EDESTADDRREQ
+                    EDOM EDQUOT EEXIST EFAULT EFBIG EHOSTUNREACH EIDRM EILSEQ EINPROGRESS EINTR
+                    EINVAL EIO EISCONN EISDIR ELOOP EMFILE EMLINK EMSGSIZE EMULTIHOP ENAMETOOLONG
+                    ENETDOWN ENETRESET ENETUNREACH ENFILE ENOBUFS ENODATA ENODEV ENOENT ENOEXEC
+                    ENOLCK ENOLINK ENOMEM ENOMSG ENOPROTOOPT ENOSPC ENOSR ENOSTR ENOSYS ENOTCONN
+                    ENOTDIR ENOTEMPTY ENOTRECOVERABLE ENOTSOCK ENOTSUP ENOTTY ENXIO EOPNOTSUPP
+                    EOVERFLOW EOWNERDEAD EPERM EPIPE EPROTO EPROTONOSUPPORT EPROTOTYPE ERANGE EROFS
+                    ESPIPE ESRCH ESTALE ETIME ETIMEDOUT ETXTBSY EWOULDBLOCK EXDEV STRUNCATE
+                  ) %}
     {% if LibC.has_constant?(value) %}
       {{value.id}} = LibC::{{value.id}}
+    {% else %}
+      {{value.id}} = INVALID
     {% end %}
   {% end %}
 
