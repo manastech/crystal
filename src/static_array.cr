@@ -66,9 +66,11 @@ struct StaticArray(T, N)
   # ```
   def self.new(& : Int32 -> T)
     array = uninitialized self
-    N.times do |i|
-      array.to_unsafe[i] = yield i
-    end
+    buf = array.to_unsafe
+    # Unroll the loop in Crystal land to avoid slow compile times in release mode. See https://github.com/crystal-lang/crystal/issues/2485#issuecomment-644416515
+    {% for i in 0...N %}
+      buf[{{i}}] = yield {{i}}
+    {% end %}
     array
   end
 
