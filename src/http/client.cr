@@ -137,7 +137,7 @@ class HTTP::Client
     {% else %}
       @tls = case tls
              when true
-               OpenSSL::SSL::Context::Client.new
+               HTTP::Client.default_ssl_context
              when OpenSSL::SSL::Context::Client
                tls
              when false, nil
@@ -157,6 +157,40 @@ class HTTP::Client
   def initialize(@io : IO, @host = "", @port = 80)
     @reconnect = false
   end
+
+  {% unless flag?(:without_openssl) %}
+    @@default_ssl_context : OpenSSL::SSL::Context::Client? = nil
+    @@default_ssl_context_initialization_mutex = Mutex.new
+
+    # Returns a shared, global, default OpenSSL::SSL::Context::Client.
+    #
+    # This can be slow because it loads all system root certificates,
+    # so we do it lazily, and once.
+    #
+    # The returned instance must not be modified. For customization,
+    # first instantiate your own with OpenSSL::SSL::Context::Client.new,
+    # and pass it to HTTP::Client.new(..., tls: custom_context)
+    #
+    # "A single SSL_CTX object can be used to create many connections [...]
+    # Note that you should not normally make changes to an SSL_CTX after the first
+    # SSL object has been created from it."
+    # - https://docs.openssl.org/3.4/man7/ossl-guide-libssl-introduction/
+    protected def self.default_ssl_context
+      {% if LibSSL.has_method?(:ssl_get0_param) %}
+        if @@default_ssl_context.nil?
+          @@default_ssl_context_initialization_mutex.synchronize do
+            if @@default_ssl_context.nil? # double-check in case we got mutex after being blocked
+              @@default_ssl_context = OpenSSL::SSL::Context::Client.new
+            end
+          end
+        end
+        @@default_ssl_context.not_nil!
+      {% else %}
+        # OpenSSL <= 1.0.1 needs set_cert_verify_callback, which mutates SSL_CTX, so don't cache a global Context object.
+        OpenSSL::SSL::Context::Client.new
+      {% end %}
+    end
+  {% end %}
 
   private def check_host_only(string : String)
     # When parsing a URI with just a host
