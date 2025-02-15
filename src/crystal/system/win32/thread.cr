@@ -1,6 +1,9 @@
 require "c/processthreadsapi"
 require "c/synchapi"
 require "../panic"
+{% if flag?(:gnu) %}
+  require "../thread_local"
+{% end %}
 
 module Crystal::System::Thread
   alias Handle = LibC::HANDLE
@@ -22,11 +25,7 @@ module Crystal::System::Thread
 
   def self.init : Nil
     {% if flag?(:gnu) %}
-      current_key = LibC.TlsAlloc
-      if current_key == LibC::TLS_OUT_OF_INDEXES
-        Crystal::System.panic("TlsAlloc()", WinError.value)
-      end
-      @@current_key = current_key
+      @@current_thread = ThreadLocal(::Thread).new
     {% end %}
   end
 
@@ -55,37 +54,25 @@ module Crystal::System::Thread
     LibC.SwitchToThread
   end
 
-  # MinGW does not support TLS correctly
+  # MinGW does not support @[::ThreadLocal] correctly
   {% if flag?(:gnu) %}
-    @@current_key = uninitialized LibC::DWORD
+    @@current_thread = uninitialized ThreadLocal(::Thread)
 
     def self.current_thread : ::Thread
-      th = current_thread?
-      return th if th
-
-      # Thread#start sets `Thread.current` as soon it starts. Thus we know
+      # Thread#start sets Thread.current as soon as it starts. Thus we know
       # that if `Thread.current` is not set then we are in the main thread
-      self.current_thread = ::Thread.new
+      @@current_thread.get { ::Thread.new }
     end
 
     def self.current_thread? : ::Thread?
-      ptr = LibC.TlsGetValue(@@current_key)
-      err = WinError.value
-      unless err == WinError::ERROR_SUCCESS
-        Crystal::System.panic("TlsGetValue()", err)
-      end
-
-      ptr.as(::Thread?)
+      @@current_thread.get?
     end
 
     def self.current_thread=(thread : ::Thread)
-      if LibC.TlsSetValue(@@current_key, thread.as(Void*)) == 0
-        Crystal::System.panic("TlsSetValue()", WinError.value)
-      end
-      thread
+      @@current_thread.set(thread)
     end
   {% else %}
-    @[ThreadLocal]
+    @[::ThreadLocal]
     @@current_thread : ::Thread?
 
     def self.current_thread : ::Thread

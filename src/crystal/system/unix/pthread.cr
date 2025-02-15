@@ -1,6 +1,9 @@
 require "c/pthread"
 require "c/sched"
 require "../panic"
+{% if flag?(:openbsd) || flag?(:android) %}
+  require "../thread_local"
+{% end %}
 
 module Crystal::System::Thread
   alias Handle = LibC::PthreadT
@@ -30,9 +33,7 @@ module Crystal::System::Thread
     {% if flag?(:musl) %}
       @@main_handle = current_handle
     {% elsif flag?(:openbsd) || flag?(:android) %}
-      ret = LibC.pthread_key_create(out current_key, nil)
-      raise RuntimeError.from_os_error("pthread_key_create", Errno.new(ret)) unless ret == 0
-      @@current_key = current_key
+      @@current_thread = ThreadLocal(::Thread).new
     {% end %}
   end
 
@@ -57,37 +58,29 @@ module Crystal::System::Thread
     raise RuntimeError.from_errno("sched_yield") unless ret == 0
   end
 
-  # no thread local storage (TLS) for OpenBSD,
-  # we use pthread's specific storage (TSS) instead
+  # No support for @[::ThreadLocal] for OpenBSD, we use pthread's specific storage (TSS)
+  # instead
   #
-  # Android appears to support TLS to some degree, but executables fail with
+  # Android appears to support @[::ThreadLocal] to some degree, but executables fail with
   # an underaligned TLS segment, see https://github.com/crystal-lang/crystal/issues/13951
   {% if flag?(:openbsd) || flag?(:android) %}
-    @@current_key = uninitialized LibC::PthreadKeyT
+    @@current_thread = uninitialized ThreadLocal(::Thread)
 
     def self.current_thread : ::Thread
-      if ptr = LibC.pthread_getspecific(@@current_key)
-        ptr.as(::Thread)
-      else
-        # Thread#start sets `Thread.current` as soon it starts. Thus we know
-        # that if `Thread.current` is not set then we are in the main thread
-        self.current_thread = ::Thread.new
-      end
+      # Thread#start sets Thread.current as soon as it starts. Thus we know
+      # that if `Thread.current` is not set then we are in the main thread
+      @@current_thread.get { ::Thread.new }
     end
 
     def self.current_thread? : ::Thread?
-      if ptr = LibC.pthread_getspecific(@@current_key)
-        ptr.as(::Thread)
-      end
+      @@current_thread.get?
     end
 
     def self.current_thread=(thread : ::Thread)
-      ret = LibC.pthread_setspecific(@@current_key, thread.as(Void*))
-      raise RuntimeError.from_os_error("pthread_setspecific", Errno.new(ret)) unless ret == 0
-      thread
+      @@current_thread.set(thread)
     end
   {% else %}
-    @[ThreadLocal]
+    @[::ThreadLocal]
     @@current_thread : ::Thread?
 
     def self.current_thread : ::Thread

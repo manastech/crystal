@@ -25,6 +25,7 @@ lib LibC
   fun pthread_join(x0 : PthreadT, x1 : Void**) : Int
   alias PthreadKeyDestructor = (Void*) ->
   fun pthread_key_create(PthreadKeyT*, PthreadKeyDestructor) : Int
+  fun pthread_key_delete(PthreadKeyT) : Int
   fun pthread_main_np : Int
   fun pthread_mutexattr_destroy(x0 : PthreadMutexattrT*) : Int
   fun pthread_mutexattr_init(x0 : PthreadMutexattrT*) : Int

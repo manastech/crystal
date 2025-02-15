@@ -54,6 +54,7 @@ lib LibC
   end
 
   type PthreadT = Void*
+  alias PthreadKeyT = UInt
   alias SSizeT = Int
   alias SusecondsT = Long
   alias TimeT = Long

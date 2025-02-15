@@ -25,7 +25,11 @@ lib LibC
   fun pthread_create(newthread : PthreadT*, attr : PthreadAttrT*, start_routine : Void* -> Void*, arg : Void*) : Int
   fun pthread_detach(th : PthreadT) : Int
   fun pthread_getattr_np(thread : PthreadT, attr : PthreadAttrT*) : Int
+  fun pthread_getspecific(PthreadKeyT) : Void*
   fun pthread_join(th : PthreadT, thread_return : Void**) : Int
+  alias PthreadKeyDestructor = (Void*) ->
+  fun pthread_key_create(PthreadKeyT*, PthreadKeyDestructor) : Int
+  fun pthread_key_delete(PthreadKeyT) : Int
   fun pthread_mutexattr_destroy(attr : PthreadMutexattrT*) : Int
   fun pthread_mutexattr_init(attr : PthreadMutexattrT*) : Int
   fun pthread_mutexattr_settype(attr : PthreadMutexattrT*, type : Int) : Int
@@ -36,4 +40,5 @@ lib LibC
   fun pthread_mutex_unlock(mutex : PthreadMutexT*) : Int
   fun pthread_self : PthreadT
   fun pthread_setname_np(PthreadT, Char*) : Int
+  fun pthread_setspecific(PthreadKeyT, Void*) : Int
 end
