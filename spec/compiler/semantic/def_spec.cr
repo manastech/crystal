@@ -566,4 +566,18 @@ describe "Semantic: def" do
     ex.column_number.should eq(3)
     ex.size.should eq(6)
   end
+
+  it "does not allow top-level 'def super'" do
+    assert_error <<-CODE, "top-level 'def super' is not allowed due to no way to call this"
+      def super
+      end
+      CODE
+  end
+
+  it "does not allow top-level 'def previous_def'" do
+    assert_error <<-CODE, "top-level 'def previous_def' is not allowed due to no way to call this"
+      def previous_def
+      end
+      CODE
+  end
 end
