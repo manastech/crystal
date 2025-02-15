@@ -128,6 +128,23 @@ module Crystal
       @in_defs && contains_target(node)
     end
 
+    def visit(node : Require)
+      return false if node.string == "prelude"
+
+      if loc_start = node.location
+        loc_end = node.end_location || loc_start
+        if @target_location.between?(loc_start, loc_end)
+          @found_nodes << node
+          return false
+        end
+      end
+
+      # Find target location into required file.
+      # It is needed when target location is out of main file. (#6098)
+      node.expanded.try &.accept self
+      false
+    end
+
     def visit(node : Call)
       if loc_start = node.location
         # If node.obj (a.k.a. an receiver) is a Path, it may be macro call and node.obj has no expansion surely.
@@ -140,13 +157,18 @@ module Crystal
           else
             @message = "no expansion found: #{node} may not be a macro"
           end
-          false
-        else
-          contains_target(node)
+          return false
         end
       else
         false
       end
+
+      return true if contains_target(node)
+
+      # Find target location into macro expansion.
+      # Because macro expansion may contain `require`.
+      node.expanded.try &.accept self
+      false
     end
 
     def visit(node : MacroFor | MacroIf | MacroExpression)
@@ -154,13 +176,19 @@ module Crystal
         loc_end = node.end_location || loc_start
         if @target_location.between?(loc_start, loc_end) && node.expanded
           @found_nodes << node
-          false
-        else
-          contains_target(node)
+          return false
         end
       else
         false
       end
+
+      node.expanded.try &.accept self
+      false
+    end
+
+    def visit(node : Expressions | ModuleDef | ClassDef)
+      # These top-level nodes can contain `require`, so always returns `true`.
+      true
     end
 
     def visit(node)
@@ -182,7 +210,7 @@ module Crystal
       end
     end
 
-    def transform(node : MacroFor | MacroIf | MacroExpression)
+    def transform(node : Require | MacroFor | MacroIf | MacroExpression)
       if expanded = node.expanded
         self.expanded = true
         expanded
