@@ -70,9 +70,16 @@ describe OpenSSL::SSL::Context do
     OpenSSL::SSL::Context::Server.insecure(LibSSL.tlsv1_method)
   end
 
-  it "sets certificate chain" do
+  it "sets certificate chain from file" do
     context = OpenSSL::SSL::Context::Client.new
     context.certificate_chain = datapath("openssl", "openssl.crt")
+  end
+
+  it "sets crtificate chain from X509 object" do
+    context = OpenSSL::SSL::Context::Server.new
+    cert = OpenSSL::X509::Certificate.new
+    cert.subject = "CN=Nobody/DC=example"
+    context.certificate_chain = cert
   end
 
   it "fails to set certificate chain" do

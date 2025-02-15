@@ -277,6 +277,13 @@ abstract class OpenSSL::SSL::Context
     raise OpenSSL::Error.new("SSL_CTX_use_certificate_chain_file") unless ret == 1
   end
 
+  # Specify the certificate to be used as chain. In server mode this
+  # is presented to the client, in client mode this used as client certificate.
+  def certificate_chain=(cert : OpenSSL::X509::Certificate)
+    ret = LibSSL.ssl_ctx_use_certificate(@handle, cert)
+    raise OpenSSL::Error.new("SSL_CTX_use_certificate") unless ret == 1
+  end
+
   # Specify the path to the private key to use. The key must in PEM format.
   # The key must correspond to the entity certificate set by `certificate_chain=`.
   def private_key=(file_path : String)
