@@ -320,6 +320,19 @@ module Crystal
 
       result = @program.macro_run(filename, run_args)
       if result.status.success?
+        unless result.stderr.empty?
+          command = "#{original_filename} #{run_args.map(&.inspect).join " "}"
+          @program.stdout.puts "Success executing run: #{command}".colorize.mode(:bold)
+          @program.stdout.puts "stderr:".colorize.mode(:bold)
+          @program.stdout.puts
+          result.stderr.each_line do |line|
+            @program.stdout << "    "
+            @program.stdout << line
+            @program.stdout.puts
+          end
+          @program.stdout.puts
+        end
+
         @last = MacroId.new(result.stdout)
       else
         command = "#{Process.quote(original_filename)} #{Process.quote(run_args)}"
