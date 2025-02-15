@@ -22,13 +22,17 @@ class Compress::Deflate::Reader < IO
   def initialize(@io : IO, @sync_close : Bool = false, @dict : Bytes? = nil)
     @buf = uninitialized UInt8[1] # input buffer used by zlib
     @stream = LibZ::ZStream.new
-    @stream.zalloc = LibZ::AllocFunc.new { |opaque, items, size| GC.malloc(items * size) }
-    @stream.zfree = LibZ::FreeFunc.new { |opaque, address| GC.free(address) }
     ret = LibZ.inflateInit2(pointerof(@stream), -LibZ::MAX_BITS, LibZ.zlibVersion, sizeof(LibZ::ZStream))
     raise Compress::Deflate::Error.new(ret, @stream) unless ret.ok?
 
     @peek = nil
     @end = false
+  end
+
+  def finalize
+    return if closed?
+
+    LibZ.inflateEnd(pointerof(@stream))
   end
 
   # Creates a new reader from the given *io*, yields it to the given block,
