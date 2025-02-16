@@ -2834,7 +2834,9 @@ module Crystal
 
           when_body = parse_expressions
           skip_space_or_newline
-          whens << When.new(when_conds, when_body).at(location)
+          whens << When.new(when_conds, when_body)
+            .at(location)
+            .at_end(when_conds.last.end_location)
         when Keyword::ELSE
           if exhaustive
             raise "exhaustive case (case ... in) doesn't allow an 'else'"
@@ -2990,6 +2992,8 @@ module Crystal
           skip_space_or_newline
 
           whens << When.new(condition, body)
+            .at(location)
+            .at_end(condition.end_location)
         when Keyword::ELSE
           if whens.size == 0
             unexpected_token "expecting when"
