@@ -31,7 +31,9 @@ lib LibLLVM
 
   fun set_module_data_layout = LLVMSetModuleDataLayout(m : ModuleRef, dl : TargetDataRef)
 
+  fun create_target_data = LLVMCreateTargetData(string_rep : Char*) : TargetDataRef
   fun dispose_target_data = LLVMDisposeTargetData(td : TargetDataRef)
+  fun copy_string_rep_of_target_data = LLVMCopyStringRepOfTargetData(td : TargetDataRef) : Char*
   fun size_of_type_in_bits = LLVMSizeOfTypeInBits(td : TargetDataRef, ty : TypeRef) : ULongLong
   fun abi_size_of_type = LLVMABISizeOfType(td : TargetDataRef, ty : TypeRef) : ULongLong
   fun abi_alignment_of_type = LLVMABIAlignmentOfType(td : TargetDataRef, ty : TypeRef) : UInt

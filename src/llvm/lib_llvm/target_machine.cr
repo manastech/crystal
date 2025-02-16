@@ -19,8 +19,8 @@ lib LibLLVM
   fun create_target_data_layout = LLVMCreateTargetDataLayout(t : TargetMachineRef) : TargetDataRef
   {% unless LibLLVM::IS_LT_180 %}
     fun set_target_machine_global_isel = LLVMSetTargetMachineGlobalISel(t : TargetMachineRef, enable : Bool)
+    fun target_machine_emit_to_file = LLVMTargetMachineEmitToFile(t : TargetMachineRef, m : ModuleRef, filename : Char*, codegen : LLVM::CodeGenFileType, error_message : Char**) : Bool
   {% end %}
-  fun target_machine_emit_to_file = LLVMTargetMachineEmitToFile(t : TargetMachineRef, m : ModuleRef, filename : Char*, codegen : LLVM::CodeGenFileType, error_message : Char**) : Bool
 
   fun get_default_target_triple = LLVMGetDefaultTargetTriple : Char*
   fun normalize_target_triple = LLVMNormalizeTargetTriple(triple : Char*) : Char*

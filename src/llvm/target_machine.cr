@@ -1,4 +1,6 @@
 class LLVM::TargetMachine
+  @layout : LLVM::TargetData?
+
   def initialize(@unwrap : LibLLVM::TargetMachineRef)
   end
 
@@ -10,7 +12,23 @@ class LLVM::TargetMachine
   def data_layout : LLVM::TargetData
     @layout ||= begin
       layout = LibLLVM.create_target_data_layout(self)
-      layout ? TargetData.new(layout) : raise "Missing layout for #{self}"
+      raise "Missing layout for #{self}" unless layout
+      layout = TargetData.new(layout)
+
+      # LLVM 18 makes all 128-bit integers 16-byte-aligned for x86 and x86-64
+      # targets, in order to support non-LLVM intrinsics that expect correctly
+      # aligned integers; we backport this behavior to previous LLVM versions
+      {% if LibLLVM::IS_LT_180 %}
+        if target.name.in?("x86", "x86-64")
+          data_layout = layout.to_data_layout_string
+          unless data_layout.includes?("i128:128")
+            layout.dispose
+            layout = TargetData.new(LibLLVM.create_target_data(data_layout + "-i128:128"))
+          end
+        end
+      {% end %}
+
+      layout
     end
   end
 
@@ -38,7 +56,7 @@ class LLVM::TargetMachine
   end
 
   private def emit_to_file(llvm_mod, filename, type)
-    status = LibLLVM.target_machine_emit_to_file(self, llvm_mod, filename, type, out error_msg)
+    status = {{ LibLLVM::IS_LT_180 ? LibLLVMExt : LibLLVM }}.target_machine_emit_to_file(self, llvm_mod, filename, type, out error_msg)
     unless status == 0
       raise LLVM.string_and_dispose(error_msg)
     end

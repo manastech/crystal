@@ -129,6 +129,12 @@ module Crystal
         end
       {% else %}
         lljit_builder = LLVM::Orc::LLJITBuilder.new
+        {% if LibLLVM::IS_LT_180 %}
+          # needed when our data layout doesn't match the machine default (this
+          # happens for LLVM 17 or below since we enforce 16-byte alignment of
+          # 128-bit integers)
+          lljit_builder.data_layout = target_machine.data_layout
+        {% end %}
         lljit = LLVM::Orc::LLJIT.new(lljit_builder)
 
         dylib = lljit.main_jit_dylib

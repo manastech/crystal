@@ -19,6 +19,10 @@ struct LLVM::TargetData
     LibLLVM.abi_alignment_of_type(self, type)
   end
 
+  def dispose : Nil
+    LibLLVM.dispose_target_data(self)
+  end
+
   def to_unsafe
     @unwrap
   end
@@ -29,7 +33,7 @@ struct LLVM::TargetData
     LibLLVM.offset_of_element(self, struct_type, element)
   end
 
-  def to_data_layout_string
+  def to_data_layout_string : String
     LLVM.string_and_dispose(LibLLVM.copy_string_rep_of_target_data(self))
   end
 end

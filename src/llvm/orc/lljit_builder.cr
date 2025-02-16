@@ -32,4 +32,13 @@ class LLVM::Orc::LLJITBuilder
       yield
     end
   end
+
+  {% if LibLLVM::IS_LT_180 %}
+    # :nodoc:
+    # needed by `Crystal::Program#evaluate` to match our custom data layout on
+    # LLVM 17 or below
+    def data_layout=(data_layout : LLVM::TargetData)
+      LibLLVMExt.orc_lljit_builder_set_data_layout(self, data_layout)
+    end
+  {% end %}
 end
