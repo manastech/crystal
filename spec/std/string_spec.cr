@@ -2375,6 +2375,14 @@ describe "String" do
       end
     end
 
+    it "has a fancy iterator" do
+      a = "cruel world"
+      a.each_match(/\w+/).map(&.[0]).to_a.should eq(["cruel", "world"])
+      a.each_match(/.../).map(&.[0]).to_a.should eq(["cru", "el ", "wor"])
+      a.each_match(/(...)/).map(&.[1]).to_a.should eq(["cru", "el ", "wor"])
+      a.each_match(/(..)(..)/).map { |m| {m[1], m[2]} }.to_a.should eq([{"cr", "ue"}, {"l ", "wo"}])
+    end
+
     it "does with utf-8" do
       a = "こん こん"
       a.scan(/こ/).map(&.[0]).should eq(["こ", "こ"])

@@ -5,6 +5,8 @@ require "crystal/small_deque"
 {% end %}
 require "float/fast_float"
 
+require "regex/*"
+
 # A `String` represents an immutable sequence of UTF-8 characters.
 #
 # A `String` is typically created with a string literal, enclosing UTF-8 characters
@@ -4827,6 +4829,36 @@ class String
     end
 
     self
+  end
+
+  private class MatchIterator
+    include Iterator(Regex::MatchData)
+
+    def initialize(@s : String, @pattern : Regex)
+      @stop = false
+      @byte_offset = 0
+    end
+
+    def next
+      return stop if @stop
+
+      if match = @pattern.match_at_byte_index(@s, @byte_offset)
+        index = match.byte_begin(0)
+        shift_by = match[0].bytesize
+        shift_by = 1 if shift_by == 0
+        @byte_offset = index + shift_by
+        return match
+      else
+        @stop = true
+        return stop
+      end
+    end
+  end
+
+  # Searches the string for instances of *pattern*,
+  # yielding an Iterator of `Regex::MatchData` for each match.
+  def each_match(pattern : Regex)
+    MatchIterator.new(self, pattern)
   end
 
   # Searches the string for instances of *pattern*,
