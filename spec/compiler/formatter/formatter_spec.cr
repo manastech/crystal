@@ -2343,6 +2343,10 @@ describe Crystal::Formatter do
   assert_format "foo\n  .bar\n  .baz(\n    1\n  )"
   assert_format "foo.bar\n  .baz(\n    1\n  )"
 
+  # #13202
+  assert_format "result_set.rows = (from..to).map { |i| result_set.rows[i] }"
+  assert_format "result_set.rows =(from..to).map { |i| result_set.rows[i] }", "result_set.rows = (from..to).map { |i| result_set.rows[i] }"
+
   assert_format <<-CRYSTAL,
     def foo
       {% if flag?(:foo) %}
