@@ -568,6 +568,8 @@ end
 # Time.local(2016, 2, 29) + 2.years  # => 2018-02-28 00:00:00
 # ```
 struct Time::MonthSpan
+  include Comparable(self)
+
   # The number of months.
   getter value : Int64
 
@@ -583,6 +585,58 @@ struct Time::MonthSpan
   # Returns a `Time` that happens N months before now.
   def ago : Time
     Time.local - self
+  end
+
+  def -(other : self) : Time::MonthSpan
+    # TODO check overflow
+    MonthSpan.new(@value - other.value)
+  end
+
+  def - : Time::MonthSpan
+    # TODO check overflow
+    MonthSpan.new(-@value)
+  end
+
+  def +(other : self) : Time::MonthSpan
+    # TODO check overflow
+    MonthSpan.new(@value + other.value)
+  end
+
+  def + : self
+    self
+  end
+
+  # Returns a `Time::MonthSpan` that is *number* times longer.
+  def *(number : Int) : Time::MonthSpan
+    # TODO check overflow
+    MonthSpan.new((@value * number).to_i64)
+  end
+
+  # Returns a `Time::MonthSpan` that is *number* times longer.
+  def *(number : Float) : Time::MonthSpan
+    # TODO check overflow
+    MonthSpan.new((@value * number).to_i64)
+  end
+
+  # Returns a `Time::MonthSpan` that is divided by *number*.
+  def /(number : Int) : Time::MonthSpan
+    # TODO check overflow
+    MonthSpan.new((@value / number).to_i64)
+  end
+
+  # Returns a `Time::MonthSpan` that is divided by *number*.
+  def /(other : self) : Float64
+    # TODO check overflow
+    @value / other.value
+  end
+
+  def /(number : Float) : Time::MonthSpan
+    # TODO check overflow
+    MonthSpan.new((@value / number).to_i64)
+  end
+
+  def <=>(other : self)
+    @value <=> other.value
   end
 end
 
