@@ -261,6 +261,18 @@ describe "Semantic: macro" do
       CRYSTAL
   end
 
+  it "expands macro with empty block" do
+    assert_type(%(
+      macro foo
+        x = {{yield}}
+      end
+
+      x = 1
+      foo { }
+      x
+      )) { nil_type }
+  end
+
   it "errors if find macros but wrong arguments" do
     assert_error(<<-CRYSTAL, "wrong number of arguments for macro 'foo' (given 1, expected 0)", inject_primitives: true)
       macro foo
