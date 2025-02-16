@@ -512,6 +512,22 @@ describe "Dir" do
       end
     end
 
+    it "respects `CaseInsensitive`" do
+      with_tempfile("glob-case-insensitive") do |path|
+        FileUtils.mkdir_p(path)
+
+        a_txt = File.join(path, "a.txt")
+        b_txt = File.join(path, "B.TXT")
+
+        File.write(a_txt, "")
+        File.write(b_txt, "")
+
+        Dir.glob("#{Path[path].to_posix}/*.txt", match: :case_insensitive).should eq [a_txt, b_txt]
+        Dir.glob("#{Path[path].to_posix}/*.TXT", match: :case_insensitive).should eq [a_txt, b_txt]
+        Dir.glob("#{Path[path].parent.to_posix}/GlOb-cAsE-INSENSITIVE/*", match: :case_insensitive).should eq [a_txt, b_txt]
+      end
+    end
+
     {% if flag?(:win32) %}
       it "respects `NativeHidden` and `OSHidden`" do
         with_tempfile("glob-system-hidden") do |path|

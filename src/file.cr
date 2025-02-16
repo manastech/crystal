@@ -85,7 +85,7 @@ class File < IO::FileDescriptor
            "/dev/null"
          {% end %}
 
-  # Options used to control the behavior of `Dir.glob`.
+  # Options used to control the behavior of `File.match?` and `Dir.glob`.
   @[Flags]
   enum MatchOptions
     # Includes files whose name begins with a period (`.`).
@@ -99,6 +99,8 @@ class File < IO::FileDescriptor
     # system attributes, `OSHidden` must also be used.
     #
     # On other systems, this has no effect.
+    #
+    # Cannot be used in `File.match?`.
     NativeHidden
 
     # Includes files which are considered hidden by operating system
@@ -111,13 +113,28 @@ class File < IO::FileDescriptor
     # `NativeHidden`.
     #
     # On other systems, this has no effect.
+    #
+    # Cannot be used in `File.match?`.
     OSHidden
+
+    # Includes files whose name differs from the match pattern in letter case
+    # only. The comparison is done using `Char#downcase`, not by the underlying
+    # filesystem's case mappings.
+    CaseInsensitive
+
+    # Returns a suitable platform-specific default set of options for
+    # `File.match?`.
+    #
+    # Currently this is `DotFiles` on all platforms.
+    def self.match_default : self
+      DotFiles
+    end
 
     # Returns a suitable platform-specific default set of options for
     # `Dir.glob` and `Dir.[]`.
     #
-    # Currently this is always `NativeHidden | OSHidden`.
-    def self.glob_default
+    # Currently this is `NativeHidden | OSHidden` on all platforms.
+    def self.glob_default : self
       NativeHidden | OSHidden
     end
   end
@@ -493,8 +510,22 @@ class File < IO::FileDescriptor
   # recognized, according to the path's kind. If *path* is a `String`, only `/`
   # is considered a directory separator.
   #
+  # The *options* argument controls the match behavior in the following ways:
+  #
+  # * Path segments beginning with a period (`.`) are matched if and only if
+  #   *options* includes `MatchOptions::DotFiles`.
+  # * If `MatchOptions::CaseInsensitive` is present, all characters are matched
+  #   in a case-insesnsitive manner, and character sets are disallowed.
+  # * Both `MatchOptions::NativeHidden` and `MatchOptions::OSHidden` raise
+  #   `ArgumentError`; this method never accesses the filesystem.
+  #
   # NOTE: Only `/` in *pattern* matches directory separators in *path*.
-  def self.match?(pattern : String, path : Path | String) : Bool
+  def self.match?(pattern : String, path : Path | String, options : MatchOptions = MatchOptions.match_default) : Bool
+    # TODO: support the absence of DotFiles
+    raise ArgumentError.new "Match flags must include DotFiles" unless options.dot_files?
+
+    raise ArgumentError.new "Invalid match flags: #{options}" if options.native_hidden? || options.os_hidden?
+
     expanded_patterns = [] of String
     File.expand_brace_pattern(pattern, expanded_patterns)
 
@@ -505,13 +536,12 @@ class File < IO::FileDescriptor
       separators = Path.separators(Path::Kind::POSIX)
     end
 
-    expanded_patterns.each do |expanded_pattern|
-      return true if match_single_pattern(expanded_pattern, path, separators)
+    expanded_patterns.any? do |expanded_pattern|
+      match_single_pattern(expanded_pattern, path, separators, options)
     end
-    false
   end
 
-  private def self.match_single_pattern(pattern : String, path : String, separators)
+  private def self.match_single_pattern(pattern : String, path : String, separators, options : MatchOptions)
     # linear-time algorithm adapted from https://research.swtch.com/glob
     preader = Char::Reader.new(pattern)
     sreader = Char::Reader.new(path)
@@ -557,6 +587,10 @@ class File < IO::FileDescriptor
         when {'[', false}
           pnext = preader.has_next?
 
+          if options.case_insensitive?
+            raise BadPatternError.new "Cannot use character sets in case-insensitive match"
+          end
+
           character_matched = false
           character_set_open = true
           escaped = false
@@ -593,7 +627,6 @@ class File < IO::FileDescriptor
                 when '\\'
                   range_end = preader.next_char
                 else
-                  # Nothing
                   # TODO: check if this branch is fine
                 end
                 range = (pchar..range_end)
@@ -603,7 +636,6 @@ class File < IO::FileDescriptor
               end
             end
             pnext = preader.has_next?
-            false
           end
           raise BadPatternError.new "Invalid character set: unterminated character set" if character_set_open
 
@@ -615,7 +647,12 @@ class File < IO::FileDescriptor
         else
           escaped = false
 
-          if snext && sreader.current_char == pchar
+          if options.case_insensitive?
+            pchar = pchar.downcase
+            char = char.downcase
+          end
+
+          if snext && char == pchar
             preader.next_char
             sreader.next_char
             next

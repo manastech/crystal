@@ -138,34 +138,42 @@ class Dir
     record DirectoriesOnly
     record ConstantEntry, path : String, merged : Bool
     record EntryMatch, pattern : String do
-      def matches?(string) : Bool
-        File.match?(pattern, string)
+      def matches?(string, options) : Bool
+        # FIXME: `File.match?` does not support lack of `DotFiles` instead,
+        # remove this option later (note that `.run` currently filters out
+        # dotfiles per path segment, so this flag has no effect here)
+        options |= File::MatchOptions::DotFiles
+        options &= ~File::MatchOptions[NativeHidden, OSHidden]
+        File.match?(pattern, string, options)
       end
     end
     record RecursiveDirectories
     record ConstantDirectory, path : String
     record RootDirectory
     record DirectoryMatch, pattern : String do
-      def matches?(string) : Bool
-        File.match?(pattern, string)
+      def matches?(string, options) : Bool
+        # FIXME: ditto
+        options |= File::MatchOptions::DotFiles
+        options &= ~File::MatchOptions[NativeHidden, OSHidden]
+        File.match?(pattern, string, options)
       end
     end
     alias PatternType = DirectoriesOnly | ConstantEntry | EntryMatch | RecursiveDirectories | ConstantDirectory | RootDirectory | DirectoryMatch
 
-    def self.glob(patterns : Enumerable, *, match, follow_symlinks, &block : String -> _)
+    def self.glob(patterns : Enumerable, *, match options, follow_symlinks, &block : String -> _)
       patterns.each do |pattern|
         if pattern.is_a?(Path)
           pattern = pattern.to_posix.to_s
         end
-        sequences = compile(pattern)
+        sequences = compile(pattern, options)
 
         sequences.each do |sequence|
           if sequence.count(&.is_a?(RecursiveDirectories)) > 1
-            run_tracking(sequence, match: match, follow_symlinks: follow_symlinks) do |match|
+            run_tracking(sequence, options: options, follow_symlinks: follow_symlinks) do |match|
               yield match
             end
           else
-            run(sequence, match: match, follow_symlinks: follow_symlinks) do |match|
+            run(sequence, options: options, follow_symlinks: follow_symlinks) do |match|
               yield match
             end
           end
@@ -173,16 +181,16 @@ class Dir
       end
     end
 
-    private def self.compile(pattern)
+    private def self.compile(pattern, options)
       expanded_patterns = [] of String
       File.expand_brace_pattern(pattern, expanded_patterns)
 
       expanded_patterns.map do |expanded_pattern|
-        single_compile expanded_pattern
+        single_compile expanded_pattern, options
       end
     end
 
-    private def self.single_compile(glob)
+    private def self.single_compile(glob, options)
       list = [] of PatternType
       return list if glob.empty?
 
@@ -192,7 +200,7 @@ class Dir
         list << DirectoriesOnly.new
       else
         file = parts.pop
-        if constant_entry?(file)
+        if constant_entry?(file, options)
           list << ConstantEntry.new file, false
         elsif !file.empty?
           list << EntryMatch.new file
@@ -204,7 +212,7 @@ class Dir
         when dir == "**"
           list << RecursiveDirectories.new
         when dir.empty?
-        when constant_entry?(dir)
+        when constant_entry?(dir, options)
           case last = list[-1]
           when ConstantDirectory
             list[-1] = ConstantDirectory.new File.join(dir, last.path)
@@ -218,6 +226,14 @@ class Dir
         end
       end
 
+      # FIXME: if `options.case_insensitive?` is true, then there will be
+      # neither `ConstantDirectory` nor `ConstantEntry` subpatterns, so Windows
+      # absolute paths will start with a `DirectoryMatch` for the anchor, which
+      # is then treated like a relative path; this is wrong, so anchors should
+      # be recognized here and `RootDirectory` should support them
+      #
+      # but then what if we really want `./C:` on filesystems that support that
+      # name?
       if glob.starts_with?('/')
         list << RootDirectory.new
       end
@@ -225,7 +241,9 @@ class Dir
       list
     end
 
-    private def self.constant_entry?(file)
+    private def self.constant_entry?(file, options)
+      return false if options.case_insensitive?
+
       file.each_char do |char|
         return false if char.in?('*', '?', '[', '\\')
       end
@@ -233,17 +251,17 @@ class Dir
       true
     end
 
-    private def self.run_tracking(sequence, match, follow_symlinks, &block : String -> _)
+    private def self.run_tracking(sequence, options, follow_symlinks, &block : String -> _)
       result_tracker = Set(String).new
 
-      run(sequence, match, follow_symlinks) do |result|
+      run(sequence, options, follow_symlinks) do |result|
         if result_tracker.add?(result)
           yield result
         end
       end
     end
 
-    private def self.run(sequence, match, follow_symlinks, &block : String -> _)
+    private def self.run(sequence, options, follow_symlinks, &block : String -> _)
       return if sequence.empty?
 
       path_stack = [] of Tuple(Int32, String?, Crystal::System::Dir::Entry?)
@@ -275,14 +293,14 @@ class Dir
         in EntryMatch
           next if sequence[pos + 1]?.is_a?(RecursiveDirectories)
           each_child(path) do |entry|
-            next unless matches_file?(entry, match)
-            yield join(path, entry.name) if cmd.matches?(entry.name)
+            next unless matches_file?(entry, options)
+            yield join(path, entry.name) if cmd.matches?(entry.name, options)
           end
         in DirectoryMatch
           next_cmd = sequence[next_pos]?
 
           each_child(path) do |entry|
-            if cmd.matches?(entry.name)
+            if cmd.matches?(entry.name, options)
               is_dir = entry.dir?
               fullpath = join(path, entry.name)
               if is_dir.nil?
@@ -335,7 +353,7 @@ class Dir
 
             if entry = read_entry(dir)
               next if entry.name.in?(".", "..")
-              next unless matches_file?(entry, match)
+              next unless matches_file?(entry, options)
 
               if dir_path.bytesize == 0
                 fullpath = entry.name
@@ -349,7 +367,7 @@ class Dir
                   yield fullpath if next_cmd.path == entry.name
                 end
               when EntryMatch
-                yield fullpath if next_cmd.matches?(entry.name)
+                yield fullpath if next_cmd.matches?(entry.name, options)
               end
 
               is_dir = entry.dir?

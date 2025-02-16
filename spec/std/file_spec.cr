@@ -8,16 +8,16 @@ private def it_raises_on_null_byte(operation, file = __FILE__, line = __LINE__, 
   end
 end
 
-private def assert_file_matches(pattern, path : String, *, file = __FILE__, line = __LINE__)
-  File.match?(pattern, path).should be_true, file: file, line: line
-  File.match?(pattern, Path.posix(path)).should be_true, file: file, line: line
-  File.match?(pattern, Path.posix(path).to_windows).should be_true, file: file, line: line
+private def assert_file_matches(pattern, path : String, options : File::MatchOptions = File::MatchOptions.match_default, *, file = __FILE__, line = __LINE__)
+  File.match?(pattern, path, options).should be_true, file: file, line: line
+  File.match?(pattern, Path.posix(path), options).should be_true, file: file, line: line
+  File.match?(pattern, Path.posix(path).to_windows, options).should be_true, file: file, line: line
 end
 
-private def refute_file_matches(pattern, path : String, *, file = __FILE__, line = __LINE__)
-  File.match?(pattern, path).should be_false, file: file, line: line
-  File.match?(pattern, Path.posix(path)).should be_false, file: file, line: line
-  File.match?(pattern, Path.posix(path).to_windows).should be_false, file: file, line: line
+private def refute_file_matches(pattern, path : String, options : File::MatchOptions = File::MatchOptions.match_default, *, file = __FILE__, line = __LINE__)
+  File.match?(pattern, path, options).should be_false, file: file, line: line
+  File.match?(pattern, Path.posix(path), options).should be_false, file: file, line: line
+  File.match?(pattern, Path.posix(path).to_windows, options).should be_false, file: file, line: line
 end
 
 private def normalize_permissions(permissions, *, directory)
@@ -1824,6 +1824,12 @@ describe "File" do
       expect_raises(File::BadPatternError, "unterminated character set") do
         File.match?("a[", "a")
       end
+      expect_raises(File::BadPatternError, "Cannot use character sets in case-insensitive match") do
+        File.match?("[a]", "a", File::MatchOptions[DotFiles, CaseInsensitive])
+      end
+      expect_raises(File::BadPatternError, "Cannot use character sets in case-insensitive match") do
+        File.match?("[a-b]", "a", File::MatchOptions[DotFiles, CaseInsensitive])
+      end
     end
 
     it "alternates" do
@@ -1838,6 +1844,13 @@ describe "File" do
       assert_file_matches "ab{{c,d}ef,}", "ab"
       assert_file_matches "ab{{c,d}ef,}", "abcef"
       assert_file_matches "ab{{c,d}ef,}", "abdef"
+    end
+
+    it "supports CaseInsensitive" do
+      assert_file_matches "ABcDe", "abcDE", File::MatchOptions[DotFiles, CaseInsensitive]
+      assert_file_matches "a*b/*.txt", "AB/CDE.TXT", File::MatchOptions[DotFiles, CaseInsensitive]
+      assert_file_matches "a*b/*.txt", "AAAAB/CDE.TXT", File::MatchOptions[DotFiles, CaseInsensitive]
+      assert_file_matches "a?c", "ABC", File::MatchOptions[DotFiles, CaseInsensitive]
     end
   end
 
