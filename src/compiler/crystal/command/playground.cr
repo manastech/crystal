@@ -6,6 +6,7 @@
 class Crystal::Command
   private def playground
     server = Playground::Server.new
+    should_launch_browser = true
 
     OptionParser.parse(@options) do |opts|
       opts.banner = "Usage: crystal play [options] [file]\n\nOptions:"
@@ -29,6 +30,10 @@ class Crystal::Command
         exit
       end
 
+      opts.on("-n", "--no-launch", "Disables the automatic launching of the browser.") do
+        should_launch_browser = false
+      end
+
       opts.unknown_args do |before, after|
         if before.size > 0
           server.source = gather_sources([before.first]).first
@@ -36,6 +41,21 @@ class Crystal::Command
       end
     end
 
+    playground_url = "http://#{server.host || "localhost"}:#{server.port}"
+
+    launch_browser(playground_url) if should_launch_browser
+
     server.start
+  end
+
+  # Open up the default browser automatically to the Playground.
+  private def launch_browser(playground_url)
+    {% if flag?(:darwin) %}
+      Process.run("open #{playground_url}", shell: true)
+    {% elsif flag?(:win32) %}
+      Process.run("start #{playground_url}", shell: true)
+    {% elsif flag?(:unix) %}
+      Process.run("xdg-open #{playground_url}", shell: true)
+    {% end %}
   end
 end
