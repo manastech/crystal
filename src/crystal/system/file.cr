@@ -1,8 +1,13 @@
 # :nodoc:
 module Crystal::System::File
+  
+  private def self.open_flag(mode : Int)
+    mode
+  end
+
   # Helper method for calculating file open modes on systems with posix-y `open`
   # calls.
-  private def self.open_flag(mode)
+  private def self.open_flag(mode : String)
     if mode.size == 0
       raise "No file open mode specified"
     end
