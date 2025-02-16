@@ -409,6 +409,14 @@ module Crystal
         assert_macro %({{'a'.ord}}), %(97)
         assert_macro %({{'龍'.ord}}), %(40845)
       end
+
+      it "executes zero?" do
+        assert_macro "", "{{0.zero?}}", [] of ASTNode, "true"
+        assert_macro "", "{{1.zero?}}", [] of ASTNode, "false"
+
+        assert_macro "", "{{0.0.zero?}}", [] of ASTNode, "true"
+        assert_macro "", "{{0.1.zero?}}", [] of ASTNode, "false"
+      end
     end
 
     describe "string methods" do

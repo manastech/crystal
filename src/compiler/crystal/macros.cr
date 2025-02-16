@@ -489,6 +489,10 @@ module Crystal::Macros
 
   # Any number literal.
   class NumberLiteral < ASTNode
+    # Returns `true` if value is 0, `false` otherwise.
+    def zero? : BoolLiteral
+    end
+
     # Compares this node's value to another node's value.
     def <(other : NumberLiteral) : BoolLiteral
     end
