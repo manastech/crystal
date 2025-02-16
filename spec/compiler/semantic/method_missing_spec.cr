@@ -93,6 +93,44 @@ describe "Semantic: method_missing" do
       )) { int32 }
   end
 
+  it "reorders expanded def immediately" do
+    assert_type(<<-CR) { int32 }
+      class Foo
+        macro method_missing(call)
+          def foo(y : Int32)
+            1
+          end
+        end
+
+        def foo(x : Int32 | String)
+          true
+        end
+      end
+
+      Foo.new.foo(y: 1)
+      Foo.new.foo(1)
+      CR
+  end
+
+  it "reorders expanded def immediately, even if overload ordering is deferred" do
+    assert_type(<<-CR, flags: "preview_overload_order") { int32 }
+      class Foo
+        macro method_missing(call)
+          def foo(y : Int32)
+            1
+          end
+        end
+
+        def foo(x : Int32 | String)
+          true
+        end
+      end
+
+      Foo.new.foo(y: 1)
+      Foo.new.foo(1)
+      CR
+  end
+
   it "doesn't look up method_missing in with_yield_scope if call has a receiver (#12097)" do
     assert_error(%(
       class Foo

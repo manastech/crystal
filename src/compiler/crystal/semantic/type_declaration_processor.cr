@@ -132,6 +132,12 @@ struct Crystal::TypeDeclarationProcessor
     # First check type declarations
     @program.visit_with_finished_hooks(node, type_decl_visitor)
 
+    # If overload ordering has been deferred, do it now since all types are
+    # fully defined
+    if @program.has_flag?("preview_overload_order")
+      OverloadOrderingProcessor.new(@program).run
+    end
+
     # Use the last type found for class variables to declare them
     type_decl_visitor.class_vars.each do |owner, vars|
       vars.each do |name, type|

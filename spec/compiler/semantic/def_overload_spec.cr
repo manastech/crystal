@@ -1672,6 +1672,166 @@ describe "Semantic: def overload" do
       foo(1)
       CRYSTAL
   end
+
+  describe "without `-Dpreview_overload_order`" do
+    it "orders overloads as soon as they are defined" do
+      assert_type(<<-CR) { bool }
+        class Foo
+        end
+
+        def foo(a : Bar)
+          1
+        end
+
+        def foo(a : Foo)
+          true
+        end
+
+        class Bar < Foo
+        end
+
+        foo(Bar.new)
+        CR
+    end
+
+    it "overload ordering is observable from top-level macros (1)" do
+      assert_type(<<-CR) { int32 }
+        class Foo
+        end
+
+        class Bar < Foo
+          def foo(a : Foo)
+            true
+          end
+
+          def foo(a : Bar)
+            1
+          end
+        end
+
+        {{ Bar.methods[0].body }}
+        CR
+    end
+
+    it "overload ordering is observable from top-level macros (2)" do
+      assert_type(<<-CR) { int32 }
+        module Foo
+          def foo
+            true
+          end
+
+          def foo
+            1
+          end
+        end
+
+        {{ Foo.methods[0].body }}
+        CR
+    end
+
+    it "overload ordering is observable from macro defs" do
+      assert_type(<<-CR) { int32 }
+        class Foo
+        end
+
+        class Bar < Foo
+          def foo(a : Foo)
+            true
+          end
+
+          def foo(a : Bar)
+            1
+          end
+        end
+
+        def foo
+          {{ Bar.methods[0].body }}
+        end
+
+        foo
+        CR
+    end
+  end
+
+  describe "with `-Dpreview_overload_order`" do
+    it "orders overloads after all types are defined" do
+      assert_type(<<-CR, flags: "preview_overload_order") { int32 }
+        class Foo
+        end
+
+        def foo(a : Bar)
+          1
+        end
+
+        def foo(a : Foo)
+          true
+        end
+
+        class Bar < Foo
+        end
+
+        foo(Bar.new)
+        CR
+    end
+
+    it "overload ordering is not observable from top-level macros (1)" do
+      assert_type(<<-CR, flags: "preview_overload_order") { bool }
+        class Foo
+        end
+
+        class Bar < Foo
+          def foo(a : Foo)
+            true
+          end
+
+          def foo(a : Bar)
+            1
+          end
+        end
+
+        {{ Bar.methods[0].body }}
+        CR
+    end
+
+    it "overload ordering is not observable from top-level macros (2)" do
+      assert_type(<<-CR, flags: "preview_overload_order") { bool }
+        module Foo
+          def foo
+            true
+          end
+
+          def foo
+            1
+          end
+        end
+
+        {{ Foo.methods[0].body }}
+        CR
+    end
+
+    it "overload ordering is observable from macro defs" do
+      assert_type(<<-CR, flags: "preview_overload_order") { int32 }
+        class Foo
+        end
+
+        class Bar < Foo
+          def foo(a : Foo)
+            true
+          end
+
+          def foo(a : Bar)
+            1
+          end
+        end
+
+        def foo
+          {{ Bar.methods[0].body }}
+        end
+
+        foo
+        CR
+    end
+  end
 end
 
 private def each_union_variant(t1, t2, &)

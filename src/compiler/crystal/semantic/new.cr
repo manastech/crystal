@@ -40,6 +40,7 @@ module Crystal
 
       if check
         type = type.as(ModuleType)
+        defer_overload_order = @program.has_flag?("preview_overload_order")
 
         self_initialize_methods = type.lookup_defs_without_parents("initialize")
         self_new_methods = type.metaclass.lookup_defs_without_parents("new")
@@ -52,11 +53,11 @@ module Crystal
         if !has_new_or_initialize
           # Add self.new
           new_method = Def.argless_new(type)
-          type.metaclass.as(ModuleType).add_def(new_method)
+          type.metaclass.as(ModuleType).add_def(new_method, ordered: !defer_overload_order)
 
           # Also add `initialize`, so `super` in a subclass
           # inside an `initialize` will find this one
-          type.add_def Def.argless_initialize(type)
+          type.add_def Def.argless_initialize(type), ordered: !defer_overload_order
         end
 
         # Check to see if a type doesn't define `initialize`
@@ -82,8 +83,8 @@ module Crystal
             if initialize_methods.empty?
               # If the type has `self.new()`, don't override it
               unless has_default_self_new
-                type.metaclass.as(ModuleType).add_def(Def.argless_new(type))
-                type.add_def(Def.argless_initialize(type))
+                type.metaclass.as(ModuleType).add_def(Def.argless_new(type), ordered: !defer_overload_order)
+                type.add_def(Def.argless_initialize(type), ordered: !defer_overload_order)
               end
             else
               initialize_owner = nil
@@ -102,14 +103,14 @@ module Crystal
                 initialize_owner = initialize.owner
 
                 new_method = initialize.expand_new_from_initialize(type)
-                type.metaclass.as(ModuleType).add_def(new_method)
+                type.metaclass.as(ModuleType).add_def(new_method, ordered: !defer_overload_order)
               end
 
               # Copy non-generated `new` methods from parent to child
               new_methods.each do |new_method|
                 next if new_method.new?
 
-                type.metaclass.as(ModuleType).add_def(new_method.clone)
+                type.metaclass.as(ModuleType).add_def(new_method.clone, ordered: !defer_overload_order)
               end
             end
           else

@@ -652,9 +652,9 @@ module Crystal
       "main"
     end
 
-    def add_def(node : Def)
+    def add_def(node : Def, *, ordered = true)
       if file_module = check_private(node)
-        file_module.add_def node
+        file_module.add_def node, ordered: ordered
       else
         super
       end

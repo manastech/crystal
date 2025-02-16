@@ -25,6 +25,20 @@ describe "Semantic: previous_def" do
       )) { int32 }
   end
 
+  it "types previous def even if overload ordering is deferred" do
+    assert_type(<<-CR, flags: "preview_overload_order") { int32 }
+      def foo
+        1
+      end
+
+      def foo
+        previous_def
+      end
+
+      foo
+      CR
+  end
+
   it "types previous def in generic class" do
     assert_type(%(
       class Foo(T)

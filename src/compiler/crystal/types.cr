@@ -908,28 +908,34 @@ module Crystal
     getter hooks : Array(Hook)?
     getter(parents) { [] of Type }
 
-    def add_def(a_def)
+    def add_def(a_def : Def, *, ordered = true)
       a_def.owner = self
 
       item = DefWithMetadata.new(a_def)
 
       defs = (@defs ||= {} of String => Array(DefWithMetadata))
       list = defs[a_def.name] ||= [] of DefWithMetadata
-      list.each_with_index do |ex_item, i|
-        case item.compare_strictness(ex_item, self)
-        when nil
-          # Incompatible defs; do nothing
-        when 0
-          # The two defs have the same signature so item overrides ex_item.
-          list[i] = item
-          a_def.previous = ex_item
-          a_def.doc ||= ex_item.def.doc
-          ex_item.def.next = a_def
-          return ex_item.def
-        when .< 0
-          # item has a new signature, stricter than ex_item.
-          list.insert(i, item)
-          return nil
+
+      # do not order overloads unless requested (e.g. in top-level visitor)
+      # all overloads may be later ordered in `Crystal::OverloadOrderProcessor`
+      # note that `previous_def` won't work until overloads are ordered
+      if ordered
+        list.each_with_index do |ex_item, i|
+          case item.compare_strictness(ex_item, self)
+          when nil
+            # Incompatible defs; do nothing
+          when 0
+            # The two defs have the same signature so item overrides ex_item.
+            list[i] = item
+            a_def.previous = ex_item
+            a_def.doc ||= ex_item.def.doc
+            ex_item.def.next = a_def
+            return ex_item.def
+          when .< 0
+            # item has a new signature, stricter than ex_item.
+            list.insert(i, item)
+            return nil
+          end
         end
       end
 

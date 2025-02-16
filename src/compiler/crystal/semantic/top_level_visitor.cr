@@ -482,7 +482,8 @@ class Crystal::TopLevelVisitor < Crystal::SemanticVisitor
       node.raise "enums can't define an `initialize` method, try using `def self.new`"
     end
 
-    target_type.add_def node
+    defer_overload_order = @program.has_flag?("preview_overload_order")
+    target_type.add_def node, ordered: !defer_overload_order
 
     node.set_type @program.nil
 
@@ -494,7 +495,7 @@ class Crystal::TopLevelVisitor < Crystal::SemanticVisitor
       # to find this method.
       if node.name == "initialize"
         new_method = node.expand_new_signature_from_initialize(target_type)
-        target_type.metaclass.as(ModuleType).add_def(new_method)
+        target_type.metaclass.as(ModuleType).add_def(new_method, ordered: !defer_overload_order)
 
         # And we register it to later complete it
         new_expansions[node] = new_method
@@ -1009,6 +1010,9 @@ class Crystal::TopLevelVisitor < Crystal::SemanticVisitor
     external.fun_def = node
     node.external = external
 
+    # C funs cannot overload, so overload order shouldn't matter here
+    # TODO: top-level funs can still overload with top-level defs (#4761),
+    # they should be disallowed
     current_type.add_def(external)
 
     false
