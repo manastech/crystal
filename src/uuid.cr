@@ -352,7 +352,7 @@ struct UUID
   # Generates an empty UUID.
   #
   # ```
-  # UUID.empty # => UUID(00000000-0000-4000-0000-000000000000)
+  # UUID.empty # => UUID["00000000-0000-4000-0000-000000000000"]
   # ```
   def self.empty : self
     new(StaticArray(UInt8, 16).new(0_u8), UUID::Variant::NCS, UUID::Version::V4)
@@ -422,9 +422,9 @@ struct UUID
 
   # Convert to `String` in literal format.
   def inspect(io : IO) : Nil
-    io << "UUID("
+    io << %(UUID[")
     to_s(io)
-    io << ')'
+    io << %("])
   end
 
   def to_s(io : IO) : Nil
