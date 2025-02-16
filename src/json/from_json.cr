@@ -1,30 +1,32 @@
-# Deserializes the given JSON in *string_or_io* into
-# an instance of `self`. This simply creates a `parser = JSON::PullParser`
-# and invokes `new(parser)`: classes that want to provide JSON
-# deserialization must provide an `def initialize(parser : JSON::PullParser)`
-# method.
-#
-# ```
-# Int32.from_json("1")                # => 1
-# Array(Int32).from_json("[1, 2, 3]") # => [1, 2, 3]
-# ```
-def Object.from_json(string_or_io)
-  parser = JSON::PullParser.new(string_or_io)
-  new parser
-end
-
-# Deserializes the given JSON in *string_or_io* into
-# an instance of `self`, assuming the JSON consists
-# of an JSON object with key *root*, and whose value is
-# the value to deserialize.
-#
-# ```
-# Int32.from_json(%({"main": 1}), root: "main") # => 1
-# ```
-def Object.from_json(string_or_io, root : String)
-  parser = JSON::PullParser.new(string_or_io)
-  parser.on_key!(root) do
+class Class
+  # Deserializes the given JSON in *string_or_io* into
+  # an instance of `self`. This simply creates a `parser = JSON::PullParser`
+  # and invokes `new(parser)`: classes that want to provide JSON
+  # deserialization must provide an `def initialize(parser : JSON::PullParser)`
+  # method.
+  #
+  # ```
+  # Int32.from_json("1")                # => 1
+  # Array(Int32).from_json("[1, 2, 3]") # => [1, 2, 3]
+  # ```
+  def from_json(string_or_io)
+    parser = JSON::PullParser.new(string_or_io)
     new parser
+  end
+
+  # Deserializes the given JSON in *string_or_io* into
+  # an instance of `self`, assuming the JSON consists
+  # of an JSON object with key *root*, and whose value is
+  # the value to deserialize.
+  #
+  # ```
+  # Int32.from_json(%({"main": 1}), root: "main") # => 1
+  # ```
+  def from_json(string_or_io, root : String)
+    parser = JSON::PullParser.new(string_or_io)
+    parser.on_key!(root) do
+      new parser
+    end
   end
 end
 

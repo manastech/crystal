@@ -1,15 +1,17 @@
-# Deserializes the given YAML in *string_or_io* into
-# an instance of `self`. This simply creates an instance of
-# `YAML::ParseContext` and invokes `new(parser, yaml)`:
-# classes that want to provide YAML deserialization must provide an
-# `def initialize(parser : YAML::ParseContext, yaml : string_or_io)`
-# method.
-#
-# ```
-# Hash(String, String).from_yaml("{env: production}") # => {"env" => "production"}
-# ```
-def Object.from_yaml(string_or_io : String | IO)
-  new(YAML::ParseContext.new, parse_yaml(string_or_io))
+class Class
+  # Deserializes the given YAML in *string_or_io* into
+  # an instance of `self`. This simply creates an instance of
+  # `YAML::ParseContext` and invokes `new(parser, yaml)`:
+  # classes that want to provide YAML deserialization must provide an
+  # `def initialize(parser : YAML::ParseContext, yaml : string_or_io)`
+  # method.
+  #
+  # ```
+  # Hash(String, String).from_yaml("{env: production}") # => {"env" => "production"}
+  # ```
+  def from_yaml(string_or_io : String | IO)
+    new(YAML::ParseContext.new, parse_yaml(string_or_io))
+  end
 end
 
 def Array.from_yaml(string_or_io : String | IO, &)

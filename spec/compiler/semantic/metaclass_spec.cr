@@ -259,6 +259,16 @@ describe "Semantic: metaclass" do
     end
   end
 
+  it "doesn't put Object.class as the parent of generic module instance metaclasses (#11110)" do
+    mod = semantic(%(
+      module Foo(T); end
+      )).program
+
+    foo_int32_class = mod.generic_module("Foo", mod.int32).metaclass
+    foo_int32_class.parents.should eq([mod.class_type])
+    foo_int32_class.ancestors.should eq([mod.class_type, mod.value, mod.object])
+  end
+
   it "can't reopen as struct" do
     assert_error <<-CRYSTAL, "Bar is not a struct, it's a metaclass"
       class Foo
