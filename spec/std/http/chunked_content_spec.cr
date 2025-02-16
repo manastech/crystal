@@ -58,6 +58,15 @@ describe HTTP::ChunkedContent do
     content.gets_to_end.should eq("456")
   end
 
+  it "skips to the end when closed" do
+    mem = IO::Memory.new("4\r\n123\n\r\n3\r\n456\r\n0\r\n\r\n")
+    content = HTTP::ChunkedContent.new(mem)
+
+    content.close
+
+    mem.pos.should eq mem.bytesize
+  end
+
   it "#gets reads multiple chunks" do
     mem = IO::Memory.new("1\r\nA\r\n1\r\nB\r\n0\r\n\r\n")
     content = HTTP::ChunkedContent.new(mem)
