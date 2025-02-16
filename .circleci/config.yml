@@ -233,17 +233,25 @@ jobs:
     steps:
       - attach_workspace:
           at: /tmp/workspace
+      - checkout
       - run: |
+          case "$CIRCLE_BRANCH" in
+          release/*)
+            # In release branches, always use version from src/VERSION
+            VERSION=$(cat src/VERSION)
+            ;;
+          *)
+            # The version is based on the branch name.
+            VERSION=$CIRCLE_BRANCH
+
+            # We need to sanitize it because there are restrictions on some places
+            # where the version is use (Mac pkg names, snap branch).
+            VERSION=${VERSION//_/-}
+            VERSION=${VERSION//\//-}-dev
+            ;;
+          esac
+
           cd /tmp/workspace/distribution-scripts
-
-          # The version is based on the branch name.
-          VERSION=$CIRCLE_BRANCH
-
-          # We need to sanitize it because there are restrictions on some places
-          # where the version is use (Mac pkg names, snap branch).
-          VERSION=${VERSION/release\//}
-          VERSION=${VERSION//_/-}
-          VERSION=${VERSION//\//-}-dev
 
           export VERSION
           echo "export CRYSTAL_VERSION=$VERSION" >> build.env
