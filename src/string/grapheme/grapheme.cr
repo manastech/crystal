@@ -173,6 +173,20 @@ class String
       @cluster == other.@cluster
     end
 
+    # Returns `true` if *string* is equivalent to `self`.
+    #
+    # A string and a grapheme are equivalent if they contain the same sequence of codepoints.
+    def ==(string : String) : Bool
+      return false unless string.bytesize == bytesize
+
+      case cluster = @cluster
+      in Char
+        cluster == string[0]
+      in String
+        cluster == string
+      end
+    end
+
     # :nodoc:
     def self.break?(c1 : Char, c2 : Char) : Bool
       break?(Property.from(c1), Property.from(c2))

@@ -3050,6 +3050,13 @@ class String
     to_unsafe.memcmp(other.to_unsafe, bytesize) == 0
   end
 
+  # Returns `true` if *grapheme* is equivalent to `self`.
+  #
+  # A string and a grapheme are eqivalent if they contain the same sequence of codepoints.
+  def ==(grapheme : Grapheme) : Bool
+    grapheme == self
+  end
+
   # The comparison operator.
   #
   # Compares this string with *other*, returning `-1`, `0` or `1` depending on whether

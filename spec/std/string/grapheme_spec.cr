@@ -38,10 +38,24 @@ describe String::Grapheme do
     String::Grapheme.new('🙂').bytesize.should eq 4
   end
 
-  it "#==" do
-    String::Grapheme.new('f').should eq String::Grapheme.new('f')
-    String::Grapheme.new('f').should_not eq String::Grapheme.new("f")
-    String::Grapheme.new("foo").should eq String::Grapheme.new("foo")
+  describe "#==" do
+    it "Grapheme" do
+      String::Grapheme.new('f').should eq String::Grapheme.new('f')
+      String::Grapheme.new('f').should_not eq String::Grapheme.new('g')
+      String::Grapheme.new('f').should_not eq String::Grapheme.new("f")
+      String::Grapheme.new("foo").should eq String::Grapheme.new("foo")
+      String::Grapheme.new("foo").should_not eq String::Grapheme.new("goo")
+      String::Grapheme.new('🙂').should eq String::Grapheme.new('🙂')
+    end
+
+    it "String" do
+      String::Grapheme.new('f').should eq "f"
+      String::Grapheme.new('f').should_not eq "g"
+      String::Grapheme.new('f').should_not eq "fo"
+      String::Grapheme.new("foo").should eq "foo"
+      String::Grapheme.new("foo").should_not eq "goo"
+      String::Grapheme.new('🙂').should eq "🙂"
+    end
   end
 
   it ".break?" do
