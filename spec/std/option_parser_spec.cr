@@ -738,14 +738,37 @@ describe "OptionParser" do
       USAGE
   end
 
-  it "handles subcommands with hyphen" do
-    subcommand = false
-    OptionParser.parse(%w(sub-command)) do |opts|
-      opts.banner = "Usage: foo"
-      opts.on("sub-command", "Subcommand description") { subcommand = true }
-    end
+  it "handles subcommands with inline hyphens (#9465)" do
+    expect_capture_option ["sub--command [option]"], "sub--command [option]", ""
+    expect_capture_option ["sub--command option"], "sub--command option", ""
+    expect_capture_option ["sub--command"], "sub--command", ""
+    expect_capture_option ["sub-c [option]"], "sub-c [option]", ""
+    expect_capture_option ["sub-c value"], "sub-c value", ""
+    expect_capture_option ["sub-c "], "sub-c ", ""
+    expect_capture_option ["sub-command"], "sub-command", ""
+  end
 
-    subcommand.should be_true
+  it "handles subcommands with leading or trailing spaces (#9465)" do
+    expect_capture_option ["--command [option] "], "--command [option] ", ""
+    expect_capture_option [" --command [option]"], " --command [option]", ""
+    expect_capture_option ["--command option "], "--command option ", ""
+    expect_capture_option [" --command option"], " --command option", ""
+    expect_raises(OptionParser::InvalidOption) do
+      expect_capture_option ["--command "], "--command ", ""
+    end
+    expect_capture_option [" --command"], " --command", ""
+    expect_raises(OptionParser::InvalidOption) do
+      expect_capture_option ["-c [option] "], "-c [option] ", ""
+    end
+    expect_capture_option [" -c [option]"], " -c [option]", ""
+    expect_raises(OptionParser::InvalidOption) do
+      expect_capture_option ["-c value "], "-c value ", ""
+    end
+    expect_capture_option [" -c value"], " -c value", ""
+    expect_raises(OptionParser::InvalidOption) do
+      expect_capture_option ["-command "], "-command ", ""
+    end
+    expect_capture_option [" -command"], " -command", ""
   end
 
   it "stops when asked" do
