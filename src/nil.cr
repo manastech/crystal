@@ -65,7 +65,7 @@ struct Nil
   end
 
   # Returns `false`.
-  def same?(other : Reference) : Bool
+  def same?(other : Object) : Bool
     false
   end
 
