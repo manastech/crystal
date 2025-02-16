@@ -64,4 +64,16 @@ describe "Parser warnings" do
       assert_no_parser_warning("def foo : Foo\nend")
     end
   end
+
+  Char::Reader.new("abcdefghjklmnopstuvyzABCDEFGHIJKLMNOPRSTUVWXYZ").each do |letter|
+    it "warns on single-letter macro fresh variable %#{letter}" do
+      assert_parser_warning <<-EOS, "Warning: don't use single-letter fresh variable identifiers"
+        macro foo
+          {% for i in 1..6 %}
+            %#{letter}{i} = {{ i }}
+          {% end %}
+        end
+        EOS
+    end
+  end
 end

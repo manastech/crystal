@@ -3239,6 +3239,9 @@ module Crystal
           end
         when .macro_var?
           macro_var_name = @token.value.to_s
+          if macro_var_name.size == 1
+            warnings.add_warning_at @token.location, "don't use single-letter fresh variable identifiers"
+          end
           if current_char == '{'
             macro_var_exps = parse_macro_var_exps
           else
