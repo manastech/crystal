@@ -32,6 +32,33 @@ module HTTP
 
     def_equals_and_hash name, value, path, expires, domain, secure, http_only, samesite, extension
 
+    # Parses a `Cookie` from the provided `set-cookie` *header*.
+    #
+    # Raises an `ArgumentError` if the *header* fails to parse.
+    #
+    # ```
+    # require "http/cookie"
+    #
+    # HTTP::Cookie.from_set_cookie_header "id=a3fWa; Expires=Wed, 21 Oct 2015 07:28:00 GMT; Secure; SameSite=Lax" # =>
+    # # <HTTP::Cookie:0x7f684eb29770
+    # # @domain=nil,
+    # # @expires=2015-10-21 07:28:00.0 UTC,
+    # # @extension=nil,
+    # # @http_only=false,
+    # # @name="id",
+    # # @path=nil,
+    # # @samesite=Lax,
+    # # @secure=true,
+    # # @value="a3fWa">
+    # ```
+    def self.from_set_cookie_header(header : String) : self
+      unless cookie = Parser.parse_set_cookie header
+        raise ArgumentError.new "Invalid set-cookie header: #{header}."
+      end
+
+      cookie
+    end
+
     # Creates a new `Cookie` instance.
     #
     # Raises `IO::Error` if *name* or *value* are invalid as per [RFC 6265 §4.1.1](https://tools.ietf.org/html/rfc6265#section-4.1.1).

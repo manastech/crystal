@@ -20,18 +20,20 @@ private INVALID_COOKIE_VALUES = ("\x00".."\x08").to_a + ("\x0A".."\x1F").to_a + 
 
 module HTTP
   describe Cookie do
-    it "#==" do
-      cookie = Cookie.new("a", "b", path: "/path", expires: Time.utc, domain: "domain", secure: true, http_only: true, samesite: :strict, extension: "foo=bar")
-      cookie.should eq(cookie.dup)
-      cookie.should_not eq(cookie.dup.tap { |c| c.name = "c" })
-      cookie.should_not eq(cookie.dup.tap { |c| c.value = "c" })
-      cookie.should_not eq(cookie.dup.tap { |c| c.path = "/c" })
-      cookie.should_not eq(cookie.dup.tap { |c| c.domain = "c" })
-      cookie.should_not eq(cookie.dup.tap { |c| c.expires = Time.utc(2021, 1, 1) })
-      cookie.should_not eq(cookie.dup.tap { |c| c.secure = false })
-      cookie.should_not eq(cookie.dup.tap { |c| c.http_only = false })
-      cookie.should_not eq(cookie.dup.tap { |c| c.samesite = :lax })
-      cookie.should_not eq(cookie.dup.tap { |c| c.extension = nil })
+    describe ".from_set_cookie_header" do
+      it "returns a cookie based on the provided header string" do
+        cookie = HTTP::Cookie.from_set_cookie_header "id=a3fWa; Expires=Wed, 21 Oct 2015 07:28:00 GMT; Secure; SameSite=Lax"
+        cookie.name.should eq "id"
+        cookie.secure.should be_true
+        (cookie.samesite.should_not be_nil).lax?.should be_true
+        cookie.expires.should eq Time.utc 2015, 10, 21, 7, 28, 0
+      end
+
+      it "raises if the cookie header is invalid" do
+        expect_raises ArgumentError, "Invalid set-cookie header: foo:bar." do
+          HTTP::Cookie.from_set_cookie_header "foo:bar"
+        end
+      end
     end
 
     describe ".new" do
@@ -87,6 +89,20 @@ module HTTP
       cookie.value.empty?.should be_true
       cookie.expired?.should be_true
       cookie.max_age.should eq(Time::Span.zero)
+    end
+
+    it "#==" do
+      cookie = Cookie.new("a", "b", path: "/path", expires: Time.utc, domain: "domain", secure: true, http_only: true, samesite: :strict, extension: "foo=bar")
+      cookie.should eq(cookie.dup)
+      cookie.should_not eq(cookie.dup.tap { |c| c.name = "c" })
+      cookie.should_not eq(cookie.dup.tap { |c| c.value = "c" })
+      cookie.should_not eq(cookie.dup.tap { |c| c.path = "/c" })
+      cookie.should_not eq(cookie.dup.tap { |c| c.domain = "c" })
+      cookie.should_not eq(cookie.dup.tap { |c| c.expires = Time.utc(2021, 1, 1) })
+      cookie.should_not eq(cookie.dup.tap { |c| c.secure = false })
+      cookie.should_not eq(cookie.dup.tap { |c| c.http_only = false })
+      cookie.should_not eq(cookie.dup.tap { |c| c.samesite = :lax })
+      cookie.should_not eq(cookie.dup.tap { |c| c.extension = nil })
     end
 
     describe "#name=" do
