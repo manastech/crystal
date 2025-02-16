@@ -2921,7 +2921,14 @@ module Crystal
       program.class_type
     end
 
-    delegate abstract?, generic_nest, lookup_new_in_ancestors?,
+    def abstract?
+      # the value `T` is an instance of the type `T.class`, and the value
+      # `Class` is an instance of the type `Class`, so metaclasses are never
+      # abstract
+      false
+    end
+
+    delegate generic_nest, lookup_new_in_ancestors?,
       type_var?, to: instance_type
 
     def class_var_owner

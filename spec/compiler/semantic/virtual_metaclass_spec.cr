@@ -33,6 +33,36 @@ describe "Semantic: virtual metaclass" do
     ", inject_primitives: true) { union_of(int32, float64) }
   end
 
+  it "errors if virtual metaclass method is not defined on base class" do
+    assert_error %(
+      class A
+      end
+
+      class B < A
+        def self.foo
+        end
+      end
+
+      (A || B).foo
+      ),
+      "undefined method 'foo' for A.class (compile-time type is A+.class)"
+  end
+
+  it "errors if virtual metaclass method is not defined on abstract base class" do
+    assert_error %(
+      abstract class A
+      end
+
+      class B < A
+        def self.foo
+        end
+      end
+
+      (A || B).foo
+      ),
+      "undefined method 'foo' for A.class (compile-time type is A+.class)"
+  end
+
   it "allows allocating virtual type when base class is abstract" do
     assert_type(%(
       require "prelude"

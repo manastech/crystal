@@ -418,7 +418,7 @@ module Crystal
       base_type_covers_all = base_type_matches.cover_all?
 
       # If the base type doesn't cover every possible type combination, it's a failure
-      if !base_type.abstract? && !base_type_covers_all
+      if !abstract? && !base_type_covers_all
         return Matches.new(base_type_matches.matches, base_type_matches.cover, base_type_lookup, false)
       end
 
