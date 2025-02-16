@@ -153,7 +153,7 @@ module Crystal
       static_build = has_flag?("static")
 
       # Instruct the linker to link statically if the user asks
-      flags << "-static" if static_build
+      flags << "-static" if static_build && !has_flag?("darwin")
 
       # Add CRYSTAL_LIBRARY_PATH locations, so the linker preferentially
       # searches user-given library paths.
@@ -181,7 +181,32 @@ module Crystal
         end
       end
 
-      flags.join(" ")
+      process_flags(flags.join(" "))
+    end
+
+    private def process_flags(flags)
+      return flags if !(has_flag?("darwin") && has_flag?("static"))
+      # From `man 3 intro`
+      system_libs = ["c", "dbm", "dl", "info", "m", "poll", "pthread", "rpcsvc"]
+      new_flags = [] of String
+      flags.split.each do |flag|
+        if (lib_name = flag.lchop?("-l"))
+          static_lib = find_static_lib(lib_name)
+          if (!static_lib && !system_libs.includes?(lib_name))
+            Crystal.error "could not find lib#{lib_name}.a", 1
+          end
+          flag = static_lib if static_lib
+        end
+        new_flags << flag
+      end
+      new_flags.join(" ")
+    end
+
+    private def find_static_lib(libname)
+      CrystalLibraryPath.paths.each do |libdir|
+        static_lib = "#{libdir}/lib#{libname}.a"
+        return static_lib if File.exists?(static_lib)
+      end
     end
 
     private def quote_flag(flag, cross_compiling)

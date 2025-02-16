@@ -42,7 +42,7 @@
   @[Link("crypt32")] # CertOpenStore, ...
   @[Link("user32")]  # GetProcessWindowStation, GetUserObjectInformationW, _MessageBoxW
 {% else %}
-  @[Link(ldflags: "`command -v pkg-config > /dev/null && pkg-config --libs --silence-errors libcrypto || printf %s '-lcrypto'`")]
+  @[Link("crypto", pkg_config: "libcrypto")]
 {% end %}
 {% if compare_versions(Crystal::VERSION, "1.11.0-dev") >= 0 %}
   # TODO: if someone brings their own OpenSSL 1.x.y on Windows, will this have a different name?

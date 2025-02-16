@@ -49,7 +49,7 @@ require "./lib_crypto"
   @[Link("crypt32")] # CertOpenStore, ...
   @[Link("user32")]  # GetProcessWindowStation, GetUserObjectInformationW, _MessageBoxW
 {% else %}
-  @[Link(ldflags: "`command -v pkg-config > /dev/null && pkg-config --libs --silence-errors libssl || printf %s '-lssl -lcrypto'`")]
+  @[Link("ssl", pkg_config: "libssl")]
 {% end %}
 {% if compare_versions(Crystal::VERSION, "1.11.0-dev") >= 0 %}
   # TODO: if someone brings their own OpenSSL 1.x.y on Windows, will this have a different name?
