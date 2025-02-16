@@ -18,6 +18,14 @@ describe "levenshtein" do
   it { Levenshtein.distance("abc", "cba").should eq(2) }
   it { Levenshtein.distance("かんじ", "じんか").should eq(2) }
   it { Levenshtein.distance("", "かんじ").should eq(3) }
+  it { Levenshtein.distance("مِكرٍّ مِفَرٍّ مُقبِلٍ مُدْبِرٍ معًا كجُلمودِ صخرٍ حطّه السيلُ من علِ",
+    "مِكرٍّ مِفَرٍّ مُقبِلٍ مُدْبِرٍ معًا كجُلموادِ صخرٍ خطّه اسيلُ من علِ").should eq(3) }
+  it { Levenshtein.distance("I didn't find the shirt I wanted",
+    "I cidn't fined he shirt I wasted").should eq(4) }
+  it { Levenshtein.distance("I cannot see how this could be a problem. It compiles doesn't it",
+    "It cannot see how this could be a broblem. It compiles doesnt it").should eq(3) }
+  it { Levenshtein.distance("Lorem ipsum dolor sit amet, consectetuer adipiscing elit. Aenean commo",
+    "Lorem ipsun dolor sit Smet, consectetueo adipiscing lit. BAenean commo").should eq(5) }
 
   it "finds with finder" do
     finder = Levenshtein::Finder.new "hallo"
