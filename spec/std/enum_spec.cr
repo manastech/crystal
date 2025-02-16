@@ -49,6 +49,41 @@ private enum SpecEnumWithCaseSensitiveMembers
   Foo = 2
 end
 
+private enum SpecEnumWithMethodOverrides
+  FOO = 1
+  BAR = 2
+
+  def self.parse?(string : String)
+    result = super(string)
+
+    if result.nil?
+      case string
+      when "f"
+        result = FOO
+      when "b"
+        result = BAR
+      end
+    end
+
+    result
+  end
+
+  def self.from_value?(value : Int)
+    result = super(value)
+
+    if result.nil?
+      case value
+      when 10
+        result = FOO
+      when 20
+        result = BAR
+      end
+    end
+
+    result
+  end
+end
+
 describe Enum do
   describe "#to_s" do
     it "for simple enum" do
@@ -433,5 +468,17 @@ describe Enum do
 
   it "different enums classes not eq always" do
     SpecEnum::One.should_not eq SpecEnum2::FortyTwo
+  end
+
+  it "allows the use of super in child methods" do
+    SpecEnumWithMethodOverrides.parse?("f").should eq SpecEnumWithMethodOverrides::FOO
+    SpecEnumWithMethodOverrides.parse?("foo").should eq SpecEnumWithMethodOverrides::FOO
+    SpecEnumWithMethodOverrides.parse?("b").should eq SpecEnumWithMethodOverrides::BAR
+    SpecEnumWithMethodOverrides.parse?("bar").should eq SpecEnumWithMethodOverrides::BAR
+
+    SpecEnumWithMethodOverrides.from_value?(10).should eq SpecEnumWithMethodOverrides::FOO
+    SpecEnumWithMethodOverrides.from_value?(1).should eq SpecEnumWithMethodOverrides::FOO
+    SpecEnumWithMethodOverrides.from_value?(20).should eq SpecEnumWithMethodOverrides::BAR
+    SpecEnumWithMethodOverrides.from_value?(2).should eq SpecEnumWithMethodOverrides::BAR
   end
 end
