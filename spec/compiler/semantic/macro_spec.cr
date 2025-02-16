@@ -581,6 +581,64 @@ describe "Semantic: macro" do
       CRYSTAL
   end
 
+  it "error raised within complex macro included hook (#7394)" do
+    ex = assert_error(<<-'CRYSTAL', "Value method must be an instance method")
+      module ExampleModule
+        macro included
+          {% verbatim do %}
+            {%
+              if method = @type.class.methods.find &.name.stringify.==("value")
+                method.raise "Value method must be an instance method."
+              else
+                raise "BUG: Didn't find value method."
+              end
+            %}
+          {% end %}
+        end
+      end
+
+      class ExampleClass
+        def self.value : Nil
+        end
+
+        include ExampleModule
+      end
+    CRYSTAL
+
+    ex.to_s.should contain "error in line 16"
+  end
+
+  it "error raise within macro included hook points to `include` vs `raise`" do
+    ex = assert_error(<<-'CRYSTAL', "noooo")
+      module Foo
+        macro included
+          {% raise "noooo" %}
+        end
+      end
+
+      include Foo
+    CRYSTAL
+
+    ex.to_s.should contain "error in line 3"
+    ex.to_s.should contain "error in line 7"
+  end
+
+  it "error raise within macro inherited hook points to the inheriting type vs `raise`" do
+    ex = assert_error(<<-'CRYSTAL', "noooo")
+      abstract struct Parent
+        macro inherited
+          {% raise "noooo" %}
+        end
+      end
+
+      struct Child < Parent
+      end
+    CRYSTAL
+
+    ex.to_s.should contain "error in line 3"
+    ex.to_s.should contain "error in line 7"
+  end
+
   it "gives precise location info when doing yield inside macro" do
     assert_error(<<-CRYSTAL, "in line 6")
       macro foo

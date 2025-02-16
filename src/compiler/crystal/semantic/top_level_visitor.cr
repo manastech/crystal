@@ -240,6 +240,12 @@ class Crystal::TopLevelVisitor < Crystal::SemanticVisitor
     pushing_type(type) do
       run_hooks(hook_type(superclass), type, :inherited, node) if created_new_type
       node.body.accept self
+    rescue ex : MacroRaiseException
+      # Make the inner most exception to be the inherited node so that it's the last frame in the trace.
+      # This will make the location show on that node instead of the `raise` call.
+      ex.inner = Crystal::MacroRaiseException.for_node node, ex.message
+
+      raise ex
     end
 
     if created_new_type
@@ -1121,6 +1127,12 @@ class Crystal::TopLevelVisitor < Crystal::SemanticVisitor
     begin
       current_type.as(ModuleType).include type
       run_hooks hook_type(type), current_type, kind, node
+    rescue ex : MacroRaiseException
+      # Make the inner most exception to be the include/extend node so that it's the last frame in the trace.
+      # This will make the location show on that node instead of the `raise` call.
+      ex.inner = Crystal::MacroRaiseException.for_node node, ex.message
+
+      raise ex
     rescue ex : TypeException
       node.raise "at '#{kind}' hook", ex
     end
