@@ -504,62 +504,55 @@ struct BigInt < Int
       count = LibGMP.sizeinbase(self, base).to_i
       negative = self < 0
 
-      if precision <= count
-        len = count + (negative ? 1 : 0)
-        String.new(len + 1) do |buffer| # null terminator required by GMP
-          buffer[len - 1] = 0
-          LibGMP.get_str(buffer, upcase ? -base : base, self)
-
-          # `sizeinbase` may be 1 greater than the exact value
-          if buffer[len - 1] == 0
-            if precision == count
-              # In this case the exact `count` is `precision - 1`, i.e. one zero
-              # should be inserted at the beginning of the number
-              # e.g. precision = 3, count = 3, exact count = 2
-              # "85\0\0" -> "085\0" for positive
-              # "-85\0\0" -> "-085\0" for negative
-              start = buffer + (negative ? 1 : 0)
-              start.move_to(start + 1, count - 1)
-              start.value = '0'.ord.to_u8
-            else
-              len -= 1
-            end
-          end
-
-          base62_swapcase(Slice.new(buffer, len)) if base == 62
-          {len, len}
-        end
+      if precision > count
+        len = precision
+        offset = precision - count
       else
-        len = precision + (negative ? 1 : 0)
-        String.new(len + 1) do |buffer|
-          # e.g. precision = 13, count = 8
-          # "_____12345678\0" for positive
-          # "_____-12345678\0" for negative
-          buffer[len - 1] = 0
-          start = buffer + precision - count
-          LibGMP.get_str(start, upcase ? -base : base, self)
+        len = count
+        offset = 0
+      end
 
-          # `sizeinbase` may be 1 greater than the exact value
-          if buffer[len - 1] == 0
+      len += 1 if negative
+
+      # Allocate a buffer with capacity `len + 1` for the number of
+      # expected/requested digits plus sign (if negative) and null terminator
+      # (required by libgmp).
+      String.new(len + 1) do |buffer|
+        # Explicitly clear the memory of the second-to last byte because that
+        # might not be overriden by `LibGMP.get_str` because the value returned
+        # by `LibGMP.sizeinbase` can be 1 too big.
+        buffer[len - 1] = 0
+
+        start = buffer + offset
+        LibGMP.get_str(start, upcase ? -base : base, self)
+
+        # `LibGMP.sizeinbase` may be 1 greater than the exact value, in which
+        # case the last byte of the buffer was not overriden and still
+        # has the initial value `0`.
+        if buffer[len - 1] == 0
+          if precision >= count
             # e.g. precision = 7, count = 3, exact count = 2
             # "____85\0\0" -> "____885\0" for positive
             # "____-85\0\0" -> "____-885\0" for negative
             # `start` will be zero-filled later
-            count -= 1
-            start += 1 if negative
-            start.move_to(start + 1, count)
+            start.move_to(start + 1, len)
+            offset += 1
+          else
+            len -= 1
           end
+        end
 
-          base62_swapcase(Slice.new(buffer + len - count, count)) if base == 62
+        base62_swapcase(Slice.new(start, len)) if base == 62
 
+        if offset > 0
           if negative
             buffer.value = '-'.ord.to_u8
             buffer += 1
           end
-          Slice.new(buffer, precision - count).fill('0'.ord.to_u8)
-
-          {len, len}
+          Slice.new(buffer, offset).fill('0'.ord.to_u8)
         end
+
+        {len, len}
       end
     end
   end
