@@ -1242,6 +1242,46 @@ describe "Semantic: macro" do
       CRYSTAL
   end
 
+  it "finds macro through generic type" do
+    assert_type(<<-CRYSTAL) { int32.metaclass }
+      module Foo(T)
+        macro foo
+          {{ T }}
+        end
+      end
+
+      Foo(Int32).foo
+      CRYSTAL
+  end
+
+  it "finds macro through alias to generic instance" do
+    assert_type(<<-CRYSTAL) { int32.metaclass }
+      module Foo(T)
+        macro foo
+          {{ T }}
+        end
+      end
+
+      alias Bar = Foo(Int32)
+
+      Bar.foo
+      CRYSTAL
+  end
+
+  it "finds macro through alias to generic type" do
+    assert_type(<<-CRYSTAL) { int32.metaclass }
+      module Foo(T)
+        macro foo
+          {{ T }}
+        end
+      end
+
+      alias Bar = Foo
+
+      Bar(Int32).foo
+      CRYSTAL
+  end
+
   it "can override macro (#2773)" do
     assert_type(<<-CRYSTAL) { char }
       macro foo

@@ -46,8 +46,8 @@ class Crystal::Type
   end
 
   # Similar to `lookup_type`, but returns `nil` if a type can't be found.
-  def lookup_type?(node : ASTNode, self_type = self.instance_type, allow_typeof = true, free_vars : Hash(String, TypeVar)? = nil, find_root_generic_type_parameters = true) : Type?
-    TypeLookup.new(self, self_type, false, allow_typeof, free_vars, find_root_generic_type_parameters).lookup(node)
+  def lookup_type?(node : ASTNode, self_type = self.instance_type, allow_typeof = true, free_vars : Hash(String, TypeVar)? = nil, raise = false, raise_typeof = raise, find_root_generic_type_parameters = true) : Type?
+    TypeLookup.new(self, self_type, raise, allow_typeof, free_vars, find_root_generic_type_parameters, raise_typeof: raise_typeof).lookup(node)
   end
 
   # Similar to `lookup_type`, but the result might also be an ASTNode, for example when
@@ -62,7 +62,7 @@ class Crystal::Type
   end
 
   private struct TypeLookup
-    def initialize(@root : Type, @self_type : Type, @raise : Bool, @allow_typeof : Bool, @free_vars : Hash(String, TypeVar)? = nil, @find_root_generic_type_parameters = true, @remove_alias = true)
+    def initialize(@root : Type, @self_type : Type, @raise : Bool, @allow_typeof : Bool, @free_vars : Hash(String, TypeVar)? = nil, @find_root_generic_type_parameters = true, @remove_alias = true, @raise_typeof : Bool = raise)
       @in_generic_args = 0
 
       # If we are looking types inside a non-instantiated generic type,
@@ -274,7 +274,7 @@ class Crystal::Type
         end
 
         type = in_generic_args { lookup(type_var) }
-        return if !@raise && !type
+        return if (!@raise || !@raise_typeof) && !type
         type = type.not_nil!
 
         case instance_type
@@ -369,7 +369,7 @@ class Crystal::Type
 
     def lookup(node : TypeOf)
       unless @allow_typeof
-        if @raise
+        if @raise_typeof
           node.raise "can't use 'typeof' here"
         else
           return

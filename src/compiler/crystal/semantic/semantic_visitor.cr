@@ -292,9 +292,15 @@ abstract class Crystal::SemanticVisitor < Crystal::Visitor
 
     obj = node.obj
     case obj
-    when Path
+    when Path, Generic
       base_type = @path_lookup || @scope || @current_type
-      macro_scope = base_type.lookup_type_var?(obj, free_vars: free_vars, raise: raise_on_missing_const)
+      macro_scope =
+        if obj.is_a?(Path)
+          base_type.lookup_type_var?(obj, free_vars: free_vars, raise: raise_on_missing_const)
+        else
+          base_type.lookup_type?(obj, allow_typeof: false, free_vars: free_vars, raise: raise_on_missing_const, raise_typeof: false)
+        end
+
       return false unless macro_scope.is_a?(Type)
 
       macro_scope = macro_scope.remove_alias
