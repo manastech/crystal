@@ -142,7 +142,7 @@ def _u128_div_rem(duo : UInt128, div : UInt128) : Tuple(UInt128, UInt128)
 
   # Undersubtracting long division algorithm.
 
-  quo : UInt128 = 0
+  quo = UInt128.zero
   div_extra = 96 - div_lz                  # Number of lesser significant bits that aren't part of div_sig_32
   div_sig_32 = (div >> div_extra).to_u32!  # Most significant 32 bits of div
   div_sig_32_add1 = div_sig_32.to_u64! + 1 # This must be a UInt64 because this can overflow

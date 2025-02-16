@@ -4391,7 +4391,7 @@ class String
     last_is_downcase = false
     last_is_upcase = false
     last_is_digit = false
-    mem : Char? = nil
+    mem = nil
 
     each_char do |char|
       if options.ascii?

@@ -4,7 +4,7 @@ require "./spec_helper"
 
 private def test__mulodi4(a : Int64, b : Int64, expected : Int64, expected_overflow : Int32, file = __FILE__, line = __LINE__)
   it "passes compiler-rt builtins unit tests" do
-    actual_overflow : Int32 = 0
+    actual_overflow = 0_i32
     actual = __mulodi4(a, b, pointerof(actual_overflow))
     actual_overflow.should eq(expected_overflow), file: file, line: line
     if !expected_overflow

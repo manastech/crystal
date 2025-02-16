@@ -289,7 +289,7 @@ class Crystal::Repl::Interpreter
       @context.class_vars_memory[index] = 1_u8
     end
 
-    instructions : CompiledInstructions = @instructions
+    instructions = @instructions
     ip = instructions.instructions.to_unsafe
     return_value = Pointer(UInt8).null
 

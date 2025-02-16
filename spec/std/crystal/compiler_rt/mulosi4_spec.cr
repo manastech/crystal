@@ -4,7 +4,7 @@ require "./spec_helper"
 
 private def test__mulosi4(a : Int32, b : Int32, expected : Int32, expected_overflow : Int32, file = __FILE__, line = __LINE__)
   it "passes compiler-rt builtins unit tests" do
-    actual_overflow : Int32 = 0
+    actual_overflow = 0_i32
     actual = __mulosi4(a, b, pointerof(actual_overflow))
     actual_overflow.should eq(expected_overflow), file: file, line: line
     if !expected_overflow
