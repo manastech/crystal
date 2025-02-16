@@ -1,16 +1,12 @@
 require "../../../spec_helper"
-require "http/server/handler"
-require "http/client/response"
+require "spec/http/client"
 
 private def handle(request, fallthrough = true, directory_listing = true, ignore_body = false, decompress = true)
-  io = IO::Memory.new
-  response = HTTP::Server::Response.new(io)
-  context = HTTP::Server::Context.new(request, response)
   handler = HTTP::StaticFileHandler.new datapath("static_file_handler"), fallthrough, directory_listing
-  handler.call context
-  response.close
-  io.rewind
-  HTTP::Client::Response.from_io(io, ignore_body, decompress)
+
+  Spec::HTTP::Client
+    .new(handler, ignore_body: ignore_body, decompress: decompress)
+    .exec(request)
 end
 
 describe HTTP::StaticFileHandler do
