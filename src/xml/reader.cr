@@ -192,6 +192,14 @@ class XML::Reader
     value ? String.new(value) : ""
   end
 
+  def column_number : Int32
+    LibXML.xmlTextReaderGetParserColumnNumber(@reader)
+  end
+
+  def line_number : Int32
+    LibXML.xmlTextReaderGetParserLineNumber(@reader)
+  end
+
   # Returns a reference to the underlying `LibXML::XMLTextReader`.
   def to_unsafe
     @reader

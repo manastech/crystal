@@ -1,14 +1,15 @@
 require "./libxml2"
 
 class XML::Error < Exception
-  getter line_number : Int32
+  getter line_number : Int32 = 0
+  getter column_number : Int32 = 0
 
   def self.new(error : LibXML::Error*)
     new String.new(error.value.message).chomp, error.value.line
   end
 
-  def initialize(message, @line_number)
-    super(message)
+  def initialize(message, @line_number = 0, @column_number = 0, cause = nil)
+    super(message, cause)
   end
 
   @[Deprecated("This class accessor is deprecated. XML errors are accessible directly in the respective context via `XML::Reader#errors` and `XML::Node#errors`.")]

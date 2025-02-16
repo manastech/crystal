@@ -1072,6 +1072,7 @@ describe "JSON mapping" do
     it { JSONAttrModuleTest2.from_json(%({"bar": 30, "moo": 40})).to_tuple.should eq({40, 15, 30}) }
   end
 
+  # TODO: add XML support
   it "works together with yaml" do
     person = JSONAttrPersonWithYAML.new("Vasya", 30)
     person.to_json.should eq "{\"name\":\"Vasya\",\"age\":30}"

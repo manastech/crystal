@@ -127,6 +127,8 @@ lib LibXML
   fun xmlTextReaderReadOuterXml(reader : XMLTextReader) : UInt8*
   fun xmlTextReaderExpand(reader : XMLTextReader) : Node*
   fun xmlTextReaderCurrentNode(reader : XMLTextReader) : Node*
+  fun xmlTextReaderGetParserColumnNumber(reader : XMLTextReader) : Int
+  fun xmlTextReaderGetParserLineNumber(reader : XMLTextReader) : Int
 
   fun xmlTextReaderSetErrorHandler(reader : XMLTextReader, f : TextReaderErrorFunc) : Void
 
@@ -204,6 +206,43 @@ lib LibXML
   fun xmlTextWriterWriteDTD(TextWriter, name : UInt8*, pubid : UInt8*, sysid : UInt8*, subset : UInt8*) : Int
 
   fun xmlOutputBufferCreateIO(iowrite : OutputWriteCallback, ioclose : OutputCloseCallback, ioctx : Void*, encoder : Void*) : OutputBuffer*
+
+  # struct XMLSAXHandler
+  #   internalSubset : Void*
+  #   isStandalone : Void*
+  #   hasInternalSubset : Void*
+  #   hasExternalSubset : Void*
+  #   resolveEntity : Void*
+  #   getEntity : Void*
+  #   entityDecl : Void*
+  #   notationDecl : Void*
+  #   attributeDecl : Void*
+  #   elementDecl : Void*
+  #   unparsedEntityDecl : Void*
+  #   setDocumentLocator : Void*
+  #   startDocument : Void*
+  #   endDocument : Void*
+  #   startElement : Void*
+  #   endElement : Void*
+  #   reference : Void*
+  #   characters : Void*
+  #   ignorableWhitespace : Void*
+  #   processingInstruction : Void*
+  #   comment : Void*
+  #   warning : Void*
+  #   error : Void*
+  #   fatalError : Void*
+  #   getParameterEntity : Void*
+  #   cdataBlock : Void*
+  #   externalSubset : Void*
+  #   initialized : UInt
+  #   _private : Void*
+  #   startElementNs : Void*
+  #   endElementNs : Void*
+  #   serror : Void*
+  # end
+
+  # fun xmlSAXUserParseMemory(sax : XMLSAXHandler*, user_data Void*, buffer : UInt8*, size : Int) : Int
 
   enum ErrorLevel
     NONE    = 0
