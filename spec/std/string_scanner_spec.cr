@@ -356,3 +356,31 @@ describe StringScanner do
     end
   end
 end
+
+describe StringScanner, "#read_byte" do
+  it "returns one byte from the current offset and advances the offset" do
+    s = StringScanner.new("あ")
+    s.read_byte.should eq 227
+    s.offset.should eq 1
+    s.read_byte.should eq 129
+    s.offset.should eq 2
+    s.read_byte.should eq 130
+    s.offset.should eq 3
+    s.read_byte.should be_nil
+    s.offset.should eq 3
+    s.eos?.should eq(true)
+  end
+end
+
+describe StringScanner, "#read_char" do
+  it "returns a char from the current offset and advances the offset" do
+    s = StringScanner.new("ab")
+    s.read_char.should eq 'a'
+    s.offset.should eq 1
+    s.read_char.should eq 'b'
+    s.offset.should eq 2
+    s.read_byte.should be_nil
+    s.offset.should eq 2
+    s.eos?.should eq(true)
+  end
+end

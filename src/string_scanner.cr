@@ -40,6 +40,8 @@
 # * `#scan_until`
 # * `#skip`
 # * `#skip_until`
+# * `#read_byte`
+# * `#read_char`
 #
 # Methods that look ahead:
 # * `#peek`
@@ -70,12 +72,12 @@ class StringScanner
   # Sets the *position* of the scan offset.
   def offset=(position : Int)
     raise IndexError.new unless position >= 0
-    @byte_offset = @str.char_index_to_byte_index(position) || @str.bytesize
+    @byte_offset = Math.min(position, @str.bytesize)
   end
 
   # Returns the current position of the scan offset.
   def offset : Int32
-    @str.byte_index_to_char_index(@byte_offset).not_nil!
+    @byte_offset
   end
 
   # Tries to match with *pattern* at the current position. If there's a match,
@@ -373,6 +375,37 @@ class StringScanner
   # ```
   def rest : String
     @str.byte_slice(@byte_offset, @str.bytesize - @byte_offset)
+  end
+
+  # Returns one byte from the current offset.
+  # ```
+  # require "string_scanner"
+  #
+  # s = StringScanner.new("あ")
+  # s.read_byte # => 227
+  # s.read_byte # => 129
+  # s.read_byte # => 130
+  # ```
+  def read_byte : UInt8?
+    return nil if eos?
+    byte = @str.byte_at(@byte_offset)
+    @byte_offset += 1
+    byte
+  end
+
+  # Returns one char from the current offset.
+  # ```
+  # require "string_scanner"
+  #
+  # s = StringScanner.new("ab")
+  # s.read_char # => 'a'
+  # s.read_char # => 'b'
+  # ```
+  def read_char : Char?
+    reader = Char::Reader.new(@str, @byte_offset)
+    char = reader.current_char
+    @byte_offset += char.bytesize
+    char
   end
 
   # Writes a representation of the scanner.
