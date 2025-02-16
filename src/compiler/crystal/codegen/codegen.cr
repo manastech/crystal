@@ -1499,40 +1499,54 @@ module Crystal
 
       obj_type = node.obj.type
       to_type = node.to.type
-
       resulting_type = node.type
-
-      filtered_type = obj_type.filter_by(to_type)
-
-      unless filtered_type
-        @last = upcast llvm_nil, resulting_type, @program.nil
-        return false
-      end
-
       non_nilable_type = node.non_nilable_type
 
-      if node.upcast?
-        @last = upcast last_value, non_nilable_type, obj_type
-        @last = upcast @last, resulting_type, non_nilable_type
-      elsif obj_type != non_nilable_type
-        type_id = type_id last_value, obj_type
-        cmp = match_type_id obj_type, non_nilable_type, type_id
-
-        Phi.open(self, node, @needs_value) do |phi|
-          matches_block, doesnt_match_block = new_blocks "matches", "doesnt_match"
-          cond cmp, matches_block, doesnt_match_block
-
-          position_at_end doesnt_match_block
-          @last = upcast llvm_nil, resulting_type, @program.nil
-          phi.add @last, resulting_type
-
-          position_at_end matches_block
-          @last = downcast last_value, non_nilable_type, obj_type, true
-          @last = upcast @last, resulting_type, non_nilable_type
-          phi.add @last, resulting_type, last: true
+      if to_type.pointer?
+        if obj_type.nil_type?
+          @last = llvm_type(to_type).null
+        else
+          @last = upcast last_value, non_nilable_type, obj_type
         end
+        @last = upcast @last, resulting_type, non_nilable_type
+      elsif obj_type.pointer?
+        if to_type.nil_type?
+          @last = llvm_type(to_type).null
+        else
+          @last = upcast last_value, non_nilable_type, obj_type
+        end
+        @last = upcast @last, resulting_type, non_nilable_type
       else
-        @last = upcast last_value, resulting_type, obj_type
+        filtered_type = obj_type.filter_by(to_type)
+
+        unless filtered_type
+          @last = upcast llvm_nil, resulting_type, @program.nil
+          return false
+        end
+
+        if node.upcast?
+          @last = upcast last_value, non_nilable_type, obj_type
+          @last = upcast @last, resulting_type, non_nilable_type
+        elsif obj_type != non_nilable_type
+          type_id = type_id last_value, obj_type
+          cmp = match_type_id obj_type, non_nilable_type, type_id
+
+          Phi.open(self, node, @needs_value) do |phi|
+            matches_block, doesnt_match_block = new_blocks "matches", "doesnt_match"
+            cond cmp, matches_block, doesnt_match_block
+
+            position_at_end doesnt_match_block
+            @last = upcast llvm_nil, resulting_type, @program.nil
+            phi.add @last, resulting_type
+
+            position_at_end matches_block
+            @last = downcast last_value, non_nilable_type, obj_type, true
+            @last = upcast @last, resulting_type, non_nilable_type
+            phi.add @last, resulting_type, last: true
+          end
+        else
+          @last = upcast last_value, resulting_type, obj_type
+        end
       end
 
       false

@@ -535,14 +535,14 @@ module Crystal
 
       @upcast = false
 
-      if obj_type
+      if obj_type && !(obj_type.pointer? || to_type.pointer?)
         filtered_type = obj_type.filter_by(to_type)
 
         # If the filtered type didn't change it means that an
         # upcast is being made, for example:
         #
-        #   1 as Int32 | Float64
-        #   Bar.new as Foo # where Bar < Foo
+        #   1.as?(Int32 | Float64)
+        #   Bar.new.as?(Foo) # where Bar < Foo
         if obj_type == filtered_type && !to_type.is_a?(GenericClassType) &&
            to_type.can_be_stored?
           filtered_type = to_type.virtual_type
