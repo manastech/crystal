@@ -21,6 +21,8 @@ class JSON::Parser
       value_and_next_token token.int_value
     when .float?
       value_and_next_token token.float_value
+    when .int_as_string?
+      value_and_next_token token.int_as_string_value
     when .string?
       value_and_next_token token.string_value
     when .null?

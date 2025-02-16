@@ -70,6 +70,7 @@ class JSON::PullParser
     BeginObject
     EndObject
     EOF
+    IntAsString
   end
 
   private enum ObjectStackKind
@@ -82,6 +83,10 @@ class JSON::PullParser
 
   def int_value : Int64
     token.int_value
+  end
+
+  def int_as_string_value : String
+    token.int_as_string_value
   end
 
   def float_value : Float64
@@ -125,6 +130,9 @@ class JSON::PullParser
     in .string?
       @kind = :string
       @string_value = token.string_value
+    in .int_as_string?
+      @kind = :int_as_string
+      @raw_value = token.raw_value
     in .begin_array?
       begin_array
     in .begin_object?
@@ -252,7 +260,7 @@ class JSON::PullParser
       "null"
     when .bool?
       @bool_value.to_s.tap { read_next }
-    when .int?, .float?
+    when .int?, .float?, .int_as_string?
       @raw_value.tap { read_next }
     when .string?
       @string_value.to_json.tap { read_next }
@@ -279,7 +287,7 @@ class JSON::PullParser
     when .int?, .float?
       json.raw(@raw_value)
       read_next
-    when .string?
+    when .string?, .int_as_string?
       json.string(@string_value)
       read_next
     when .begin_array?
@@ -303,6 +311,12 @@ class JSON::PullParser
     else
       unexpected_token
     end
+  end
+
+  # Reads a int_as_string and returns it.
+  def read_int_as_string : String
+    expect_kind :int_as_string
+    @string_value.tap { read_next }
   end
 
   # Reads a string and returns it.
@@ -497,6 +511,11 @@ class JSON::PullParser
         @raw_value = token.raw_value
         next_token_after_value
         return
+      when .int_as_string?
+        @kind = :int_as_string
+        @raw_value = token.raw_value
+        next_token_after_value
+        return
       when .string?
         @kind = :string
         @string_value = token.string_value
@@ -596,7 +615,7 @@ class JSON::PullParser
   private def skip_internal
     @skip_count += 1
     case @kind
-    when .null?, .bool?, .int?, .float?, .string?
+    when .null?, .bool?, .int?, .float?, .string?, .int_as_string?
       read_next
     when .begin_array?
       @skip_count += 1

@@ -13,6 +13,7 @@ class JSON::Token
     Colon
     Comma
     EOF
+    IntAsString
   end
 
   property kind : Kind
@@ -20,6 +21,12 @@ class JSON::Token
 
   def int_value : Int64
     raw_value.to_i64
+  rescue exc : ArgumentError
+    raise ParseException.new(exc.message, line_number, column_number)
+  end
+
+  def int_as_string_value : String
+    raw_value.to_s
   rescue exc : ArgumentError
     raise ParseException.new(exc.message, line_number, column_number)
   end
@@ -54,7 +61,7 @@ class JSON::Token
       raw_value.to_s(io)
     when .float?
       raw_value.to_s(io)
-    when .string?
+    when .string?, .int_as_string?
       string_value.to_s(io)
     when .begin_array?
       io << '['
