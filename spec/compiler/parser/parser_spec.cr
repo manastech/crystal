@@ -822,7 +822,10 @@ module Crystal
     it_parses "1.foo do; 1; end", Call.new(1.int32, "foo", block: Block.new(body: 1.int32))
     it_parses "a b() {}", Call.new("a", Call.new("b", block: Block.new))
 
-    assert_syntax_error "foo(&block) {}"
+    assert_syntax_error "foo(&block) {}", "can't use captured and non-captured blocks together"
+    assert_syntax_error "foo(&block) do end", "can't use captured and non-captured blocks together"
+    assert_syntax_error "foo.bar(&block) {}", "can't use captured and non-captured blocks together"
+    assert_syntax_error "foo.bar(&block) do end", "can't use captured and non-captured blocks together"
 
     it_parses "foo { |a, (b, c), (d, e)| a; b; c; d; e }", Call.new("foo",
       block: Block.new(

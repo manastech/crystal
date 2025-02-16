@@ -796,6 +796,11 @@ module Crystal
             end
 
             block = parse_block(block, stop_on_do: @stop_on_do)
+
+            if block && block_arg
+              raise "can't use captured and non-captured blocks together", location
+            end
+
             atomic = Call.new atomic, name, (args || [] of ASTNode), block, block_arg, named_args
             atomic.has_parentheses = has_parentheses
             atomic.name_location = name_location
