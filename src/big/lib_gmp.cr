@@ -120,6 +120,8 @@ lib LibGMP
 
   fun sqrt = __gmpz_sqrt(rop : MPZ*, op : MPZ*)
 
+  fun invert = __gmpz_invert(rop : MPZ*, op1 : MPZ*, op2 : MPZ*)
+
   # # Bitwise operations
 
   fun and = __gmpz_and(rop : MPZ*, op1 : MPZ*, op2 : MPZ*)

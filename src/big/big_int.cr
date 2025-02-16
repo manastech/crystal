@@ -484,6 +484,15 @@ struct BigInt < Int
     end
   end
 
+  # Return the multiplicative inverse of `self` modulo `other`.
+  #
+  # ```
+  # 7.to_big_i.mod_invert(4.to_big_i) # => 3
+  # ```
+  def mod_invert(other : BigInt) : BigInt
+    BigInt.new { |mpz| LibGMP.invert(mpz, self, other) }
+  end
+
   def bit_length : Int32
     LibGMP.sizeinbase(self, 2).to_i
   end

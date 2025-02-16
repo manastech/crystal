@@ -525,6 +525,14 @@ describe "BigInt" do
     (a_17).gcd(17).should be_a(Int::Unsigned)
   end
 
+  it "calculates the modulo inverse" do
+    a = BigInt.new("48112959837082048697")
+    b = BigInt.new("12764787846358441471")
+    c = a.mod_invert(b)
+
+    (a*c % b).should eq(1)
+  end
+
   it "can use Number::[]" do
     a = BigInt[146, "3464", 97, "545"]
     b = [BigInt.new(146), BigInt.new(3464), BigInt.new(97), BigInt.new(545)]
