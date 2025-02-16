@@ -744,7 +744,7 @@ class Crystal::Repl::Interpreter
         call_frame_ip += @call_stack[index + 1].overflow_offset
       end
 
-      call_frame_index = call_frame_ip - call_frame_instructions.to_unsafe
+      call_frame_index = (call_frame_ip - call_frame_instructions.to_unsafe).to_i32!
       node = call_frame_nodes[call_frame_index]?
       if node && (location = node.location)
         location = location.macro_location || location
