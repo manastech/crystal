@@ -89,7 +89,7 @@ describe "Semantic: module" do
       "Foo is not a generic type"
   end
 
-  it "includes module but wrong number of arguments" do
+  it "errors if including generic and incorrect number of type vars" do
     assert_error "
       module Foo(T, U)
       end
@@ -99,6 +99,66 @@ describe "Semantic: module" do
       end
       ",
       "wrong number of type vars for Foo(T, U) (given 1, expected 2)"
+  end
+
+  it "errors if including variadic generic and incorrect number of type vars" do
+    assert_error %(
+      module Foo(*T, U, V)
+      end
+
+      class Bar
+        include Foo(Int32)
+      end
+      ),
+      "wrong number of type vars for Foo(*T, U, V) (given 1, expected 2+)"
+  end
+
+  it "errors if splatting type var into generic without splats" do
+    assert_error %(
+      module Foo(T)
+      end
+
+      class Bar(*T)
+        include Foo(*T)
+      end
+      ),
+      "cannot splat *T into Foo(T)"
+  end
+
+  it "errors if splatting type var into non-splat parameter, before splat in definition" do
+    assert_error %(
+      module Foo(T, *U)
+      end
+
+      class Bar(*T)
+        include Foo(*T, Int32)
+      end
+      ),
+      "cannot splat *T into non-splat type parameter T of Foo(T, *U)"
+  end
+
+  it "errors if splatting type var into non-splat parameter, after splat in definition" do
+    assert_error %(
+      module Foo(*T, U)
+      end
+
+      class Bar(*T)
+        include Foo(Int32, *T)
+      end
+      ),
+      "cannot splat *T into non-splat type parameter U of Foo(*T, U)"
+  end
+
+  it "errors if splatting type var into non-splat parameter, more args" do
+    assert_error %(
+      module Foo(T, *U, V, W)
+      end
+
+      class Bar(T, U, *V, W)
+        include Foo(V, U, T, W, *V, T)
+      end
+      ),
+      "cannot splat *V into non-splat type parameter V of Foo(T, *U, V, W)"
   end
 
   it "errors if including generic module and not specifying type vars" do

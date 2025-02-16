@@ -17,10 +17,65 @@ describe "Semantic: generic class" do
       class Foo(T)
       end
 
-      class Bar < Foo(A, B)
+      class Bar < Foo(Int32, String)
       end
       ),
       "wrong number of type vars for Foo(T) (given 2, expected 1)"
+  end
+
+  it "errors if inheriting from variadic generic and incorrect number of type vars" do
+    assert_error %(
+      class Foo(*T, U, V)
+      end
+
+      class Bar < Foo(Int32)
+      end
+      ),
+      "wrong number of type vars for Foo(*T, U, V) (given 1, expected 2+)"
+  end
+
+  it "errors if splatting type var into generic without splats" do
+    assert_error %(
+      class Foo(T)
+      end
+
+      class Bar(*T) < Foo(*T)
+      end
+      ),
+      "cannot splat *T into Foo(T)"
+  end
+
+  it "errors if splatting type var into non-splat parameter, before splat in definition" do
+    assert_error %(
+      class Foo(T, *U)
+      end
+
+      class Bar(*T) < Foo(*T, Int32)
+      end
+      ),
+      "cannot splat *T into non-splat type parameter T of Foo(T, *U)"
+  end
+
+  it "errors if splatting type var into non-splat parameter, after splat in definition" do
+    assert_error %(
+      class Foo(*T, U)
+      end
+
+      class Bar(*T) < Foo(Int32, *T)
+      end
+      ),
+      "cannot splat *T into non-splat type parameter U of Foo(*T, U)"
+  end
+
+  it "errors if splatting type var into non-splat parameter, more args" do
+    assert_error %(
+      class Foo(T, *U, V, W)
+      end
+
+      class Bar(T, U, *V, W) < Foo(V, U, T, W, *V, T)
+      end
+      ),
+      "cannot splat *V into non-splat type parameter V of Foo(T, *U, V, W)"
   end
 
   it "inherits from generic with instantiation" do

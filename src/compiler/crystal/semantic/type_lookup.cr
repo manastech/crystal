@@ -201,23 +201,8 @@ class Crystal::Type
           node.raise "instantiating #{node}", inner: ex if @raise
         end
       when GenericType
-        if instance_type.splat_index
-          if node.named_args
-            node.raise "can only use named arguments with NamedTuple"
-          end
-
-          min_needed = instance_type.type_vars.size - 1
-          if node.type_vars.size < min_needed
-            node.wrong_number_of "type vars", instance_type, node.type_vars.size, "#{min_needed}+"
-          end
-        else
-          if node.named_args
-            node.raise "can only use named arguments with NamedTuple"
-          end
-
-          if instance_type.type_vars.size != node.type_vars.size
-            node.wrong_number_of "type vars", instance_type, node.type_vars.size, instance_type.type_vars.size
-          end
+        if node.named_args
+          node.raise "can only use named arguments with NamedTuple"
         end
       else
         node.raise "#{instance_type} is not a generic type, it's a #{instance_type.type_desc}"
@@ -283,6 +268,41 @@ class Crystal::Type
         end
 
         type_vars << type.virtual_type
+      end
+
+      splat_index = instance_type.splat_index
+      var_count = instance_type.type_vars.size
+
+      case {type_vars.any?(TypeSplat), splat_index}
+      in {true, Int32}
+        # node is `(A, B, C, *D, E)`, definition is `(T, *U, V, W)`; *D would splat into V
+        0.upto(splat_index - 1) do |index|
+          if (splat = type_vars[index]).is_a?(TypeSplat)
+            type_var = instance_type.type_vars[index]
+            node.raise "cannot splat #{splat} into non-splat type parameter #{type_var} of #{instance_type}"
+          end
+        end
+        (splat_index + 1).upto(var_count - 1) do |index|
+          if (splat = type_vars[index - var_count]).is_a?(TypeSplat)
+            type_var = instance_type.type_vars[index]
+            node.raise "cannot splat #{splat} into non-splat type parameter #{type_var} of #{instance_type}"
+          end
+        end
+      in {true, Nil}
+        # node is `(A, B, *C)`, definition is `(T)`; instantiation would always fail
+        splat = type_vars.find(&.is_a?(TypeSplat)).not_nil!
+        node.raise "cannot splat #{splat} into #{instance_type}"
+      in {false, Int32}
+        # node is `(A)`, definition is `(T, U, *V)`; instantiation would always fail
+        min_needed = var_count - 1
+        if type_vars.size < min_needed
+          node.wrong_number_of "type vars", instance_type, type_vars.size, "#{min_needed}+"
+        end
+      in {false, Nil}
+        # neither side contains splats; type var counts must be equal
+        if type_vars.size != var_count
+          node.wrong_number_of "type vars", instance_type, type_vars.size, var_count
+        end
       end
 
       begin
