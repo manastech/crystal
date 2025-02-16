@@ -55,6 +55,31 @@ module Crystal
         # in this case we can't continue searching past `N`
         return unless type.is_a?(Type)
       end
+
+      # If this is a TypeParameter resulting from the formal argument of e.g. an
+      # inherited generic instance, we must solve this immediately whenever
+      # possible. For example:
+      #
+      # ```
+      # class Foo(T1); end
+      #
+      # class Bar(T2) < Foo(T2); end
+      # ```
+      #
+      # Looking up `T1` under `Bar(Int32)`'s context will return `T2`, which is
+      # the formal argument in `Foo(T2)`, and we solve it to return `Int32`. On
+      # the other hand, looking up `T1` under `Bar`'s context will return `nil`.
+      if type.is_a?(TypeParameter)
+        if solved = type.solve?(self).as?(Var)
+          return solved.type
+        elsif !solved.nil?
+          # If the context were `Bar(1)` instead, then `solved` is that AST node
+          # itself (i.e. `1`), rather than a `Var` with the type of the solved
+          # type argument.
+          return solved
+        end
+      end
+
       type
     end
 

@@ -489,6 +489,55 @@ describe "Code gen: generic class type" do
       ))
   end
 
+  it "accesses generic type argument from superclass, def context (#10834)" do
+    run(%(
+      class Foo(T)
+      end
+
+      class Bar(U) < Foo(U)
+        def t
+          T
+        end
+      end
+
+      Bar(7).new.t
+      )).to_i.should eq(7)
+  end
+
+  it "accesses generic type argument from superclass, metaclass context" do
+    run(%(
+      struct Int32
+        def self.new(x : Int32)
+          x
+        end
+      end
+
+      class Foo(T)
+      end
+
+      class Bar(U) < Foo(U)
+        @x = T.new(7)
+      end
+
+      Bar(Int32).new.@x
+      )).to_i.should eq(7)
+  end
+
+  it "accesses generic type argument from superclass, macro context" do
+    run(%(
+      class Foo(T)
+      end
+
+      class Bar(U) < Foo(U)
+        def t
+          {{ T == 7 ? 1 : 2 }}
+        end
+      end
+
+      Bar(7).new.t
+      )).to_i.should eq(1)
+  end
+
   it "codegens compile-time interpreted generic int128" do
     run(%(
       require "prelude"
