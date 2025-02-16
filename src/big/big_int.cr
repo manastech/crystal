@@ -468,6 +468,18 @@ struct BigInt < Int
     end
   end
 
+  # Computes greatest common denominator of `self` and `other`,
+  # as well as its Bézout coefficients.
+  #
+  # ```
+  # gcd, x, y = 7.to_big_i.gcd_ext(2.to_big_i) # => {1, 1, -3}
+  # ```
+  def gcd_ext(other : BigInt) : {BigInt, BigInt, BigInt}
+    a = BigInt.new
+    b = BigInt.new
+    {BigInt.new { |mpz| LibGMP.gcdext(mpz, a, b, self, other) }, a, b}
+  end
+
   # Returns the least common multiple of `self` and *other*.
   def lcm(other : BigInt) : BigInt
     BigInt.new { |mpz| LibGMP.lcm(mpz, self, other) }
