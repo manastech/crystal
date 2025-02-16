@@ -267,6 +267,11 @@ module IO::Buffered
     self
   end
 
+  # Unsafe, direct access to the underlying read buffer.
+  protected def unsafe_read_buffer
+    @in_buffer_rem
+  end
+
   private def fill_buffer
     in_buffer = in_buffer()
     size = unbuffered_read(Slice.new(in_buffer, @buffer_size)).to_i

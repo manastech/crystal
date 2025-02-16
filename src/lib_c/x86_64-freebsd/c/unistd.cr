@@ -47,4 +47,5 @@ lib LibC
   fun sysconf(x0 : Int) : Long
   fun unlink(x0 : Char*) : Int
   fun write(x0 : Int, x1 : Void*, x2 : SizeT) : SSizeT
+  fun copy_file_range(fd_in : Int, offset_in : OffT*, fd_out : Int, offset_out : OffT*, len : SizeT, flags : UInt) : SSizeT
 end
