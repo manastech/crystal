@@ -849,6 +849,16 @@ struct Slice(T)
   # Bytes[1, 3] == Bytes[1, 2]    # => false
   # Bytes[1, 2] == Bytes[1, 2, 3] # => false
   # ```
+  #
+  # Slices of different types are considered equal if the elements compare equal:
+  # The only exception is `Slice(UInt8)` which does not compare equal to any
+  # other `Slice(X)` because `Slice(UInt8)#hash` uses a different implementation
+  # and equality implies hash equality.
+  #
+  # ```
+  # Slice[1, 2, 3] == Slice[1.0, 2.0, 3.0] # => true
+  # Slice[1, 2, 3] == Bytes[1, 2, 3]       # => false
+  # ```
   def ==(other : Slice(U)) : Bool forall U
     # If both slices are of different sizes, they cannot be equal.
     return false if size != other.size
@@ -859,6 +869,9 @@ struct Slice(T)
 
     {% if T == UInt8 && U == UInt8 %}
       to_unsafe.memcmp(other.to_unsafe, size) == 0
+    {% elsif T == UInt8 || U == UInt8 %}
+      # ensure that Slice(UInt8) is never considered equal to any other Slice(X)
+      false
     {% else %}
       each_with_index do |elem, i|
         return false unless elem == other.to_unsafe[i]

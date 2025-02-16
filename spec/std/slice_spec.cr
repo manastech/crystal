@@ -501,6 +501,14 @@ describe "Slice" do
       a.should eq(b)
       a.should_not eq(c)
     end
+
+    it "different types" do
+      a = Slice[1, 2, 3]
+      b = Slice[1.0, 2.0, 3.0]
+      c = Slice[1.0, 2.0, 2.9]
+      a.should eq(b)
+      a.should_not eq(c)
+    end
   end
 
   it "#same?" do
@@ -680,6 +688,8 @@ describe "Slice" do
 
   it "optimizes hash for Bytes" do
     Bytes[1, 2, 3].hash.should_not eq(Slice[1, 2, 3].hash)
+    Bytes[1, 2, 3].should_not eq(Slice[1, 2, 3])
+    Slice[1, 2, 3].should_not eq(Bytes[1, 2, 3])
   end
 
   it "#[]" do
