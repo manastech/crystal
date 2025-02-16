@@ -74,21 +74,55 @@ module Crystal
 
     record MacroVarKey, name : String, exps : Array(ASTNode)?
 
+    class BlockScope
+      enum State
+        Continue
+        FoundNext
+        FoundBreak
+      end
+
+      property state : State = State::Continue
+    end
+
     def initialize(@program : Program,
                    @scope : Type, @path_lookup : Type, @location : Location?,
                    @vars = {} of String => ASTNode, @block : Block? = nil, @def : Def? = nil,
                    @in_macro = false, @call : Call? = nil)
       @str = IO::Memory.new(512) # Can't be String::Builder because of `{{debug}}`
       @last = Nop.new
+      @block_scopes = [] of BlockScope
     end
 
     def define_var(name : String, value : ASTNode) : Nil
       @vars[name] = value
     end
 
+    def new_block_scope(& : BlockScope ->)
+      block_scope = BlockScope.new
+      @block_scopes << block_scope
+      begin
+        yield block_scope
+      ensure
+        @block_scopes.pop
+      end
+    end
+
     def accept(node)
       node.accept self
       @last
+    end
+
+    def visit_any(node)
+      # upon encountering a `next` or `break` expression, this pauses evaluation
+      # until `interpret_block` in `./methods.cr` drops a pending `next`, or
+      # `new_block_scope` drops the innermost block scope by returning; while
+      # evaluation is paused, `@last` holds the argument to the most recent
+      # `next` or `break` expression
+      if block_scope = @block_scopes.last?
+        return false unless block_scope.state.continue?
+      end
+
+      true
     end
 
     def visit(node : Expressions)
@@ -405,6 +439,36 @@ module Crystal
       else
         @last = Nop.new
       end
+      false
+    end
+
+    def visit(node : Next)
+      unless block_scope = @block_scopes.last?
+        node.raise "invalid next"
+      end
+
+      if exp = node.exp
+        exp.accept self
+      else
+        @last = Nop.new
+      end
+
+      block_scope.state = :found_next
+      false
+    end
+
+    def visit(node : Break)
+      unless block_scope = @block_scopes.last?
+        node.raise "invalid break"
+      end
+
+      if exp = node.exp
+        exp.accept self
+      else
+        @last = Nop.new
+      end
+
+      block_scope.state = :found_break
       false
     end
 
