@@ -143,6 +143,48 @@ class String
       end
     end
 
+    # Yields each character of this grapheme.
+    #
+    # Equivalent to `String#each_char`.
+    def each_char(& : Char -> Nil) : Nil
+      case cluster = @cluster
+      in Char
+        yield cluster
+      in String
+        cluster.each_char do |char|
+          yield char
+        end
+      end
+    end
+
+    # Returns an `Iterator` over each character of this grapheme.
+    #
+    # Equivalent to `String#each_char(&)`.
+    def each_char : Iterator(Char)
+      case cluster = @cluster
+      in Char
+        {cluster}.each
+      in String
+        cluster.each_char
+      end
+    end
+
+    # Yields each byte of this grapheme in UTF-8 encoding.
+    #
+    # Equivalent to `String#each_byte`.
+    def each_byte(& : UInt8 -> Nil) : Nil
+      cluster.each_byte do |byte|
+        yield byte
+      end
+    end
+
+    # Returns an `Iterator` over each byte of this grapheme in UTF-8 encoding.
+    #
+    # Equivalent to `String#each_byte(&)`.
+    def each_byte : Iterator(UInt8)
+      cluster.each_byte
+    end
+
     # Appends a representation of this grapheme cluster to *io*.
     def inspect(io : IO) : Nil
       io << "String::Grapheme("

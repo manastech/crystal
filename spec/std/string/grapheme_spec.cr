@@ -1,4 +1,5 @@
 require "./spec_helper"
+require "spec/helpers/iterate"
 
 describe String::Grapheme do
   it ".new" do
@@ -17,6 +18,20 @@ describe String::Grapheme do
     String.build do |io|
       String::Grapheme.new('f').to_s(io)
     end.should eq "f"
+  end
+
+  describe "#each_char" do
+    it_iterates "string", ['f', 'o', 'o'], String::Grapheme.new("foo").each_char
+    it_iterates "string", ['🙂', '🙂'], String::Grapheme.new("🙂🙂").each_char
+    it_iterates "char", ['f'], String::Grapheme.new('f').each_char
+    it_iterates "char", ['🙂'], String::Grapheme.new('🙂').each_char
+  end
+
+  describe "#each_byte" do
+    it_iterates "string", ['f', 'o', 'o'], String::Grapheme.new("foo").each_byte
+    it_iterates "string", ['🙂', '🙂'], String::Grapheme.new("🙂🙂").each_byte
+    it_iterates "char", ['f'], String::Grapheme.new('f').each_byte
+    it_iterates "char", ['🙂'], String::Grapheme.new('🙂').each_byte
   end
 
   it "#inspect" do
