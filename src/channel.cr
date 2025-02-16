@@ -85,7 +85,7 @@ class Channel(T)
     @receivers = Crystal::PointerLinkedList(Receiver(T)).new
 
     if capacity > 0
-      @queue = Deque(T).new(capacity)
+      @queue = Deque(T).new
     end
   end
 
