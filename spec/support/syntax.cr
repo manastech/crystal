@@ -158,6 +158,16 @@ def assert_syntax_error(str, message = nil, line = nil, column = nil, metafile =
   end
 end
 
+def assert_syntax_warning(str, message, *, metafile = __FILE__, metaline = __LINE__, metaendline = __END_LINE__)
+  it "says syntax warning on #{str.inspect}", metafile, metaline, metaendline do
+    warnings = WarningCollection.new
+    parse str, false, nil, warnings
+    unless warnings.infos.find(&.ends_with?(message))
+      fail "Expected warnings to include '#{message}'"
+    end
+  end
+end
+
 def parse(string, wants_doc = false, filename = nil, warnings = nil)
   parser = Parser.new(string, warnings: warnings)
   parser.warnings = warnings if warnings
