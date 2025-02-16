@@ -576,13 +576,15 @@ struct Time::MonthSpan
   end
 
   # Returns a `Time` that happens N months after now.
-  def from_now : Time
-    Time.local + self
+  # If `utc` is true, UTC time is used instead of the local time.
+  def from_now(utc = false) : Time
+    (utc ? Time.utc : Time.local) + self
   end
 
   # Returns a `Time` that happens N months before now.
-  def ago : Time
-    Time.local - self
+  # If `utc` is true, UTC time is used instead of the local time.
+  def ago(utc = false) : Time
+    (utc ? Time.utc : Time.local) - self
   end
 end
 
