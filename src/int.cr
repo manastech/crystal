@@ -1638,9 +1638,8 @@ struct Int64
 end
 
 struct Int128
-  # TODO: eventually update to literals once UInt128 bit support is finished
-  MIN = new(1) << 127
-  MAX = ~MIN
+  MIN = -170141183460469231731687303715884105728_i128
+  MAX =  170141183460469231731687303715884105727_i128
 
   # Returns an `Int128` by invoking `to_i128` on *value*.
   # See `String#to_i` for more details.
@@ -1668,8 +1667,7 @@ struct Int128
   Number.expand_div [Float64], Float64
 
   def -
-    # TODO: use 0_i128 - self
-    Int128.new(0) - self
+    0_i128 - self
   end
 
   # Returns `self` converted to a signed value of the same size.
@@ -2586,9 +2584,8 @@ struct UInt64
 end
 
 struct UInt128
-  # TODO: eventually update to literals once UInt128 bit support is finished
-  MIN = new 0
-  MAX = ~MIN
+  MIN =                                       0_u128
+  MAX = 340282366920938463463374607431768211455_u128
 
   # Returns an `UInt128` by invoking `to_u128` on *value*.
   # See `String#to_i` for more details.
