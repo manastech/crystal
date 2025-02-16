@@ -208,6 +208,63 @@ class HTTP::WebSocket
       end
     end
   end
+
+  record Ping
+  record Pong
+  record Close
+
+  def read : Slice(UInt8) | String | Close | Ping | Pong | Nil
+    begin
+      info = @ws.receive(@buffer)
+    rescue IO::EOFError
+      close
+      return nil
+    end
+
+    case info.opcode
+    when Protocol::Opcode::PING
+      @current_message.write @buffer[0, info.size]
+      if info.final
+        message = @current_message.to_s
+        @on_ping.try &.call(message)
+        pong(message) unless closed?
+        @current_message.clear
+      end
+      return Ping.new
+    when Protocol::Opcode::PONG
+      @current_message.write @buffer[0, info.size]
+      if info.final
+        @on_pong.try &.call(@current_message.to_s)
+        @current_message.clear
+      end
+      return Pong.new
+    when Protocol::Opcode::TEXT
+      message = @buffer[0, info.size]
+      @current_message.write message
+      if info.final
+        @on_message.try &.call(@current_message.to_s)
+        @current_message.clear
+      end
+      return String.new message
+    when Protocol::Opcode::BINARY
+      message = @buffer[0, info.size]
+      @current_message.write message
+      if info.final
+        @on_binary.try &.call(@current_message.to_slice)
+        @current_message.clear
+      end
+      return message
+    when Protocol::Opcode::CLOSE
+      @current_message.write @buffer[0, info.size]
+      if info.final
+        message = @current_message.to_s
+        @on_close.try &.call(message)
+        close(message) unless closed?
+        @current_message.clear
+      end
+      return Close.new
+    end
+  end
 end
 
 require "./web_socket/*"
